@@ -980,6 +980,8 @@ function marcaVistas(){ // as perguntas que saem na sala também ficam marcadas 
   if(mudou)persist();
 }
 function lobbyChanged(){
+  const me=LOBBY[MYDEV]; // se outro aparelho que entrou antes já usa a mesma cor, larga a minha
+  if(NET&&me&&me.cor&&G.phase==='setup'&&Object.entries(LOBBY).some(([d,l])=>d!==MYDEV&&l.cor===me.cor&&((l.ts||0)<(me.ts||0)||((l.ts||0)===(me.ts||0)&&d<MYDEV)))){me.cor='';NET.setMe(ROOM,MYDEV,{cor:''}).catch(()=>{})}
   if(amHost()&&G.phase==='setup'){
     const ord=(G.ordem||[]).filter(d=>LOBBY[d]);
     Object.keys(LOBBY).sort((a,b)=>(LOBBY[a].ts||0)-(LOBBY[b].ts||0)).forEach(d=>{if(!ord.includes(d))ord.push(d)});
