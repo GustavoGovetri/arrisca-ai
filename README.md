@@ -13,10 +13,14 @@ São dois jeitos:
 
 Na sala online:
 
-- quem está na vez aposta a ficha, escolhe o tema e usa as ajudas;
-- o próximo jogador da roda é quem lê a pergunta: só ele vê a resposta, marca se acertou ou errou e controla o timer;
+- quem está na vez aposta a ficha, escolhe o tema, usa as ajudas e **digita a resposta** no próprio celular;
+- os outros veem o que foi escrito e a resposta oficial e votam se vale ou não. Ganha a maioria; no empate, decide o próximo da roda. Resposta igual à oficial vale direto;
+- o timer da sala (20 s, ou 10 s na múltipla escolha) aparece para todos; quando acaba, o que estiver escrito é enviado;
 - na casa final, os outros jogadores escolhem o tema;
-- quem criou a sala pode mudar a ordem, tirar alguém e ligar o "Controle total" para jogar por quem caiu da conexão.
+- tem um chat (💬) com reações rápidas;
+- quem criou a sala pode mudar a ordem, tirar alguém e ligar o "Controle total" para jogar por quem caiu da conexão (e decidir a votação na hora).
+
+O jogo tem animações e sons; o botão 🔊 liga e desliga o som.
 
 Se alguém fechar o navegador, é só abrir o link de novo que volta para a mesma partida.
 

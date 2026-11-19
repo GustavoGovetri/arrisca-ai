@@ -15,7 +15,9 @@ if(cfg&&cfg.databaseURL&&!sim){
       watch(code,h){
         const u=[d.onValue(R('salas/'+code+'/meta'),s=>h.onMeta(s.val())),
                  d.onValue(R('salas/'+code+'/jogadores'),s=>h.onLobby(s.val()||{})),
-                 d.onValue(R('salas/'+code+'/estado'),s=>h.onState(s.val()))];
+                 d.onValue(R('salas/'+code+'/estado'),s=>h.onState(s.val())),
+                 d.onValue(R('salas/'+code+'/votos'),s=>h.onVotes&&h.onVotes(s.val()||{})),
+                 d.onValue(d.query(R('salas/'+code+'/chat'),d.limitToLast(60)),s=>{const a=[];s.forEach(c=>{a.push(c.val())});h.onChat&&h.onChat(a)})];
         return ()=>u.forEach(f=>f());
       },
       async setMe(code,dev,obj){
@@ -28,6 +30,8 @@ if(cfg&&cfg.databaseURL&&!sim){
         const res=await d.runTransaction(R('salas/'+code+'/estado'),cur=>{const v=(cur&&cur.v)||0;if(v!==base)return;return val},{applyLocally:false});
         return res.committed;
       },
+      async vote(code,dev,obj){await d.set(R('salas/'+code+'/votos/'+dev),obj)},
+      async chat(code,msg){await d.push(R('salas/'+code+'/chat'),msg)},
       async report(r){await d.push(R('reportes'),r)},
       onConnected(cb){d.onValue(R('.info/connected'),s=>cb(!!s.val()))}
     };
