@@ -234,9 +234,206 @@ div.dobro{padding:10px 14px;border-radius:10px}
 .rei{text-align:center;font-size:17px;margin:6px 0 10px}
 .junta{background:#1e2a22;color:#cfe9d6;font-size:13px;line-height:1.45;margin:-4px 0 12px}
 .veio{font-size:12px;color:#9aa0ad;margin-left:2px}
+/* ===================== visual de jogo de festa: colorido, contornado e animado ===================== */
+@font-face{font-family:'Fredoka';src:url(/fonts/fredoka.woff2) format('woff2');font-weight:300 700;font-display:swap}
+@font-face{font-family:'Lilita One';src:url(/fonts/lilita-one.woff2) format('woff2');font-weight:400;font-display:swap}
+:root{
+  --k:#140a3d;              /* contorno */
+  --painel1:#4a36bd;--painel2:#3a299f;
+  --ladrilho:#2d1f84;--ladrilho2:#4f3cc9;
+  --suave:#d6ceff;
+  --amarelo:#ffd23f;
+  --txt-contorno:0 3px 0 var(--k),2px 0 0 var(--k),-2px 0 0 var(--k),0 -2px 0 var(--k),2px 2px 0 var(--k),-2px 2px 0 var(--k),2px -2px 0 var(--k),-2px -2px 0 var(--k);
+}
+body{font-family:'Fredoka',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#fff;
+  background:radial-gradient(120% 90% at 50% 0%,#6b45ee 0%,#4a28c4 30%,#2c138a 62%,#1a0a58 100%) fixed;background-color:#1a0a58}
+.wrap{position:relative;z-index:1}
+
+/* fundo animado: raios girando e fichas subindo */
+#fundo{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#fundo .raios{position:absolute;left:50%;top:38%;width:220vmax;height:220vmax;margin:-110vmax 0 0 -110vmax;
+  background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.07) 0deg 7deg,transparent 7deg 20deg);
+  -webkit-mask-image:radial-gradient(circle,#000 0%,rgba(0,0,0,.5) 18%,transparent 42%);mask-image:radial-gradient(circle,#000 0%,rgba(0,0,0,.5) 18%,transparent 42%);
+  animation:gira 120s linear infinite;will-change:transform}
+@keyframes gira{to{transform:rotate(360deg)}}
+#fundo .ficha{position:absolute;top:105vh;width:var(--t);height:var(--t);border-radius:50%;
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.55),rgba(255,255,255,0) 42%),var(--cor);
+  border:max(3px,.5vmin) solid var(--k);
+  box-shadow:inset 0 calc(var(--t)*-.09) 0 rgba(0,0,0,.25),inset 0 0 0 calc(var(--t)*.08) rgba(255,255,255,.22),0 calc(var(--t)*.07) 0 var(--k);
+  display:flex;align-items:center;justify-content:center;
+  font:400 calc(var(--t)*.48)/1 'Lilita One',sans-serif;color:#fff;text-shadow:0 calc(var(--t)*.04) 0 var(--k);
+  opacity:var(--o);will-change:transform;animation:sobe var(--d) linear infinite;animation-delay:var(--dl)}
+@keyframes sobe{from{transform:translateY(0) rotate(0deg)}to{transform:translateY(calc(-105vh - var(--t) - 20px)) rotate(var(--r))}}
+#fundo .brilho{position:absolute;width:var(--t);height:var(--t);color:#fff;opacity:0;animation:pisca var(--d) ease-in-out infinite;animation-delay:var(--dl)}
+#fundo .brilho svg{width:100%;height:100%;fill:currentColor}
+@keyframes pisca{0%,70%,100%{opacity:0;transform:scale(.3) rotate(0)}80%{opacity:.9;transform:scale(1) rotate(45deg)}90%{opacity:0;transform:scale(.5) rotate(90deg)}}
+
+/* painéis */
+.card{background:linear-gradient(180deg,var(--painel1),var(--painel2));border:3px solid var(--k);border-radius:24px;padding:20px;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.2),inset 0 -4px 0 rgba(0,0,0,.12),0 6px 0 var(--k),0 18px 36px rgba(8,2,35,.45);
+  animation:cardIn .55s cubic-bezier(.2,.9,.3,1.25) both}
+.card+.card{animation-delay:.08s}
+@keyframes cardIn{from{opacity:0;transform:translateY(24px) scale(.96)}}
+.card h2{font-family:'Lilita One',sans-serif;font-weight:400;font-size:23px;letter-spacing:.4px;color:var(--amarelo);text-shadow:var(--txt-contorno);margin-bottom:14px}
+.card h2 .muted{font-family:'Fredoka',sans-serif;font-weight:600;text-shadow:none;font-size:14px}
+.muted{color:var(--suave)}
+.msg{font-size:17px}
+.qtext{font-size:23px;font-weight:700;line-height:1.3;text-shadow:0 2px 0 rgba(20,10,61,.6)}
+details summary{font-family:'Lilita One',sans-serif;font-weight:400;font-size:19px;color:var(--amarelo);text-shadow:var(--txt-contorno)}
+details ul{color:#e9e4ff}
+
+/* botões grossos, com contorno e "degrau" */
+button{font-family:inherit;font-weight:600;background:#6a55e6;color:#fff;border:3px solid var(--k);border-radius:14px;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.2),inset 0 2px 0 rgba(255,255,255,.25),0 4px 0 var(--k);
+  transition:transform .12s cubic-bezier(.3,.7,.4,1.6),box-shadow .1s,background .15s,filter .15s}
+button:hover:not(:disabled){background:#7a66f2;transform:translateY(-2px)}
+button:active:not(:disabled){transform:translateY(3px);box-shadow:inset 0 -1px 0 rgba(0,0,0,.2),0 1px 0 var(--k)}
+button:disabled{opacity:.45}
+.primary{background:linear-gradient(180deg,#ffe36e,#ffc21a);color:#2a1600;position:relative;overflow:hidden}
+.primary:hover:not(:disabled){background:linear-gradient(180deg,#ffeb8f,#ffcd38)}
+.primary::after{content:'';position:absolute;top:-10%;bottom:-10%;width:35%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);transform:skewX(-20deg);animation:brilhoBtn 3.4s ease-in-out infinite;pointer-events:none}
+.primary:disabled::after{display:none}
+@keyframes brilhoBtn{0%,62%{left:-60%}100%{left:135%}}
+.ok{background:linear-gradient(180deg,#5ee88c,#22b558)}.ok:hover:not(:disabled){background:linear-gradient(180deg,#77f0a0,#2cc765)}
+.bad{background:linear-gradient(180deg,#ff8085,#e8404a)}.bad:hover:not(:disabled){background:linear-gradient(180deg,#ff9599,#f2525b)}
+.small{border-width:2.5px;border-radius:12px;box-shadow:inset 0 -2px 0 rgba(0,0,0,.2),inset 0 2px 0 rgba(255,255,255,.22),0 3px 0 var(--k)}
+button.big{font-family:'Lilita One',sans-serif;font-weight:400;font-size:21px;letter-spacing:.3px;padding:16px 18px;border-radius:18px;text-shadow:0 2px 0 rgba(20,10,61,.35)}
+button.big.primary{text-shadow:0 1px 0 rgba(255,255,255,.4)}
+button.big small{font-family:'Fredoka',sans-serif;font-weight:500;font-size:14px;color:#e4defc;text-shadow:none}
+button.big.primary small{color:#5a3a00}
+.card button.big:nth-of-type(1){animation:btnIn .5s .15s cubic-bezier(.2,.9,.3,1.4) both}
+.card button.big:nth-of-type(2){animation:btnIn .5s .25s cubic-bezier(.2,.9,.3,1.4) both}
+@keyframes btnIn{from{opacity:0;transform:translateX(-30px) scale(.9)}}
+.tab,.snd{background:#5642d6}
+.tab.on{background:#7a66f2;box-shadow:inset 0 0 0 2px var(--amarelo),0 4px 0 var(--k)}
+.chatreac button{border:0;box-shadow:none;background:none}
+.chatreac button:hover:not(:disabled){background:rgba(255,255,255,.1)}
+
+/* campos claros */
+input,select,textarea,.report textarea{background:#f5f2ff;color:#1b0f4d;border:3px solid var(--k);border-radius:12px;font-weight:600;font-family:inherit}
+input::placeholder{color:#8a80b8}
+input:focus,select:focus,textarea:focus{outline:3px solid var(--amarelo);outline-offset:1px}
+.joinrow input{letter-spacing:4px}
+
+/* ladrilhos: temas, modos, jogadores */
+.tchip,.modo,.pl,.lob{background:var(--ladrilho);border:3px solid var(--k);border-radius:14px;box-shadow:0 3px 0 var(--k)}
+.tchip{opacity:.6}
+.tchip.on{opacity:1;background:linear-gradient(180deg,#5944d6,#4633bd);box-shadow:inset 0 0 0 3px var(--c),0 3px 0 var(--k)}
+.tchip small,.modo small{color:var(--suave)}
+.tchip .tdot{width:14px;height:14px;border:2px solid var(--k)}
+.modo{opacity:.65}
+.modo.on,.modo.on:hover:not(:disabled){opacity:1;background:linear-gradient(180deg,#6a4fe0,#5038c9);border-color:var(--k);box-shadow:inset 0 0 0 3px var(--amarelo),0 3px 0 var(--k),0 0 22px rgba(255,210,63,.35)}
+.modo b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:18px;letter-spacing:.3px}
+.pl{padding:9px 11px}
+.pl.cur{background:linear-gradient(180deg,#5d48dc,#4a36c4);box-shadow:inset 0 0 0 3px var(--amarelo),0 3px 0 var(--k),0 0 20px rgba(255,210,63,.35)}
+.pl .nm{font-weight:700}
+.pl .pawn,.setup-row .pawn{border-color:#fff;box-shadow:0 0 0 2px var(--k)}
+.chip{border:2px solid var(--k);font-family:'Lilita One',sans-serif;font-weight:400;font-size:11px}
+.badge{border:2px solid var(--k);box-shadow:0 2px 0 var(--k);font-weight:700;font-size:13px;padding:4px 11px}
+.you,.host,.off{border:2px solid var(--k)}
+.palette{background:var(--ladrilho);border:3px solid var(--k);border-radius:14px}
+.swatch{border:3px solid #fff;box-shadow:0 0 0 2.5px var(--k),0 3px 0 2px var(--k)}
+.grip,.ordem{color:var(--suave)}
+.dragging{background:#5944d6}
+
+/* fichas da aposta com cara de ficha de cassino */
+.tok{width:52px;height:52px;border:3px solid var(--k);font-family:'Lilita One',sans-serif;font-weight:400;font-size:23px;color:#fff;
+  text-shadow:0 2px 0 rgba(20,10,61,.6);
+  box-shadow:inset 0 -4px 0 rgba(0,0,0,.25),inset 0 0 0 5px rgba(255,255,255,.28),inset 0 0 0 7px rgba(0,0,0,.15),0 4px 0 var(--k)}
+.tok:hover:not(:disabled){transform:translateY(-3px) rotate(-8deg)}
+.tok.sel{outline:4px solid var(--amarelo);outline-offset:3px}
+.tokens{gap:10px}
+
+/* caixas de conteúdo */
+.answer{background:#fff6cf;color:#2a1600;border:3px solid var(--k);border-radius:16px;box-shadow:0 4px 0 var(--k);font-size:19px;font-weight:700;padding:10px 14px}
+.answer .muted{color:#9a7414;font-weight:600;font-size:13px}
+.resp{background:#e5f3ff;color:#0d2747;border:3px solid var(--k);border-radius:16px;box-shadow:0 4px 0 var(--k)}
+.resp .muted{color:#3d6a9a}
+.hint,.report,.wait,.rasteira,.note2,.junta,.timer,.code,.focolbl{border:3px solid var(--k);border-radius:14px}
+.hint{background:#2d1f84;border-style:dashed;border-color:var(--amarelo)}
+.report,.wait{background:var(--ladrilho)}
+.note2{background:#1f6b46;color:#e3ffef}
+.junta{background:#1d5c43;color:#dcfff0}
+.timer{background:#f5f2ff;color:#1b0f4d;font-family:'Lilita One',sans-serif;font-weight:400;box-shadow:0 3px 0 var(--k)}
+.timer.low,.timer.done{color:#e8303a}
+.code{background:#2d1f84;color:var(--amarelo);font-family:'Lilita One',sans-serif;letter-spacing:4px}
+.dobro{border:3px solid var(--k);border-radius:14px}
+.estrelas{text-shadow:0 1px 0 var(--k)}
+.win{font-family:'Lilita One',sans-serif;font-weight:400;font-size:34px;color:var(--amarelo);text-shadow:var(--txt-contorno)}
+.rei{font-weight:700}
+.hrow,.hv{border-bottom:2px solid rgba(20,10,61,.45)}
+.hv .ha{color:var(--amarelo)}
+.bar{background:#1b0f4d;border:2px solid var(--k);height:12px}
+.bigcount{font-family:'Lilita One',sans-serif;font-weight:400}
+.pill{border:2px solid var(--k);font-weight:700}
+#toast{border:3px solid var(--k);border-radius:14px;box-shadow:0 4px 0 var(--k);font-weight:700;font-size:16px;background:linear-gradient(180deg,#5ee88c,#22b558);color:#0b3319}
+
+/* nomes e temas coloridos continuam legíveis no fundo roxo */
+.msg b[style*="color"],.turninfo b[style*="color"],.wait b[style*="color"],.rei b[style*="color"],.rasteira b,.hname{text-shadow:0 0 1px var(--k),0 2px 0 var(--k),0 0 10px rgba(255,255,255,.18)}
+
+/* chat e histórico */
+.chatbox{background:linear-gradient(180deg,var(--painel1),var(--painel2));border:3px solid var(--k);border-radius:22px;box-shadow:0 6px 0 var(--k),0 20px 50px rgba(8,2,35,.6)}
+.chathead{border-bottom:2px solid rgba(20,10,61,.5)}
+.chathead b,.chathead h2{font-family:'Lilita One',sans-serif;font-weight:400;color:var(--amarelo);text-shadow:var(--txt-contorno)}
+.chatreac,.chatform{border-top:2px solid rgba(20,10,61,.5)}
+.cm{background:var(--ladrilho);border:2px solid var(--k)}
+.cm.me{background:#6a55e6}
+.cm.emo{border:0}
+.chatprev{background:var(--painel1);border:3px solid var(--k);box-shadow:0 4px 0 var(--k)}
+.chatn{border:2px solid var(--k)}
+.focolbl{background:rgba(20,10,61,.94);border-color:#8c78ff}
+
+/* tabuleiro */
+.sp{border:.42cqw solid var(--k);box-shadow:inset 0 -.75cqw 0 rgba(0,0,0,.22),inset 0 .5cqw 0 rgba(255,255,255,.32),0 .6cqw 0 var(--k),0 1.2cqw 1.6cqw rgba(8,2,35,.35)}
+.sp .lb{font-family:'Lilita One',sans-serif;font-weight:400;font-size:calc(var(--sp,8.4cqw)*.25);text-shadow:0 .25cqw 0 rgba(20,10,61,.75)}
+.sp .n{font-weight:600}
+.sp.start{background:radial-gradient(circle at 35% 30%,#6a55e6,#2d1f84);border-color:var(--k);box-shadow:inset 0 0 0 .5cqw var(--amarelo),0 .6cqw 0 var(--k)}
+.sp.final{border-color:var(--k);box-shadow:inset 0 -.75cqw 0 rgba(0,0,0,.15),inset 0 .5cqw 0 rgba(255,255,255,.5),0 .6cqw 0 var(--k),0 0 3cqw rgba(255,210,63,.55);animation:fimBrilha 2.4s ease-in-out infinite}
+@keyframes fimBrilha{50%{box-shadow:inset 0 -.75cqw 0 rgba(0,0,0,.15),inset 0 .5cqw 0 rgba(255,255,255,.5),0 .6cqw 0 var(--k),0 0 5cqw 1cqw rgba(255,210,63,.75)}}
+.pw{border-color:#fff;box-shadow:0 0 0 .32cqw var(--k),0 .7cqw 0 .1cqw var(--k)}
+.pw::before{content:'';position:absolute;left:18%;right:18%;top:24%;height:36%;
+  background:radial-gradient(circle at 28% 55%,var(--k) 0 16%,#fff 17% 34%,transparent 35%),radial-gradient(circle at 72% 55%,var(--k) 0 16%,#fff 17% 34%,transparent 35%);
+  animation:pisca2 4.5s infinite}
+@keyframes pisca2{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.1)}}
+.center .logo{font-family:'Lilita One',sans-serif;font-weight:400;font-size:9.6cqw!important;letter-spacing:.25cqw!important;line-height:1;
+  background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--amarelo);filter:none;
+  text-shadow:0 .7cqw 0 var(--k),.35cqw 0 0 var(--k),-.35cqw 0 0 var(--k),0 -.35cqw 0 var(--k),.35cqw .35cqw 0 var(--k),-.35cqw .35cqw 0 var(--k),.35cqw -.35cqw 0 var(--k),-.35cqw -.35cqw 0 var(--k),0 1.6cqw 2.4cqw rgba(8,2,35,.5)}
+.logo .lt{display:inline-block;animation:onda 3.6s ease-in-out infinite;animation-delay:calc(var(--i)*.08s)}
+.logo .lt.esp{width:2.2cqw}
+@keyframes onda{0%,30%,100%{transform:none}10%{transform:translateY(-1.4cqw) rotate(-4deg) scale(1.08)}20%{transform:translateY(.2cqw)}}
+.center .sub{font-family:'Fredoka',sans-serif;font-weight:700;color:#fff;letter-spacing:.9cqw;text-shadow:0 .25cqw 0 var(--k);margin-top:1.2cqw}
+.turn{font-family:'Lilita One',sans-serif;font-weight:400;font-size:3.6cqw;text-shadow:0 .35cqw 0 var(--k)}
+.turn .pawn{border:.35cqw solid #fff;box-shadow:0 0 0 .25cqw var(--k)}
+.turninfo{color:#efeaff;font-weight:600;text-shadow:0 .2cqw 0 var(--k)}
+.leg{color:#efeaff;font-weight:500}
+.leg i{border:.3cqw solid var(--k)}
+.arrow{font-family:'Lilita One',sans-serif;font-weight:400;color:var(--amarelo);text-shadow:0 .25cqw 0 var(--k);font-size:1.9cqw}
+.float{font-family:'Lilita One',sans-serif;font-weight:400;text-shadow:0 .4cqw 0 var(--k),.3cqw 0 0 var(--k),-.3cqw 0 0 var(--k),0 -.3cqw 0 var(--k)}
+
+/* mesa no meio do tabuleiro (esconde as fichas do fundo atrás do texto) */
+.ring::before,.ring::after{content:'';position:absolute;inset:11.5%;border-radius:50%;pointer-events:none;z-index:-1}
+.ring::before{background:radial-gradient(circle at 50% 42%,#4b30c4 0%,#33199a 55%,#230f74 100%);box-shadow:inset 0 0 0 .7cqw rgba(20,10,61,.55),inset 0 2.5cqw 5cqw rgba(255,255,255,.08),inset 0 -3cqw 5cqw rgba(0,0,0,.3)}
+.ring::after{background:repeating-conic-gradient(from 0deg,rgba(255,255,255,.05) 0deg 6deg,transparent 6deg 18deg);-webkit-mask-image:radial-gradient(circle,#000 20%,transparent 72%);mask-image:radial-gradient(circle,#000 20%,transparent 72%);animation:gira 80s linear infinite reverse;will-change:transform}
+.center{z-index:2}
+.turninfo b[style*="color"]{background:#f5f2ff;border:.25cqw solid var(--k);border-radius:2cqw;padding:0 1cqw;text-shadow:none}
+.tok:disabled{opacity:.35}
+.tok.sel,.tok.sel:disabled{opacity:1;transform:translateY(-2px) scale(1.08)}
+
+/* tela inicial no celular: menu primeiro, tabuleiro depois */
+.homelogo{display:none;text-align:center;margin:2px 0 16px}
+.homelogo .logo{font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(40px,13vw,58px)!important;letter-spacing:1px!important;line-height:1;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--amarelo);filter:none;
+  text-shadow:0 5px 0 var(--k),3px 0 0 var(--k),-3px 0 0 var(--k),0 -3px 0 var(--k),3px 3px 0 var(--k),-3px 3px 0 var(--k),3px -3px 0 var(--k),-3px -3px 0 var(--k),0 10px 18px rgba(8,2,35,.5)}
+.homelogo .lt.esp{width:.3em}
+.homelogo .lt{animation-name:ondaPx}
+@keyframes ondaPx{0%,30%,100%{transform:none}10%{transform:translateY(-8px) rotate(-4deg) scale(1.08)}20%{transform:translateY(1px)}}
+.homesub{font-weight:700;letter-spacing:5px;text-transform:uppercase;font-size:12px;margin-top:8px;text-shadow:0 2px 0 var(--k)}
+@media(max-width:980px){body.inicio .wrap>.ringwrap{order:2}body.inicio .homelogo{display:block}}
+.joinrow input{min-width:0}
+.joinrow input::placeholder{letter-spacing:1px;font-size:16px}
 </style>
 </head>
 <body>
+<div id="fundo" aria-hidden="true"></div>
 <div class="wrap">
   <div class="ringwrap"><div class="ring" id="ring"></div></div>
   <div>
@@ -286,6 +483,16 @@ const T={
   V:{n:'Variedades',d:'múltipla escolha: língua, raciocínio e curiosidades',c:'#6b7280'}
 };
 const ORDER=Object.keys(T);
+const LOGO_HTML='<div class="logo" aria-label="Arrisca Aí">'+[...'ARRISCA AÍ'].map((ch,i)=>ch===' '?'<span class="lt esp"></span>':`<span class="lt" style="--i:${i}">${ch}</span>`).join('')+'</div>';
+(function montaFundo(){ // fichas coloridas subindo devagar e brilhos piscando
+  const f=document.getElementById('fundo');if(!f)return;
+  const cores=['#ff4d6d','#3da5ff','#55e08a','#ffd23f','#c77dff','#ff8c42','#2ee6d6','#ff7ac8'],txt=['?','1','2','3','?','4','5','!'];
+  const n=innerWidth<700?9:15,R=Math.random;let h='<div class="raios"></div>';
+  for(let i=0;i<n;i++){const t=(4.5+R()*7).toFixed(1),d=(26+R()*30).toFixed(1);h+=`<div class="ficha" style="left:${((i+R()*.8)*100/n).toFixed(1)}%;--t:${t}vmin;--cor:${cores[i%cores.length]};--o:${(.3+R()*.4).toFixed(2)};--d:${d}s;--dl:-${(R()*d).toFixed(1)}s;--r:${R()<.5?'-':''}${Math.round(90+R()*270)}deg">${txt[i%txt.length]}</div>`}
+  const estrela='<svg viewBox="0 0 24 24"><path d="M12 0c1 7 5 11 12 12-7 1-11 5-12 12-1-7-5-11-12-12 7-1 11-5 12-12z"/></svg>';
+  for(let i=0;i<7;i++){const d=(5+R()*6).toFixed(1);h+=`<div class="brilho" style="left:${(R()*96).toFixed(1)}%;top:${(R()*90).toFixed(1)}%;--t:${(1.6+R()*2.4).toFixed(1)}vmin;--d:${d}s;--dl:-${(R()*d).toFixed(1)}s">${estrela}</div>`}
+  f.innerHTML=h;
+})();
 function sg(k){return T[k].s||k}
 const CLASSIC=['M','AL','S','CT','ES','V'];
 const LEGACY={AE:'AL',EL:'ES',BR:'M'};
@@ -573,7 +780,7 @@ function renderBoard(){
   const key=N+'|'+sz.toFixed(2)+'|'+board.map(s=>s.type+(s.themes||[]).join('/')).join(',');
   if(key!==BOARD_KEY){ // só monta as casas quando o tabuleiro muda
     BOARD_KEY=key;SZ=sz;ring.style.setProperty('--sp',sz.toFixed(2)+'cqw');
-    let h=`<svg class="track" viewBox="0 0 100 100"><circle cx="50" cy="50" r="${R}" fill="none" stroke="#2c3140" stroke-width="5.5"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="#3b4256" stroke-width=".5" stroke-dasharray="1 1.5"/></svg>`;
+    let h=`<svg class="track" viewBox="0 0 100 100"><circle cx="50" cy="50" r="${R}" fill="none" stroke="#140a3d" stroke-opacity=".55" stroke-width="6.2"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="#2a1a7a" stroke-width="5"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width=".55" stroke-dasharray="1 1.6" stroke-linecap="round"/></svg>`;
     h+=`<div class="arrow">INÍCIO ▶ sentido horário ▶</div>`;
     SQ=board.map((s,i)=>{const a=(-90+(i+1)*360/(N+1))*Math.PI/180,x=50+R*Math.cos(a),y=50+R*Math.sin(a);return {x,y,dx:x,dy:y,ds:1}});FOCO=null;
     board.forEach((s,i)=>{
@@ -587,7 +794,7 @@ function renderBoard(){
   }
   const curPos=G.players&&G.players[G.cur]?G.players[G.cur].pos:-1;
   SQ.forEach((q,i)=>{q.el.classList.toggle('target',i===tgt);q.el.classList.toggle('here',i===curPos)});
-  let c='<div class="logo">ARRISCA AÍ</div><div class="sub">jogo de perguntas</div>';
+  let c=LOGO_HTML+'<div class="sub">jogo de perguntas</div>';
   if(G.players&&G.phase!=='setup'){
     const p=G.players[G.cur];
     c+=`<div class="turn"><span class="pawn" style="background:${p.color}"></span>${G.phase==='won'?'🏆 '+esc(p.name)+' venceu!':(online()&&myIdx()===G.cur?'Sua vez!':'Vez de '+esc(p.name))}</div>`;
@@ -663,7 +870,7 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online')netPush();else saveGame()}
+function render(){document.body.classList.toggle('inicio',!MODE);syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online')netPush();else saveGame()}
 
 function renderPanel(){
   const el=document.getElementById('panel');
@@ -1116,7 +1323,7 @@ function playLocal(){MODE='local';render()}
 // ----- tela inicial -----
 function homeHtml(){
   const ok=!!NET;
-  return `<h2>Como vocês vão jogar?</h2>
+  return `<div class="homelogo">${LOGO_HTML}<div class="homesub">jogo de perguntas</div></div><h2>Como vocês vão jogar?</h2>
   <button class="big primary" onclick="playLocal()">📱 Todo mundo neste aparelho<small>O celular passa de mão em mão.</small></button>
   <button class="big" ${ok?'':'disabled'} onclick="createRoom()">🌐 Criar sala online<small>Cada um joga no próprio celular.</small></button>
   <div class="joinrow"><input id="joincode" maxlength="6" placeholder="Código da sala" autocapitalize="characters" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')joinFromInput()"><button ${ok?'':'disabled'} onclick="joinFromInput()">Entrar</button></div>
