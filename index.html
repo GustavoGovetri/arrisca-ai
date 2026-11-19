@@ -232,6 +232,8 @@ div.dobro{padding:10px 14px;border-radius:10px}
 .rasteira{margin:10px 0;padding:10px 12px;border-radius:10px;background:#2a1f33;border:1px dashed #c77dff}
 .estrelas{font-size:13px;color:#ffd23f;margin-left:4px}
 .rei{text-align:center;font-size:17px;margin:6px 0 10px}
+.junta{background:#1e2a22;color:#cfe9d6;font-size:13px;line-height:1.45;margin:-4px 0 12px}
+.veio{font-size:12px;color:#9aa0ad;margin-left:2px}
 </style>
 </head>
 <body>
@@ -427,7 +429,7 @@ function guardaVista(t,id,q,a){delete VISTAS[id];VISTAS[id]=[t,q,a,Date.now()];c
 function respostaTxt(){return G.qid?ANS[G.qid]:undefined}
 function certaIdx(){const a=respostaTxt();return G.theme==='V'&&a!=null&&G.q?G.q[1].indexOf(a):null}
 function buscaResposta(){
-  const id=G.qid,t=G.theme,q0=G.q&&G.q[0];
+  const id=G.qid,t=G.qt||G.theme,q0=G.q&&G.q[0];
   if(!id)return Promise.reject(new Error('sem pergunta'));
   if(ANS[id]!=null)return Promise.resolve(ANS[id]);
   if(BUSCA[id])return BUSCA[id];
@@ -459,7 +461,7 @@ function resetTheme(k){
 let TAB='jogo';
 // ---------- desfazer ----------
 const DRAWLOG=[];let UNDO=[];
-const SNAP_KEYS=['players','cur','round','phase','theme','q','qd','qid','hint','timeUp','lvNote','seen','token','lastTok','chosen','revealed','forcedNow','resetNote','themeOptions','themeLabel','msg','resp','tEnd','tk','sortTema','dobro','rasteira'];
+const SNAP_KEYS=['players','cur','round','phase','theme','q','qd','qid','hint','timeUp','lvNote','seen','token','lastTok','chosen','revealed','forcedNow','resetNote','themeOptions','themeLabel','msg','resp','tEnd','tk','sortTema','dobro','rasteira','qt'];
 function snapshot(label){
   const s={label,draws:DRAWLOG.length,state:{}};
   SNAP_KEYS.forEach(k=>s.state[k]=G[k]===undefined?undefined:JSON.parse(JSON.stringify(G[k])));
@@ -668,7 +670,7 @@ function renderPanel(){
   if(!MODE){el.innerHTML=homeHtml();return}
   if(MODE==='online'&&G.phase==='setup'){el.innerHTML=lobbyHtml();return}
   if(G.phase==='setup'){
-    const total=Q?ORDER.reduce((s,k)=>s+QN(k),0):0;
+    const total=Q?G.selThemes.reduce((s,k)=>s+QNj(k,G.selThemes),0):0;
     let h=`<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">Novo jogo</h2><button class="small" onclick="goHome()">${ICON_CASA}Início</button></div><div class="setup-row"><label style="flex:none">Jogadores:</label><select onchange="G.count=+this.value;G.pickColor=null;render()">${[2,3,4,5,6,7,8,9,10].map(n=>`<option ${n===G.count?'selected':''}>${n}</option>`).join('')}</select><label style="flex:none;margin-left:6px">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>`;
     padPlayers();
     h+='<div class="plist">';
@@ -678,13 +680,13 @@ function renderPanel(){
     h+='</div>';
     if(G.pickColor!=null&&G.pickColor<G.count)h+=`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.names[G.pickColor]||'Jogador '+(G.pickColor+1))}</b>:</span>${paletaHtml(G.colors[G.pickColor],`setupColor(${G.pickColor},'#C')`,G.colors.slice(0,G.count))}</div>`;
     h+=`<div class="row" style="margin:-2px 0 10px"><button class="small" onclick="shuffleSetup()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem; quem está em 1º começa. Toque na bolinha para trocar a cor.</span></div>`;
-    h+=`<h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);const n=Q?QN(k):0;const u=Q?countUsed(k):0;return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${Q?(n-u).toLocaleString('pt-BR')+' perguntas':''}</small></button>`}).join('')}</div>
-    <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>
+    h+=`<h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${chipInfo(k,G.selThemes,true)}</small></button>`}).join('')}</div>
+    <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>${juntaNota(G.selThemes)}
     <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
     <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}${Q&&v!=='misto'?' · '+lvCount(+v).toLocaleString('pt-BR')+' perguntas':''}</option>`).join('')}</select></div>
     ${modosHtml(true)}
     ${G.selThemes.length<3?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Escolha pelo menos 3 temas.</p>':''}`;
-    h+=`<p class="muted">${Q?(()=>{const u=ORDER.reduce((s,k)=>s+countUsed(k),0);return total.toLocaleString('pt-BR')+' perguntas no baralho'+(u?`, ${(total-u).toLocaleString('pt-BR')} ainda não saíram`:'')+'. '})():'Carregando perguntas… '}A pessoa seguinte na roda lê a pergunta e confere a resposta.</p><button class="primary" ${Q?'':'disabled'} ${G.selThemes.length<3?'disabled':''} onclick="startGame()">Começar</button>`;
+    h+=`<p class="muted">${Q?(()=>{const u=G.selThemes.reduce((s,k)=>s+usedJ(k,G.selThemes),0);return total.toLocaleString('pt-BR')+' perguntas no baralho'+(u?`, ${(total-u).toLocaleString('pt-BR')} ainda não saíram`:'')+'. '})():'Carregando perguntas… '}A pessoa seguinte na roda lê a pergunta e confere a resposta.</p><button class="primary" ${Q?'':'disabled'} ${G.selThemes.length<3?'disabled':''} onclick="startGame()">Começar</button>`;
     el.innerHTML=h;return;
   }
   const p=G.players[G.cur];
@@ -694,7 +696,7 @@ function renderPanel(){
   if(G.phase==='exhausted'){
     const t=G.exTheme,outros=activeThemes().some(k=>k!==t&&!themeDone(k));
     if(!can('cur')){el.innerHTML=head+waitHtml('cur','decidir: as perguntas de '+T[t].n+' acabaram');return}
-    el.innerHTML=head+`<p class="msg">Todas as <b>${QN(t).toLocaleString('pt-BR')}</b> perguntas de <b style="color:${T[t].c}">${T[t].n}</b> já saíram.</p><p class="msg">Quer liberar as perguntas desse tema para que voltem a cair?</p><div class="row"><button class="primary" onclick="approveReset()">Sim, liberar ${T[t].n}</button>${outros?'<button onclick="otherTheme()">Não, sortear de outro tema</button>':''}</div>`;
+    el.innerHTML=head+`<p class="msg">Todas as <b>${QNj(t,activeThemes()).toLocaleString('pt-BR')}</b> perguntas de <b style="color:${T[t].c}">${T[t].n}</b> já saíram.</p><p class="msg">Quer liberar as perguntas desse tema para que voltem a cair?</p><div class="row"><button class="primary" onclick="approveReset()">Sim, liberar ${T[t].n}</button>${outros?'<button onclick="otherTheme()">Não, sortear de outro tema</button>':''}</div>`;
     return;
   }
   if(G.phase==='theme'){
@@ -707,7 +709,7 @@ function renderPanel(){
   }
   const isFinal=p.pos===FINAL, isV=G.theme==='V';
   const locked=G.revealed||G.chosen!==null||G.phase==='result';
-  let h=head+`<div style="margin-top:12px"><span class="badge" style="background:${T[G.theme].c}">${sg(G.theme)} · ${T[G.theme].n}</span> ${G.forcedNow?'<span class="badge" style="background:#5a4a1a">repetindo o tema</span>':''} ${isFinal?'<span class="badge" style="background:#b8860b">PERGUNTA FINAL</span>':''}${G.qd&&canShowLv()?` <span class="badge" style="background:${LVCOLOR[G.qd]}">${LEVELS[G.qd]}</span>`:''}</div>`;
+  let h=head+`<div style="margin-top:12px"><span class="badge" style="background:${T[G.theme].c}">${sg(G.theme)} · ${T[G.theme].n}</span> ${G.qt&&G.qt!==G.theme&&T[G.qt]?`<span class="veio">pergunta de ${T[G.qt].n}</span> `:''}${G.forcedNow?'<span class="badge" style="background:#5a4a1a">repetindo o tema</span>':''} ${isFinal?'<span class="badge" style="background:#b8860b">PERGUNTA FINAL</span>':''}${G.qd&&canShowLv()?` <span class="badge" style="background:${LVCOLOR[G.qd]}">${LEVELS[G.qd]}</span>`:''}</div>`;
   const canAnswer=isFinal||G.token||G.phase==='result';
   if(!isFinal){
     h+=`<div class="muted" style="margin-top:12px">${G.token||G.phase==='result'?'Aposta feita:':can('cur')?'Faça sua aposta: escolha a ficha. A pergunta só aparece depois.':'⏳ Aguardando '+nm(p)+' apostar uma ficha…'}</div><div class="tokens">${fichasArr().map(v=>`<button class="tok${(G.token||G.lastTok)===v?' sel':''}" style="background:${p.color};color:#111" ${p.used.includes(v)&&!(G.phase==='result'&&G.lastTok===v)||G.token||locked||!can('cur')?'disabled':''} onclick="G.token=${v};render()">${v}</button>`).join('')}</div>`;
@@ -754,7 +756,26 @@ async function chooseOpt(i){
 }
 
 function lvTema(k){return (Q&&Q.lv&&Q.lv[k])||[0,0,0,0,0]}
-function lvCount(l){return (G.selThemes||ORDER).reduce((n,k)=>n+(lvTema(k)[l]||0),0)}
+function lvCount(l){const a=G.selThemes||ORDER;return a.reduce((n,k)=>n+(lvJ(k,a)[l]||0),0)}
+// Partida só com os 6 temas clássicos: as perguntas dos outros temas entram neles, por assunto (quem decide é o servidor).
+const JUNTA_DESC={M:'história',AL:'música, mitologia, quadrinhos e animes',S:'cinema, séries, TV, folclore e empresas de tecnologia',CT:'tecnologia e internet',ES:'games, jogos de mesa e brincadeiras'};
+function juntaCom(a){return Array.isArray(a)&&a.length===CLASSIC.length&&CLASSIC.every(k=>a.includes(k))}
+function rotasQ(){return (Q&&Q.rotas)||{}}
+function fontes(k,a){if(!juntaCom(a)||!CLASSIC.includes(k))return [];const R=rotasQ();return Object.keys(R).filter(s=>!a.includes(s)&&R[s][k])}
+function QNj(k,a){const R=rotasQ();return QN(k)+fontes(k,a).reduce((n,s)=>n+R[s][k].n,0)}
+function usedJ(k,a){const R=rotasQ();return Math.min(QNj(k,a),countUsed(k)+fontes(k,a).reduce((n,s)=>n+Math.round(countUsed(s)*R[s][k].n/Math.max(1,QN(s))),0))}
+function lvJ(k,a){const R=rotasQ(),v=lvTema(k).slice();fontes(k,a).forEach(s=>(R[s][k].lv||[]).forEach((x,i)=>v[i]=(v[i]||0)+x));return v}
+function destinosDe(s){const R=rotasQ()[s]||{},tot=Object.values(R).reduce((n,x)=>n+x.n,0)||1;return Object.keys(R).filter(d=>R[d].n/tot>=.1).sort((x,y)=>R[y].n-R[x].n)}
+function juntaNota(a){
+  if(!juntaCom(a)||!Q||!Q.rotas)return '';
+  return `<p class="note2 junta">Com os 6 temas clássicos, as perguntas dos outros temas entram neles: ${CLASSIC.filter(k=>JUNTA_DESC[k]).map(k=>`<b style="color:${T[k].c}">${T[k].n}</b> ganha ${JUNTA_DESC[k]}`).join('; ')}. Variedades continua só com múltipla escolha.</p>`;
+}
+function chipInfo(k,a,soma){ // texto pequeno embaixo do nome do tema
+  if(!Q)return '';
+  if(juntaCom(a)&&!a.includes(k)&&Q.rotas&&Q.rotas[k])return 'vai para '+destinosDe(k).map(d=>T[d].n).join(' + ');
+  const n=QNj(k,a),u=soma?usedJ(k,a):0;
+  return (n-u).toLocaleString('pt-BR')+' perguntas';
+}
 function toggleTheme(k){const i=G.selThemes.indexOf(k);if(i>=0)G.selThemes.splice(i,1);else{G.selThemes.push(k);G.selThemes.sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b))}render()}
 let timerId=null;
 function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}G.timerLeft=null}
@@ -801,7 +822,7 @@ function maskAnswer(a){
 async function useDica(){
   if(ajUsada('dica')||G.phase!=='question'||G.revealed||G.chosen!==null||G.hint)return;
   const id=G.qid;let r;
-  try{r=await api('dica',{id,t:G.theme,tk:G.tk})}catch(e){toast('Não consegui buscar a dica: '+e.message);return}
+  try{r=await api('dica',{id,t:G.qt||G.theme,tk:G.tk})}catch(e){toast('Não consegui buscar a dica: '+e.message);return}
   if(G.qid!==id||G.phase!=='question')return;
   snapshot('Dica');marcaAj('dica');
   if(G.theme==='V'){const k=G.q[1].indexOf(r.elim);G.hint={elim:k>=0?k:0}}
@@ -838,7 +859,7 @@ async function initReports(ref){
 }
 const MOTIVOS=['Resposta errada','Pergunta confusa','A pergunta entrega a resposta','Nível de dificuldade errado','Outro'];
 const MOT_NIVEL=3;
-function isReported(){return REPORTS.some(r=>r.id===G.qid&&r.t===G.theme)}
+function isReported(){return REPORTS.some(r=>r.id===G.qid&&r.t===(G.qt||G.theme))}
 function nivelAtual(){const q=G.q||[];return G.theme==='V'?q[4]:q[3]}
 function motivoMudou(){const sel=document.querySelector('input[name="motivo"]:checked');const box=document.getElementById('repnivel');if(box)box.style.display=(sel&&+sel.value===MOT_NIVEL)?'':'none'}
 function reportHtml(){
@@ -851,7 +872,7 @@ function reportHtml(){
 function sendReport(){
   const sel=document.querySelector('input[name="motivo"]:checked');const nota=(document.getElementById('repnota')||{}).value||'';
   const mi=sel?+sel.value:0;const nv=document.querySelector('input[name="nivelcerto"]:checked');
-  const r={t:G.theme,id:G.qid,q:G.q[0],a:answerText(),motivo:MOTIVOS[mi],nota:nota.trim().slice(0,400),quando:new Date().toISOString()};
+  const r={t:G.qt||G.theme,id:G.qid,q:G.q[0],a:answerText(),motivo:MOTIVOS[mi],nota:nota.trim().slice(0,400),quando:new Date().toISOString()};
   const atual=nivelAtual();if(atual)r.nivelAtual=LEVELS[atual]||atual;
   if(mi===MOT_NIVEL&&nv)r.nivelCerto=LEVELS[+nv.value];
   REPORTS.push(r);netReport(r);
@@ -966,8 +987,20 @@ function startTurn(){
   else{pickTheme(s.themes[0]);return}
   G.phase='theme';render();
 }
-function themeDone(t){return QN(t)>0&&countUsed(t)>=QN(t)}
-function approveReset(){const t=G.exTheme;USED[t]=[];usedSet[t]=new Set();persist();G.resetNote=`As perguntas de ${T[t].n} foram liberadas de novo.`;pickTheme(t,true)}
+function themeDone(t){if(fontes(t,activeThemes()).length)return false;/* com perguntas emprestadas, quem sabe se acabou é o servidor */return QN(t)>0&&countUsed(t)>=QN(t)}
+let EXIDS=null; // perguntas já usadas do baralho que acabou (quando o tema recebe perguntas de outros)
+function pedidoSorteio(t){
+  const fs=fontes(t,activeThemes());
+  const usadas=fs.length?[...(USED[t]||[]),...fs.flatMap(s=>USED[s]||[])]:(USED[t]||[]);
+  return {t,nivel:G.level||'misto',usadas,vistas:(G.seen||[]).slice(-200),sala:online()?ROOM:null,junta:fs.length?1:0};
+}
+async function approveReset(){
+  const t=G.exTheme;
+  if(fontes(t,activeThemes()).length){
+    if(!EXIDS||EXIDS.t!==t){try{const r=await api('sortear',pedidoSorteio(t));EXIDS=r.esgotado?{t,ids:r.ids||{}}:null}catch(e){toast('Não consegui liberar: '+e.message);return}}
+    if(EXIDS)Object.entries(EXIDS.ids).forEach(([s,ids])=>{if(!USED[s])return;const rm=new Set(ids);USED[s]=USED[s].filter(x=>!rm.has(x));usedSet[s]=new Set(USED[s])});
+  }else{USED[t]=[];usedSet[t]=new Set()}
+  EXIDS=null;persist();G.resetNote=`As perguntas de ${T[t].n} foram liberadas de novo.`;pickTheme(t,true)}
 function otherTheme(){const ops=activeThemes().filter(k=>k!==G.exTheme&&!themeDone(k));pickTheme(ops[rndInt(ops.length)])}
 let SORTEANDO=false;
 async function pickTheme(t,keepNote){
@@ -976,15 +1009,16 @@ async function pickTheme(t,keepNote){
   if(!keepNote)G.resetNote='';
   SORTEANDO=true;G.phase='sorteio';G.sortTema=t;forcePanel();render();
   let r;
-  try{r=await api('sortear',{t,nivel:G.level||'misto',usadas:USED[t]||[],vistas:(G.seen||[]).slice(-200),sala:online()?ROOM:null})}
+  try{r=await api('sortear',pedidoSorteio(t))}
   catch(e){SORTEANDO=false;toast('Não consegui sortear a pergunta: '+e.message);G.phase='theme';G.themeOptions=[t];G.themeLabel='Não consegui sortear a pergunta. Toque no tema para tentar de novo.';forcePanel();render();return}
   SORTEANDO=false;
-  if(r.esgotado){G.exTheme=t;G.phase='exhausted';render();return}
-  G.theme=t;
-  USED[t].push(r.id);usedSet[t].add(r.id);DRAWLOG.push([t,r.id]);
-  if(!Array.isArray(G.seen))G.seen=[];G.seen.push([t,r.id]);persist();
+  if(r.esgotado){EXIDS={t,ids:r.ids||{}};G.exTheme=t;G.phase='exhausted';render();return}
+  const src=r.t&&T[r.t]?r.t:t; // tema de onde a pergunta veio (pode ser outro, na partida clássica)
+  G.theme=t;G.qt=src;
+  USED[src].push(r.id);usedSet[src].add(r.id);DRAWLOG.push([src,r.id]);
+  if(!Array.isArray(G.seen))G.seen=[];G.seen.push([src,r.id]);persist();
   G.qd=r.d;G.qid=r.id;G.tk=r.tk;G.dobro=false;G.lvNote=r.lvNote||'';G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;RASCUNHO='';G.chosen=null;G.revealed=false;
-  G.q=t==='V'?[r.q,r.opts,null,r.b,r.d]:[r.q,null,r.b,r.d];
+  G.q=src==='V'?[r.q,r.opts,null,r.b,r.d]:[r.q,null,r.b,r.d];
   G.phase='question';render()}
 
 function resolve(ok,snapped,pre){
@@ -1206,8 +1240,8 @@ function lobbyHtml(){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
     h+=`<div class="row" style="margin:6px 0 4px"><button class="small" onclick="shuffleLobby()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem. Quem está em 1º começa.</span></div>
     <div class="setup-row"><label style="flex:none">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
-    <h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${Q?QN(k).toLocaleString('pt-BR')+' perguntas':''}</small></button>`}).join('')}</div>
-    <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>
+    <h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${chipInfo(k,G.selThemes,false)}</small></button>`}).join('')}</div>
+    <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>${juntaNota(G.selThemes)}
     <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;G.previewBoard=null;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
     <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}</option>`).join('')}</select></div>
     ${modosHtml(true)}

@@ -11,6 +11,16 @@ const crypto = require('crypto');
 const DB = process.env.FIREBASE_DB_URL || 'https://arrisca-ai-default-rtdb.firebaseio.com';
 const ORDER = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V'];
 const LEVELS = { 1: 'fácil', 2: 'médio', 3: 'difícil', 4: 'impossível' };
+// Partida com os 6 temas clássicos: as perguntas dos outros 5 temas entram neles, por assunto.
+// (Variedades é só de múltipla escolha, então não recebe perguntas abertas.)
+const CLASSICO = ['M', 'AL', 'S', 'CT', 'ES', 'V'];
+const ROTA_PADRAO = { H: 'M', MU: 'AL', CS: 'S', TI: 'CT', GG: 'ES' };
+const ROTA = {
+  H: { mitologia: 'AL', folclore: 'S', papas: 'S', 'invencoes-e-descobertas': 'CT' },
+  TI: Object.fromEntries(['empresas-e-pessoas', 'fundadores', 'empresas-donas', 'empresas', 'tecnologia', 'produtos-e-empresas', 'startups-e-apps-brasileiros', 'apps-pelo-mundo', 'mascotes-e-logos', 'criadores-de-conteudo', 'internet-no-brasil', 'dinheiro-digital', 'golpes-e-seguranca'].map(b => [b, 'S'])),
+  GG: Object.fromEntries(['quadrinhos-herois', 'anime-populares', 'anime-2', 'anime-3', 'anime-e-manga', 'anime-variantes', 'cultura-geek', 'geek-britanico', 'tokusatsu', 'desenhos-dos-anos-80', 'personagens'].map(b => [b, 'AL']))
+};
+const destino = (t, b) => (ROTA[t] && ROTA[t][b]) || ROTA_PADRAO[t];
 const TEMA_N = { M: 'Mundo', H: 'História', AL: 'Artes e Literatura', MU: 'Música', CS: 'Cinema e Séries', S: 'Sociedade', CT: 'Ciência', TI: 'Tecnologia e Internet', ES: 'Esporte', GG: 'Games e Geek', V: 'Variedades' };
 
 // ---------------------------------------------------------------- credencial e token do Google
@@ -70,6 +80,18 @@ function monta(raw, versao) {
     const lv = [0, 0, 0, 0, 0]; items.forEach(q => lv[qDiff(t, q)]++);
     B.temas[t] = { items, ids, idx, lv, info: new Map() };
   });
+  // perguntas emprestadas para a partida clássica: extra[destino] = [[tema de origem, índice]]; rotas[origem][destino] = {n, lv}
+  B.extra = {}; B.rotas = {};
+  CLASSICO.forEach(d => B.extra[d] = []);
+  Object.keys(ROTA_PADRAO).forEach(s => {
+    B.rotas[s] = {};
+    B.temas[s].items.forEach((q, i) => {
+      const d = destino(s, String(bucketOf(s, q)));
+      B.extra[d].push([s, i]);
+      const r = B.rotas[s][d] || (B.rotas[s][d] = { n: 0, lv: [0, 0, 0, 0, 0] });
+      r.n++; r.lv[qDiff(s, q)]++;
+    });
+  });
   return B;
 }
 async function banco() {
@@ -113,34 +135,45 @@ function leaks(B, t, i, vistas) {
 }
 const rnd = n => crypto.randomInt(n);
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]] } return a }
-function sortear(B, t, nivel, usadas, vistas) {
-  const T = B.temas[t], all = T.items, ids = T.ids, used = new Set(usadas), byLv = { 1: [], 2: [], 3: [], 4: [] };
-  for (let i = 0; i < all.length; i++) if (!used.has(ids[i])) byLv[qDiff(t, all[i])].push(i);
+function sortear(B, t, nivel, usadas, vistas, junta) {
+  // cada pergunta possível é [tema de origem, índice]; na partida clássica entram também as dos outros temas
+  const used = new Set(usadas), byLv = { 1: [], 2: [], 3: [], 4: [] };
+  const refs = B.temas[t].items.map((_, i) => [t, i]);
+  if (junta && B.extra[t]) refs.push(...B.extra[t]);
+  for (const r of refs) { const [s, i] = r; if (!used.has(B.temas[s].ids[i])) byLv[qDiff(s, B.temas[s].items[i])].push(r) }
   const lv = String(nivel || 'misto');
   let order;
   if (lv === 'misto') order = shuffle([1, 2, 3, 4]);
   else { const w = +lv; order = [w, w + 1, w - 1, w + 2, w - 2, w + 3, w - 3].filter(l => l >= 1 && l <= 4) }
   order = order.filter(l => byLv[l].length);
-  if (!order.length) return null; // acabou o tema
+  if (!order.length) { // acabou o tema: diz quais perguntas usadas são deste baralho (para liberar só elas)
+    const ids = {};
+    for (const [s, i] of refs) { const id = B.temas[s].ids[i]; if (used.has(id)) (ids[s] = ids[s] || []).push(id) }
+    return { esgotado: true, ids };
+  }
   const tryPool = pool => {
     const groups = new Map();
-    pool.forEach(i => { const b = bucketOf(t, all[i]); if (!groups.has(b)) groups.set(b, []); groups.get(b).push(i) });
+    pool.forEach(r => { const b = r[0] + '|' + bucketOf(r[0], B.temas[r[0]].items[r[1]]); if (!groups.has(b)) groups.set(b, []); groups.get(b).push(r) });
     const gs = [...groups.values()];
+    // dentro de cada tema de origem, os assuntos pesam pela raiz do tamanho; entre temas, pesa quantas perguntas cada um tem
+    const porTema = {}, raiz = {};
+    gs.forEach(a => { const s = a[0][0]; porTema[s] = (porTema[s] || 0) + a.length; raiz[s] = (raiz[s] || 0) + Math.sqrt(a.length) });
+    const peso = gs.map(a => Math.sqrt(a.length) * porTema[a[0][0]] / raiz[a[0][0]]);
     while (gs.length) {
-      const w = gs.map(a => Math.sqrt(a.length)), tot = w.reduce((x, y) => x + y, 0);
-      let r = rnd(1e9) / 1e9 * tot, k = 0;
-      while (k < gs.length - 1 && r >= w[k]) { r -= w[k]; k++ }
+      const w = peso, tot = w.reduce((x, y) => x + y, 0);
+      let x = rnd(1e9) / 1e9 * tot, k = 0;
+      while (k < gs.length - 1 && x >= w[k]) { x -= w[k]; k++ }
       const list = gs[k].slice();
-      while (list.length) { const j = rnd(list.length), i = list[j]; if (!leaks(B, t, i, vistas)) return i; list.splice(j, 1) }
-      gs.splice(k, 1);
+      while (list.length) { const j = rnd(list.length), r = list[j]; if (!leaks(B, r[0], r[1], vistas)) return r; list.splice(j, 1) }
+      gs.splice(k, 1); peso.splice(k, 1);
     }
-    return -1;
+    return null;
   };
-  let pick = -1, usedLv = 0;
-  for (const l of order) { pick = tryPool(byLv[l]); if (pick >= 0) { usedLv = l; break } }
-  if (pick < 0) { const pool = byLv[order[0]]; pick = pool[rnd(pool.length)]; usedLv = order[0] }
+  let pick = null, usedLv = 0;
+  for (const l of order) { pick = tryPool(byLv[l]); if (pick) { usedLv = l; break } }
+  if (!pick) { const pool = byLv[order[0]]; pick = pool[rnd(pool.length)]; usedLv = order[0] }
   const lvNote = lv !== 'misto' && usedLv !== +lv ? `Acabaram as perguntas de nível ${LEVELS[+lv]} de ${TEMA_N[t]} que podiam cair agora; esta é de nível ${LEVELS[usedLv]}.` : '';
-  return { i: pick, lvNote };
+  return { s: pick[0], i: pick[1], lvNote };
 }
 
 // ---------------------------------------------------------------- token da pergunta (quem sorteou, em que sala)
@@ -181,19 +214,19 @@ async function handle(acao, body) {
   if (acao === 'meta') {
     const n = {}, lv = {};
     ORDER.forEach(t => { n[t] = B.temas[t].items.length; lv[t] = B.temas[t].lv });
-    return { v: B.v, n, lv };
+    return { v: B.v, n, lv, rotas: B.rotas };
   }
   const t = body.t;
   if (!B.temas[t]) throw Object.assign(new Error('Tema inválido'), { status: 400 });
   if (acao === 'sortear') {
     const usadas = Array.isArray(body.usadas) ? body.usadas.slice(0, 30000).map(String) : [];
     const vistas = Array.isArray(body.vistas) ? body.vistas.slice(-200).filter(x => Array.isArray(x) && x.length === 2).map(x => [String(x[0]), String(x[1])]) : [];
-    const r = sortear(B, t, body.nivel, usadas, vistas);
-    if (!r) return { esgotado: true };
-    const q = B.temas[t].items[r.i], id = B.temas[t].ids[r.i];
+    const r = sortear(B, t, body.nivel, usadas, vistas, !!body.junta && CLASSICO.includes(t));
+    if (r.esgotado) return r;
+    const s = r.s, q = B.temas[s].items[r.i], id = B.temas[s].ids[r.i];
     const sala = body.sala && /^[A-Z0-9]{4,6}$/.test(body.sala) ? body.sala : null;
-    const out = { id, q: q[0], b: bucketOf(t, q), d: qDiff(t, q), lvNote: r.lvNote, tk: assina({ i: id, t, m: sala ? 'o' : 'l', s: sala, e: Date.now() + 864e5 }) };
-    if (t === 'V') out.opts = shuffle(q[1].slice());
+    const out = { id, t: s, q: q[0], b: bucketOf(s, q), d: qDiff(s, q), lvNote: r.lvNote, tk: assina({ i: id, t: s, m: sala ? 'o' : 'l', s: sala, e: Date.now() + 864e5 }) };
+    if (s === 'V') out.opts = shuffle(q[1].slice());
     return out;
   }
   const tk = confere(body.tk);
