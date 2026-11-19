@@ -2057,7 +2057,9 @@ function localNet(){
 function netReady(){
   if(NETREADY)return;NETREADY=true;
   NET=URLP.get('net')==='local'?localNet():(window.NET_IMPL||null);
-  if(NET&&NET.onConnected)NET.onConnected(ok=>{const mudou=ok!==CONNECTED;CONNECTED=ok;if(ok&&ROOM)NET.setMe(ROOM,MYDEV,{on:true}).catch(()=>{});if(mudou&&!ok)toast('Sem conexão com a internet…');if(mudou)render()});
+  // o Firebase diz "desconectado" logo ao abrir, antes de ligar: só avisa se continuar sem conexão por uns segundos
+  let semRede=null,jaConectou=false;
+  if(NET&&NET.onConnected)NET.onConnected(ok=>{const mudou=ok!==CONNECTED;CONNECTED=ok;if(ok)jaConectou=true;if(ok&&ROOM)NET.setMe(ROOM,MYDEV,{on:true}).catch(()=>{});clearTimeout(semRede);if(!ok)semRede=setTimeout(()=>{if(!CONNECTED)toast('Sem conexão com a internet…')},jaConectou?3000:8000);if(mudou)render()});
   reenviaFila();
   render();
   tryAutoJoin();
