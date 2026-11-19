@@ -313,55 +313,14 @@ const USED={},usedSet={},IDS={},IDX={};
 ORDER.forEach(k=>{USED[k]=[];usedSet[k]=new Set()});
 let HIST_TS=0,localOk=true,dbRef=null,writing=false,dirty=false,syncNote='';
 const LS_KEY='arrisca-perguntas-usadas-v1';
-function cyrb53(str,seed=0){let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0;i<str.length;i++){const ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0)}
-// id estável: nos temas abertos depende só do texto da pergunta (corrigir uma resposta não desmarca a pergunta)
-function qid(t,q){return cyrb53(t==='V'?t+'|'+q[0]+'|'+q[1][q[2]]:t+'|'+q[0]).toString(36)}
-const oldId=(t,q0,ans)=>cyrb53(t+'|'+q0+'|'+ans).toString(36);
-// respostas antigas que foram corrigidas: a marcação feita com o texto antigo continua valendo
-const ALIAS={};
-// perguntas reescritas: a marcação feita com o texto antigo continua valendo
-const REWORD=[];
-// textos antigos de Variedades (antes de reescrever as perguntas): a marcação continua valendo
-const V_OLD={'Qual é o coletivo de quadros de uma coleção?':'Qual é o coletivo de quadros expostos?','Qual é o coletivo de folhas de papel (500 unidades)?':'Qual é o coletivo de folhas de papel (500)?','Qual é o feminino de "cavaleiro (que monta a cavalo)"?':'Qual é o feminino de "cavaleiro"?','Como é chamado quem nasce neste lugar: Três Corações (MG)?':'Como é chamado quem nasce neste lugar: Três Corações?'};
-function vOldTexts(q0){const out=new Set();
-  out.add(q0.replace(/voz \(o som\) d[oa] /,'voz (o som) do(a) '));
-  out.add(q0.replace(/filhote d[oa] /,'filhote do(a) '));
-  out.add(q0.replace('neste lugar:','neste país:'));
-  if(V_OLD[q0])out.add(V_OLD[q0]);
-  out.delete(q0);return [...out]}
-const GMIG=new Map();
-function buildIds(){
-  ORDER.forEach(k=>{if(!Q[k])Q[k]=[];IDS[k]=Q[k].map(q=>qid(k,q));IDX[k]=new Map(IDS[k].map((id,i)=>[id,i]))});
-  const find=q0=>{for(const k of ORDER){const i=Q[k].findIndex(q=>q[0]===q0);if(i>=0)return [k,IDS[k][i]]}return null};
-  ORDER.forEach(k=>Q[k].forEach((q,i)=>{
-    const id=IDS[k][i];
-    if(k==='V'){const ans=q[1][q[2]];vOldTexts(q[0]).forEach(t=>GMIG.set(cyrb53('V|'+t+'|'+ans).toString(36),['V',id]));return}
-    const olds=[oldId(k,q[0],q[1])];
-    String(q[4]||'').split(',').filter(Boolean).forEach(ot=>olds.push(cyrb53(ot+'|'+q[0]).toString(36),oldId(ot,q[0],q[1])));
-    olds.forEach(o=>{if(o!==id)GMIG.set(o,[k,id])});
-  }));
-  Object.entries(ALIAS).forEach(([ot,list])=>list.forEach(([q0,ans])=>{const f=find(q0);if(f)GMIG.set(oldId(ot,q0,ans),f)}));
-  REWORD.forEach(([ot,velho,ans,novo])=>{const f=find(novo);if(f){GMIG.set(oldId(ot,velho,ans),f);GMIG.set(cyrb53(ot+'|'+velho).toString(36),f)}});
-}
-function migrate(){
-  if(!IDS.M)return false;
-  let ch=false;const NU={};ORDER.forEach(k=>NU[k]=[]);
-  Object.keys(USED).forEach(t=>{(USED[t]||[]).forEach(id=>{
-    const g=GMIG.get(id);
-    if(g){ch=true;NU[g[0]].push(g[1])}
-    else{if(!NU[t]){NU[t]=[];if(!T[t])ch=ch}NU[t].push(id)}
-  })});
-  Object.keys(NU).forEach(k=>{const seen=new Set(),a=[];NU[k].forEach(id=>{if(!seen.has(id)){seen.add(id);a.push(id)}});USED[k]=a;usedSet[k]=seen});
-  Object.keys(USED).forEach(k=>{if(!NU[k]){delete USED[k];delete usedSet[k]}});
-  return ch;
-}
-function countUsed(k){if(!IDS[k]||!usedSet[k])return 0;let n=0;for(const id of usedSet[k])if(IDX[k].has(id))n++;return n}
+function QN(k){return Q&&Q.n?(Q.n[k]||0):0}
+function countUsed(k){return usedSet[k]?Math.min(usedSet[k].size,QN(k)):0}
 function applyHist(h){
   Object.keys(USED).forEach(k=>{delete USED[k];delete usedSet[k]});
   ORDER.forEach(k=>{USED[k]=[];usedSet[k]=new Set()});
   const u=(h&&h.usadas)||{};
   Object.keys(u).forEach(k=>{const a=Array.isArray(u[k])?u[k].filter(x=>typeof x==='string'):[];USED[k]=a.slice();usedSet[k]=new Set(a)});
-  HIST_TS=(h&&h.atualizado)||0;return migrate()}
+  HIST_TS=(h&&h.atualizado)||0;return false}
 function histObj(){const u={};Object.keys(USED).forEach(k=>u[k]=USED[k].slice());return{usadas:u,atualizado:HIST_TS}}
 function loadLocal(){try{const r=JSON.parse(localStorage.getItem(LS_KEY)||'null');if(r&&r.usadas)applyHist(r)}catch(e){localOk=false}}
 function saveLocal(){try{localStorage.setItem(LS_KEY,JSON.stringify(histObj()));localOk=true}catch(e){localOk=false}}
@@ -418,55 +377,42 @@ function qDiff(t,q){return (t==='V'?q[4]:q[3])||2}
 const nrm=x=>' '+String(x).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()+' ';
 const STOPK=new Set(['sim','nao','verdadeiro','falso','nenhum','nenhuma','todos','todas','ambos','zero','agua','terra','fogo','ar']);
 const KCACHE=new Map();
-function qInfo(t,i){
-  const key=t+i;let o=KCACHE.get(key);if(o)return o;
-  const q=Q[t][i],ans=t==='V'?q[1][q[2]]:q[1];
-  const keys=new Set(),add=x=>{x=nrm(x).trim().replace(/^(o|a|os|as|um|uma) /,'');if(x.length>=4&&!STOPK.has(x)||/^\d{3,}$/.test(x))keys.add(' '+x+' ')};
-  const a=String(ans);add(a.replace(/\(.*?\)/g,' '));(a.match(/\((.*?)\)/g)||[]).forEach(x=>add(x.slice(1,-1)));
-  a.replace(/\(.*?\)/g,' ').split(/[;,\/]| e | ou | and /).forEach(add);
-  o={txt:nrm(q[0]),keys:[...keys]};KCACHE.set(key,o);return o;
+// ---------- perguntas vêm do servidor, uma por vez ----------
+async function api(acao,body){
+  const r=await fetch('/api/perguntas?acao='+acao,body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{});
+  let j=null;try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error((j&&j.erro)||('Erro '+r.status));
+  return j;
 }
-function leaks(t,i){
-  // a resposta desta pergunta aparece numa pergunta que já saiu, o texto dela traz a resposta de uma que já saiu, ou as duas têm a mesma resposta
-  const me=qInfo(t,i);
-  for(const [st,sid] of (G.seen||[])){
-    const j=IDX[st]&&IDX[st].get(sid);if(j===undefined)continue;
-    const o=qInfo(st,j);
-    if(me.keys.some(k=>o.txt.includes(k)||o.keys.includes(k))||o.keys.some(k=>me.txt.includes(k)))return true;
-  }
-  return false;
+const ANS={};let BUSCA={};
+// textos das perguntas que já saíram neste aparelho (para a aba Perguntas usadas)
+const VIS_KEY='arrisca-vistas-v1';let VISTAS={};
+try{VISTAS=JSON.parse(localStorage.getItem(VIS_KEY)||'{}')||{}}catch(e){VISTAS={}}
+function guardaVista(t,id,q,a){VISTAS[id]=[t,q,a];const ks=Object.keys(VISTAS);if(ks.length>4000)ks.slice(0,ks.length-4000).forEach(k=>delete VISTAS[k]);try{localStorage.setItem(VIS_KEY,JSON.stringify(VISTAS))}catch(e){}}
+function respostaTxt(){return G.qid?ANS[G.qid]:undefined}
+function certaIdx(){const a=respostaTxt();return G.theme==='V'&&a!=null&&G.q?G.q[1].indexOf(a):null}
+function buscaResposta(){
+  const id=G.qid,t=G.theme,q0=G.q&&G.q[0];
+  if(!id)return Promise.reject(new Error('sem pergunta'));
+  if(ANS[id]!=null)return Promise.resolve(ANS[id]);
+  if(BUSCA[id])return BUSCA[id];
+  BUSCA[id]=api('resposta',{id,t,tk:G.tk}).then(r=>{ANS[id]=r.a;guardaVista(t,id,q0,r.a);return r.a}).finally(()=>{delete BUSCA[id]});
+  return BUSCA[id];
 }
-function draw(t){
-  // 1) nível escolhido (no misturado, um nível sorteado); 2) assunto do tema (peso = raiz do nº de perguntas livres); 3) pergunta sem pista de outra que já saiu na partida
-  const all=Q[t],ids=IDS[t],byLv={1:[],2:[],3:[],4:[]};
-  for(let i=0;i<all.length;i++)if(!usedSet[t].has(ids[i]))byLv[qDiff(t,all[i])].push(i);
-  const lv=String(G.level||'misto');G.lvNote='';
-  let order;
-  if(lv==='misto')order=shuffle([1,2,3,4]);
-  else{const w=+lv;order=[w,w+1,w-1,w+2,w-2,w+3,w-3].filter(l=>l>=1&&l<=4)}
-  order=order.filter(l=>byLv[l].length);
-  const tryPool=pool=>{
-    const groups=new Map();
-    pool.forEach(i=>{const b=bucketOf(t,all[i]);if(!groups.has(b))groups.set(b,[]);groups.get(b).push(i)});
-    const gs=[...groups.values()];
-    while(gs.length){
-      const w=gs.map(a=>Math.sqrt(a.length)),tot=w.reduce((x,y)=>x+y,0);
-      let r=rndInt(1e9)/1e9*tot,k=0;
-      while(k<gs.length-1&&r>=w[k]){r-=w[k];k++}
-      const list=gs[k].slice();
-      while(list.length){const j=rndInt(list.length),i=list[j];if(!leaks(t,i))return i;list.splice(j,1)}
-      gs.splice(k,1);
-    }
-    return -1;
-  };
-  let pick=-1,usedLv=0;
-  for(const l of order){pick=tryPool(byLv[l]);if(pick>=0){usedLv=l;break}}
-  if(pick<0){const pool=order.length?byLv[order[0]]:all.map((_,i)=>i);pick=pool[rndInt(pool.length)];usedLv=order[0]||0} // segurança: pickTheme já pede aprovação quando o tema acaba
-  if(lv!=='misto'&&usedLv&&usedLv!==+lv)G.lvNote=`Acabaram as perguntas de nível ${LEVELS[+lv].toLowerCase()} de ${T[t].n} que podiam cair agora; esta é de nível ${LEVELS[usedLv].toLowerCase()}.`;
-  const i=pick;
-  USED[t].push(ids[i]);usedSet[t].add(ids[i]);DRAWLOG.push([t,ids[i]]);
-  if(!Array.isArray(G.seen))G.seen=[];G.seen.push([t,ids[i]]);persist();
-  return all[i];
+function precisaResposta(){ // a resposta já pode aparecer nesta tela?
+  if(!G.q||!G.qid||ANS[G.qid]!=null)return false;
+  if(G.phase==='result'||G.phase==='won')return true;
+  if(G.phase!=='question')return false;
+  if(online())return !!G.resp||(G.chosen!==null&&G.chosen!==undefined);
+  return !!G.revealed;
+}
+let AVISO_ERRO=0;
+function garanteResposta(){
+  if(!precisaResposta()||BUSCA[G.qid])return;
+  buscaResposta().then(()=>{forcePanel();render()}).catch(e=>{if(Date.now()-AVISO_ERRO>5000){AVISO_ERRO=Date.now();toast('Não consegui buscar a resposta: '+e.message)}setTimeout(()=>{if(precisaResposta())garanteResposta()},3000)});
+}
+function esperaPush(){ // na sala, espera a jogada chegar no servidor antes de pedir a resposta
+  return new Promise(res=>{let n=0;const f=()=>{if(!online()||(!PUSHING&&syncJson()===LASTSYNC)||n++>60)return res();if(!PUSHING)netPush();setTimeout(f,100)};f()});
 }
 function resetTheme(k){
   if(G.confirmReset!==k){G.confirmReset=k;renderHist();setTimeout(()=>{if(G.confirmReset===k){G.confirmReset=null;renderHist()}},3000);return}
@@ -478,7 +424,7 @@ function resetTheme(k){
 let TAB='jogo';
 // ---------- desfazer ----------
 const DRAWLOG=[];let UNDO=[];
-const SNAP_KEYS=['players','cur','round','phase','theme','q','qd','qid','hint','timeUp','lvNote','seen','token','lastTok','chosen','revealed','forcedNow','resetNote','themeOptions','themeLabel','msg','resp','tEnd'];
+const SNAP_KEYS=['players','cur','round','phase','theme','q','qd','qid','hint','timeUp','lvNote','seen','token','lastTok','chosen','revealed','forcedNow','resetNote','themeOptions','themeLabel','msg','resp','tEnd','tk','sortTema'];
 function snapshot(label){
   const s={label,draws:DRAWLOG.length,state:{}};
   SNAP_KEYS.forEach(k=>s.state[k]=G[k]===undefined?undefined:JSON.parse(JSON.stringify(G[k])));
@@ -547,12 +493,12 @@ function renderHist(){
   const el=document.getElementById('hist');
   if(!Q){el.innerHTML='<p class="muted">Carregando perguntas…</p>';return}
   let tot=0,totU=0;
-  const linhas=ORDER.map(k=>{const n=Q[k].length,u=countUsed(k);tot+=n;totU+=u;
+  const linhas=ORDER.map(k=>{const n=QN(k),u=countUsed(k);tot+=n;totU+=u;
     const conf=G.confirmReset===k;
     return `<div class="hrow"><span class="badge" style="background:${T[k].c}">${sg(k)}</span><div class="hinfo"><div class="hname">${T[k].n}</div><div class="muted">${u.toLocaleString('pt-BR')} já saíram · ${(n-u).toLocaleString('pt-BR')} disponíveis</div><div class="bar"><i style="width:${(u/n*100).toFixed(1)}%;background:${T[k].c}"></i></div></div><button class="small${conf?' bad':''}" ${u?'':'disabled'} onclick="resetTheme('${k}')">${conf?'Confirmar?':'Liberar'}</button></div>`}).join('');
   const listas=ORDER.filter(k=>countUsed(k)).map(k=>{
-    const ids=USED[k].filter(id=>IDX[k].has(id)).reverse();
-    const itens=ids.slice(0,300).map(id=>{const q=Q[k][IDX[k].get(id)];return `<li>${esc(q[0])} <span class="muted">— ${esc(k==='V'?q[1][q[2]]:q[1])}</span></li>`}).join('');
+    const ids=USED[k].slice().reverse();
+    const itens=ids.slice(0,300).map(id=>{const v=VISTAS[id];return v?`<li>${esc(v[1])} <span class="muted">— ${esc(v[2])}</span></li>`:'<li class="muted">(pergunta sem texto guardado neste aparelho)</li>'}).join('');
     return `<details><summary>${T[k].n} (${ids.length.toLocaleString('pt-BR')})</summary><ol class="hlist">${itens}</ol>${ids.length>300?'<p class="muted">Mostrando as 300 mais recentes.</p>':''}</details>`}).join('');
   const confAll=G.confirmReset==='ALL';
   const onde=dbRef?'Salvo na sua conta: o histórico vale em qualquer computador em que você abrir o jogo.':localOk?'Salvo neste navegador.':'Não foi possível salvar o histórico neste navegador: ele vale só até fechar a página.';
@@ -681,14 +627,14 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online')netPush();else saveGame()}
+function render(){syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online')netPush();else saveGame()}
 
 function renderPanel(){
   const el=document.getElementById('panel');
   if(!MODE){el.innerHTML=homeHtml();return}
   if(MODE==='online'&&G.phase==='setup'){el.innerHTML=lobbyHtml();return}
   if(G.phase==='setup'){
-    const total=Q?ORDER.reduce((s,k)=>s+Q[k].length,0):0;
+    const total=Q?ORDER.reduce((s,k)=>s+QN(k),0):0;
     let h=`<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">Novo jogo</h2><button class="small" onclick="goHome()">← Início</button></div><div class="setup-row"><label style="flex:none">Jogadores:</label><select onchange="G.count=+this.value;G.pickColor=null;render()">${[2,3,4,5,6,7,8,9,10].map(n=>`<option ${n===G.count?'selected':''}>${n}</option>`).join('')}</select><label style="flex:none;margin-left:6px">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>`;
     padPlayers();
     h+='<div class="plist">';
@@ -698,7 +644,7 @@ function renderPanel(){
     h+='</div>';
     if(G.pickColor!=null&&G.pickColor<G.count)h+=`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.names[G.pickColor]||'Jogador '+(G.pickColor+1))}</b>:</span>${paletaHtml(G.colors[G.pickColor],`setupColor(${G.pickColor},'#C')`,G.colors.slice(0,G.count))}</div>`;
     h+=`<div class="row" style="margin:-2px 0 10px"><button class="small" onclick="shuffleSetup()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem; quem está em 1º começa. Toque na bolinha para trocar a cor.</span></div>`;
-    h+=`<h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);const n=Q&&Q[k]?Q[k].length:0;const u=Q?countUsed(k):0;return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${Q?(n-u).toLocaleString('pt-BR')+' perguntas':''}</small></button>`}).join('')}</div>
+    h+=`<h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);const n=Q?QN(k):0;const u=Q?countUsed(k):0;return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${Q?(n-u).toLocaleString('pt-BR')+' perguntas':''}</small></button>`}).join('')}</div>
     <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>
     <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
     <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}${Q&&v!=='misto'?' · '+lvCount(+v).toLocaleString('pt-BR')+' perguntas':''}</option>`).join('')}</select></div>
@@ -709,10 +655,11 @@ function renderPanel(){
   const p=G.players[G.cur];
   const reader=G.players[(G.cur+1)%G.players.length];
   const head=`<div class="row" style="align-items:center;justify-content:space-between"><h2 style="margin:0">${turnTitle(p)}</h2><div class="row">${online()?'':undoBtn()}${headBtns()}</div></div>`;
+  if(G.phase==='sorteio'){const t=G.sortTema;el.innerHTML=head+`<p class="msg"><span class="dots">🎲 Sorteando uma pergunta de <b style="color:${T[t]?T[t].c:'#fff'}">${T[t]?T[t].n:''}</b></span></p>${!SORTEANDO&&(can('cur')||canTheme())?`<button class="small" onclick="pickTheme('${t}',true)">Tentar de novo</button>`:''}`;return}
   if(G.phase==='exhausted'){
     const t=G.exTheme,outros=activeThemes().some(k=>k!==t&&!themeDone(k));
     if(!can('cur')){el.innerHTML=head+waitHtml('cur','decidir: as perguntas de '+T[t].n+' acabaram');return}
-    el.innerHTML=head+`<p class="msg">Todas as <b>${Q[t].length.toLocaleString('pt-BR')}</b> perguntas de <b style="color:${T[t].c}">${T[t].n}</b> já saíram.</p><p class="msg">Quer liberar as perguntas desse tema para que voltem a cair?</p><div class="row"><button class="primary" onclick="approveReset()">Sim, liberar ${T[t].n}</button>${outros?'<button onclick="otherTheme()">Não, sortear de outro tema</button>':''}</div>`;
+    el.innerHTML=head+`<p class="msg">Todas as <b>${QN(t).toLocaleString('pt-BR')}</b> perguntas de <b style="color:${T[t].c}">${T[t].n}</b> já saíram.</p><p class="msg">Quer liberar as perguntas desse tema para que voltem a cair?</p><div class="row"><button class="primary" onclick="approveReset()">Sim, liberar ${T[t].n}</button>${outros?'<button onclick="otherTheme()">Não, sortear de outro tema</button>':''}</div>`;
     return;
   }
   if(G.phase==='theme'){
@@ -741,19 +688,19 @@ function renderPanel(){
   }
   if(G.phase==='result'){
     if(isV)h+=optsHtml(true);
-    else h+=(G.resp?respBox():'')+`<div class="answer"><div class="muted">${G.resp?'Resposta oficial':'Resposta'}</div>${esc(G.q[1])}</div>`;
+    else h+=(G.resp?respBox():'')+`<div class="answer"><div class="muted">${G.resp?'Resposta oficial':'Resposta'}</div>${esc(respostaTxt()??'carregando…')}</div>`;
     h+=`<p class="msg">${G.msg}</p>${resultBtns()}`+reportHtml();
   }else if(canAnswer){
     if(isV)h+=optsHtml(false)+(online()&&!can('cur')?waitHtml('cur','escolher a alternativa'):'');
     else if(online())h+=respHtml();
     else if(!G.revealed)h+=`<div style="margin-top:12px"><button class="primary" onclick="stopTimer();G.revealed=true;render()">Mostrar resposta</button></div>`;
-    else h+=`${G.timeUp?'<div class="note2">⏰ Tempo esgotado. Se a resposta não saiu a tempo, marque Errou.</div>':''}<div class="answer"><div class="muted">Resposta</div>${esc(G.q[1])}</div><div class="row"><button class="ok" onclick="resolve(true)">✔ Acertou</button><button class="bad" onclick="resolve(false)">✘ Errou</button></div>`;
+    else h+=`${G.timeUp?'<div class="note2">⏰ Tempo esgotado. Se a resposta não saiu a tempo, marque Errou.</div>':''}<div class="answer"><div class="muted">Resposta</div>${esc(respostaTxt()??'carregando…')}</div><div class="row"><button class="ok" onclick="resolve(true)">✔ Acertou</button><button class="bad" onclick="resolve(false)">✘ Errou</button></div>`;
     if(!G.revealed&&G.chosen===null&&!G.resp&&can('cur'))h+=ajudasHtml();
   }
   el.innerHTML=h;
 }
 function optsHtml(done){
-  const opts=G.q[1],right=G.q[2];
+  const opts=G.q[1],right=certaIdx();
   return `<div class="opts">${opts.map((o,i)=>{
     let cls='';
     const el=!done&&G.hint&&G.hint.elim===i;
@@ -762,10 +709,15 @@ function optsHtml(done){
     return `<button class="${cls}" ${done?'disabled style="opacity:1"':el||!can('cur')?'disabled':''} onclick="chooseOpt(${i})">${'ABCD'[i]}) ${esc(o)}</button>`}).join('')}</div>`;
 }
 function canShowLv(){return G.phase==='result'||G.token||(G.players&&G.players[G.cur].pos===FINAL)}
-function answerText(){return G.theme==='V'?G.q[1][G.q[2]]:G.q[1]}
-function chooseOpt(i){snapshot('escolha da alternativa');G.chosen=i;resolve(i===G.q[2],true)}
+function answerText(){return respostaTxt()||''}
+async function chooseOpt(i){
+  if(G.chosen!==null&&G.chosen!==undefined)return;
+  snapshot('escolha da alternativa');G.chosen=i;stopTimer();render();
+  try{if(online())await esperaPush();const a=await buscaResposta();resolve(G.q[1][i]===a,true)}
+  catch(e){G.chosen=null;toast('Não consegui conferir a resposta: '+e.message);forcePanel();render()}
+}
 
-const LVT={};function lvTema(k){if(!LVT[k]){const c=[0,0,0,0,0];if(Q&&Q[k])Q[k].forEach(q=>{c[qDiff(k,q)]++});LVT[k]=c}return LVT[k]}
+function lvTema(k){return (Q&&Q.lv&&Q.lv[k])||[0,0,0,0,0]}
 function lvCount(l){return (G.selThemes||ORDER).reduce((n,k)=>n+(lvTema(k)[l]||0),0)}
 function toggleTheme(k){const i=G.selThemes.indexOf(k);if(i>=0)G.selThemes.splice(i,1);else{G.selThemes.push(k);G.selThemes.sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b))}render()}
 let timerId=null;
@@ -810,11 +762,14 @@ function maskAnswer(a){
   const words=m.split(' ').filter(w=>/[0-9A-Za-zÀ-ÖØ-öø-ÿ]/.test(w)).length;
   return {mask:out,n,words};
 }
-function useDica(){
+async function useDica(){
   if(ajUsada('dica')||G.phase!=='question'||G.revealed||G.chosen!==null||G.hint)return;
+  const id=G.qid;let r;
+  try{r=await api('dica',{id,t:G.theme,tk:G.tk})}catch(e){toast('Não consegui buscar a dica: '+e.message);return}
+  if(G.qid!==id||G.phase!=='question')return;
   snapshot('Dica');marcaAj('dica');
-  if(G.theme==='V'){const w=G.q[1].map((_,i)=>i).filter(i=>i!==G.q[2]);G.hint={elim:w[rndInt(w.length)]}}
-  else G.hint=maskAnswer(G.q[1]);
+  if(G.theme==='V'){const k=G.q[1].indexOf(r.elim);G.hint={elim:k>=0?k:0}}
+  else G.hint={mask:r.mask,n:r.n,words:r.words};
   render();
 }
 function ajudasHtml(){
@@ -930,15 +885,26 @@ function startTurn(){
   else{pickTheme(s.themes[0]);return}
   G.phase='theme';render();
 }
-function themeDone(t){return countUsed(t)>=Q[t].length}
-function approveReset(){const t=G.exTheme;USED[t]=USED[t].filter(id=>!IDX[t].has(id));usedSet[t]=new Set(USED[t]);persist();G.resetNote=`As perguntas de ${T[t].n} foram liberadas de novo.`;pickTheme(t,true)}
+function themeDone(t){return QN(t)>0&&countUsed(t)>=QN(t)}
+function approveReset(){const t=G.exTheme;USED[t]=[];usedSet[t]=new Set();persist();G.resetNote=`As perguntas de ${T[t].n} foram liberadas de novo.`;pickTheme(t,true)}
 function otherTheme(){const ops=activeThemes().filter(k=>k!==G.exTheme&&!themeDone(k));pickTheme(ops[rndInt(ops.length)])}
-function pickTheme(t,keepNote){
+let SORTEANDO=false;
+async function pickTheme(t,keepNote){
   if(themeDone(t)){G.exTheme=t;G.phase='exhausted';render();return}
+  if(SORTEANDO)return;
   if(!keepNote)G.resetNote='';
-  G.theme=t;let q=draw(t);G.qd=qDiff(t,q);G.qid=(G.seen[G.seen.length-1]||[])[1]||null;G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;RASCUNHO='';
-  if(t==='V'){const right=q[1][q[2]];const opts=shuffle([...q[1]]);q=[q[0],opts,opts.indexOf(right)]}
-  G.q=q;G.phase='question';render()}
+  SORTEANDO=true;G.phase='sorteio';G.sortTema=t;forcePanel();render();
+  let r;
+  try{r=await api('sortear',{t,nivel:G.level||'misto',usadas:USED[t]||[],vistas:(G.seen||[]).slice(-200),sala:online()?ROOM:null})}
+  catch(e){SORTEANDO=false;toast('Não consegui sortear a pergunta: '+e.message);G.phase='theme';G.themeOptions=[t];G.themeLabel='Não consegui sortear a pergunta. Toque no tema para tentar de novo.';forcePanel();render();return}
+  SORTEANDO=false;
+  if(r.esgotado){G.exTheme=t;G.phase='exhausted';render();return}
+  G.theme=t;
+  USED[t].push(r.id);usedSet[t].add(r.id);DRAWLOG.push([t,r.id]);
+  if(!Array.isArray(G.seen))G.seen=[];G.seen.push([t,r.id]);persist();
+  G.qd=r.d;G.qid=r.id;G.tk=r.tk;G.lvNote=r.lvNote||'';G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;RASCUNHO='';G.chosen=null;G.revealed=false;
+  G.q=t==='V'?[r.q,r.opts,null,r.b,r.d]:[r.q,null,r.b,r.d];
+  G.phase='question';render()}
 
 function resolve(ok,snapped,pre){
   if(!snapped)snapshot(ok?'Acertou':'Errou');
@@ -1101,7 +1067,7 @@ function applyRemote(d){
 }
 function marcaVistas(){ // as perguntas que saem na sala também ficam marcadas neste aparelho
   let mudou=false;
-  (G.seen||[]).forEach(([t,id])=>{if(usedSet[t]&&!usedSet[t].has(id)&&IDX[t]&&IDX[t].has(id)){USED[t].push(id);usedSet[t].add(id);mudou=true}});
+  (G.seen||[]).forEach(([t,id])=>{if(usedSet[t]&&!usedSet[t].has(id)){USED[t].push(id);usedSet[t].add(id);mudou=true}});
   if(mudou)persist();
 }
 let LOBBY_N=0;
@@ -1138,7 +1104,7 @@ function lobbyHtml(){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
     h+=`<div class="row" style="margin:6px 0 4px"><button class="small" onclick="shuffleLobby()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem. Quem está em 1º começa.</span></div>
     <div class="setup-row"><label style="flex:none">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
-    <h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${Q&&Q[k]?Q[k].length.toLocaleString('pt-BR')+' perguntas':''}</small></button>`}).join('')}</div>
+    <h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${Q?QN(k).toLocaleString('pt-BR')+' perguntas':''}</small></button>`}).join('')}</div>
     <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>
     <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;G.previewBoard=null;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
     <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}</option>`).join('')}</select></div>
@@ -1223,7 +1189,7 @@ function respKey(){return G.resp&&G.resp.k}
 function normResp(x){return String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\(.*?\)/g,' ').replace(/^(o|a|os|as|um|uma)\s+/,'').replace(/[^a-z0-9]+/g,' ').trim()}
 function igualOficial(txt){
   const t=normResp(txt);if(!t)return false;
-  const a=String(G.q[1]);
+  const a=String(respostaTxt()||'');
   const ops=[a,...a.split(/\s*[;\/]\s*|\s+ou\s+/)].map(normResp).filter(Boolean);
   return ops.includes(t);
 }
@@ -1258,7 +1224,7 @@ function votar(v){
   NET.vote(ROOM,MYDEV,{k,v:!!v,ts:Date.now()}).catch(()=>toast('Sem conexão: o voto não foi enviado.'));
   render();
 }
-function enviarResposta(auto){
+async function enviarResposta(auto){
   if(!online()||G.phase!=='question'||G.resp||G.chosen!==null||!can('cur'))return;
   const inp=document.getElementById('resp');
   const txt=String((inp?inp.value:RASCUNHO)||'').replace(/\s+/g,' ').trim().slice(0,120);
@@ -1270,8 +1236,11 @@ function enviarResposta(auto){
   RASCUNHO='';if(inp)inp.blur();
   const k=Date.now().toString(36)+MYDEV.slice(-4);
   G.resp={t:txt,k,tarde:auto?1:0};
-  if(igualOficial(txt)){resolve(true,true,'🎯 Igual à resposta oficial. ');return}
   render();
+  await esperaPush();
+  try{await buscaResposta()}catch(e){forcePanel();render();return}
+  if(G.phase==='question'&&G.resp&&G.resp.k===k&&igualOficial(txt)){resolve(true,true,'🎯 Igual à resposta oficial. ');return}
+  forcePanel();render();
 }
 function respBox(){const p=G.players[G.cur];return `<div class="resp"><div class="muted">Resposta de ${nm(p)}${G.resp.tarde?' (enviada quando o tempo acabou)':''}</div><div class="rtxt">“${esc(G.resp.t)}”</div></div>`}
 function respHtml(){
@@ -1281,7 +1250,7 @@ function respHtml(){
     return `<p class="wait">✍️ ${nm(p)} está digitando a resposta…</p>`;
   }
   const c=contagem(),k=respKey(),mv=VOTES[MYDEV],meu=mv&&mv.k===k?mv.v:null;
-  let h=respBox()+`<div class="answer"><div class="muted">Resposta oficial</div>${esc(G.q[1])}</div>`;
+  let h=respBox()+`<div class="answer"><div class="muted">Resposta oficial</div>${esc(respostaTxt()??'carregando…')}</div>`;
   if(eu>=0&&eu!==G.cur)h+=`<p class="muted">${meu===null?'Vale a resposta de '+nm(p)+'?':'Seu voto (dá para mudar até fechar):'}</p><div class="row votos"><button class="ok${meu===true?' on':''}" onclick="votar(true)">✔ Vale</button><button class="bad${meu===false?' on':''}" onclick="votar(false)">✘ Não vale</button></div>`;
   else if(eu===G.cur)h+=`<p class="wait">🗳️ A turma está decidindo se a sua resposta vale…</p>`;
   h+=`<p class="muted">Votos: ✔ ${c.sim} · ✘ ${c.nao} de ${c.n}${c.falta.length?' · falta: '+c.falta.map(x=>esc(x.name)).join(', '):''}</p>`;
@@ -1523,8 +1492,8 @@ document.addEventListener('pointerdown',e=>{SFX.unlock();const b=e.target.closes
 
 loadLocal();loadReports();
 render();
-fetch('questions.json').then(r=>r.json()).then(d=>{Q=d;buildIds();if(migrate())saveLocal();restoreLocalGame();if(G.players&&G.phase!=='setup')MODE='local';render();loadResolvidos();QREADY=true;tryAutoJoin()}).catch(()=>{
-  document.getElementById('panel').innerHTML='<h2>Ops</h2><p class="msg">Não consegui carregar as perguntas. Recarregue a página.</p>';
+api('meta').then(d=>{Q=d;restoreLocalGame();if(G.players&&G.phase!=='setup')MODE='local';render();loadResolvidos();QREADY=true;tryAutoJoin()}).catch(()=>{
+  document.getElementById('panel').innerHTML='<h2>Ops</h2><p class="msg">Não consegui falar com o servidor de perguntas. Verifique a internet e recarregue a página.</p>';
 });
 </script>
 <script src="config.js"></script>

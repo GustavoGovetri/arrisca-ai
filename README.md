@@ -24,11 +24,17 @@ O jogo tem animações e sons; o botão 🔊 liga e desliga o som.
 
 Se alguém fechar o navegador, é só abrir o link de novo que volta para a mesma partida.
 
+## Onde ficam as perguntas
+
+As perguntas **não** estão neste repositório. Elas ficam no Firebase Realtime Database, em `/banco`, que é fechado para o público.
+O site pede ao servidor (`api/perguntas.js`, uma função da Vercel) uma pergunta por vez, sem a resposta.
+A resposta só é liberada depois que a pessoa respondeu: na sala online, o servidor confere no estado da sala se a resposta já foi enviada.
+
+A função lê o banco com uma conta de serviço do Firebase, guardada na Vercel na variável `FIREBASE_SERVICE_ACCOUNT`.
+
 ## Reportar perguntas
 
-Qualquer jogador pode reportar uma pergunta (resposta errada, nível errado, pergunta confusa etc.). Os reportes vão para o banco do Firebase, em `/reportes`, e podem ser vistos em:
-
-https://arrisca-ai-default-rtdb.firebaseio.com/reportes.json
+Qualquer jogador pode reportar uma pergunta (resposta errada, nível errado, pergunta confusa etc.). Os reportes vão para o Firebase, em `/reportes`, e aparecem no console do Firebase (Realtime Database → Dados → reportes).
 
 Se o aparelho estiver sem internet, o reporte fica guardado e é enviado depois.
 
@@ -39,8 +45,8 @@ Quando uma pergunta for corrigida, coloque a chave dela em `resolvidos.json` (fo
 | Arquivo | O que é |
 |---|---|
 | `index.html` | o jogo inteiro |
-| `questions.json` | o banco de perguntas |
-| `net-firebase.js` | conexão com o Firebase (salas e reportes) |
+| `api/perguntas.js` | servidor de perguntas (sorteio, resposta e dica) |
+| `net-firebase.js` | conexão com o Firebase (salas, votos, chat e reportes) |
 | `config.js` | configuração pública do projeto no Firebase |
 | `resolvidos.json` | reportes que já foram resolvidos |
 
