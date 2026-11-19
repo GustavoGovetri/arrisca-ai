@@ -110,7 +110,17 @@ function sortear(B, t, nivel, usadas, vistas, junta) {
   for (const r of refs) { const [s, i] = r; if (!used.has(B.temas[s].ids[i])) byLv[qDiff(s, B.temas[s].items[i])].push(r) }
   const lv = String(nivel || 'misto');
   let order;
-  if (lv === 'misto') order = shuffle([1, 2, 3, 4]);
+  if (lv === 'misto') { // sorteia o nível pesando pela raiz de quantas perguntas ainda faltam nele: os níveis pequenos (fácil e impossível) não se esgotam antes
+    const pesos = [1, 2, 3, 4].map(l => [l, Math.sqrt(byLv[l].length)]);
+    order = [];
+    while (pesos.some(p => p[1] > 0)) {
+      const tot = pesos.reduce((x, p) => x + p[1], 0);
+      let x = rnd(1e9) / 1e9 * tot, k = 0;
+      while (k < pesos.length - 1 && (pesos[k][1] === 0 || x >= pesos[k][1])) { x -= pesos[k][1]; k++ }
+      order.push(pesos[k][0]); pesos[k][1] = 0;
+    }
+    [1, 2, 3, 4].forEach(l => { if (!order.includes(l)) order.push(l) });
+  }
   else { const w = +lv; order = [w, w + 1, w - 1, w + 2, w - 2, w + 3, w - 3].filter(l => l >= 1 && l <= 4) }
   order = order.filter(l => byLv[l].length);
   if (!order.length) { // acabou o tema: diz quais perguntas usadas são deste baralho (para liberar só elas)

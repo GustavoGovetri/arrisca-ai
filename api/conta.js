@@ -115,6 +115,32 @@ async function resposta(u, body) {
   return { pts, nivel, fim, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n, nivel: c.nivel })) };
 }
 
+// histórico de perguntas da conta (vale em qualquer aparelho): por tema, ids separados por espaço
+const ID_Q = /^[a-z0-9]{1,16}$/, MAX_T = 6000;
+async function usadas(u, body, get) {
+  const base = 'usuarios/' + u.uid + '/usadas';
+  const atual = (await ler(base)) || {};
+  if (get) return { usadas: atual };
+  const mapa = {};
+  const add = body.add && typeof body.add === 'object' ? body.add : {};
+  Object.entries(add).forEach(([t, ids]) => {
+    if (!ST.TEMAS[t] || !Array.isArray(ids)) return;
+    const st = new Set(String(atual[t] || '').split(' ').filter(Boolean));
+    const antes = st.size;
+    ids.slice(0, MAX_T).forEach(id => { if (typeof id === 'string' && ID_Q.test(id)) st.add(id) });
+    if (st.size !== antes) mapa[base + '/' + t] = [...st].slice(-MAX_T).join(' ');
+  });
+  // liberar um tema (quando as perguntas dele acabaram e a pessoa aprovou começar de novo)
+  (Array.isArray(body.limpa) ? body.limpa : []).forEach(t => {
+    if (!ST.TEMAS[t]) return;
+    const tira = Array.isArray(body.tira && body.tira[t]) ? new Set(body.tira[t]) : null;
+    if (!tira) { mapa[base + '/' + t] = null; return }
+    mapa[base + '/' + t] = String(atual[t] || '').split(' ').filter(id => id && !tira.has(id)).join(' ') || null;
+  });
+  await gravaVarios(mapa);
+  return { ok: true, mudou: Object.keys(mapa).length };
+}
+
 async function apagar(u) {
   const base = 'usuarios/' + u.uid;
   const rk = await ler(base + '/rk');
@@ -161,6 +187,7 @@ module.exports = async (req, res) => {
     else if (!get && acao === 'entrar') r = await entrar(u, body);
     else if (!get && acao === 'perfil') r = await mudaPerfil(u, body);
     else if (!get && acao === 'resposta') r = await resposta(u, body);
+    else if (acao === 'usadas') r = await usadas(u, body, get);
     else if (!get && acao === 'apagar') { await apagar(u); r = { ok: true } }
     else if (!get && acao === 'resolver') { if (!ehAdmin(u)) throw falha(403, 'Só o dono do jogo pode fazer isso.'); r = await resolver(body) }
     else throw falha(400, 'Ação desconhecida.');

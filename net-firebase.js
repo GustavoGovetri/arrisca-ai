@@ -30,6 +30,9 @@ if(cfg&&cfg.databaseURL&&!sim){
         d.onDisconnect(d.child(r,'on')).set(false);
       },
       async removePlayer(code,dev){await d.remove(R('salas/'+code+'/jogadores/'+dev))},
+      // histórico de perguntas de cada aparelho na sala: quem sorteia evita o que qualquer um ali já viu
+      async setUsadas(code,dev,obj){await d.set(R('salas/'+code+'/usadas/'+dev),obj)},
+      async getUsadas(code){return (await d.get(R('salas/'+code+'/usadas'))).val()||{}},
       async tx(code,base,val){
         const res=await d.runTransaction(R('salas/'+code+'/estado'),cur=>{const v=(cur&&cur.v)||0;if(v!==base)return;return val},{applyLocally:false});
         return res.committed;

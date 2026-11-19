@@ -959,7 +959,7 @@ async function flush(){
   }catch(e){dbRef=null;syncNote='Não foi possível salvar na sua conta; o histórico fica só neste navegador.'}
   finally{writing=false;if(TAB==='hist')renderHist()}
 }
-function persist(){HIST_TS=Date.now();saveLocal();flush();renderTabCount()}
+function persist(){HIST_TS=Date.now();saveLocal();flush();renderTabCount();if(typeof contaHistDepois==='function')contaHistDepois()}
 async function initGameDb(ref){
   try{
     const snap=await ref.get();
@@ -1047,7 +1047,7 @@ function resetTheme(k){
   if(G.confirmReset!==k){G.confirmReset=k;renderHist();setTimeout(()=>{if(G.confirmReset===k){G.confirmReset=null;renderHist()}},3000);return}
   G.confirmReset=null;
   const keys=k==='ALL'?ORDER:[k];
-  keys.forEach(x=>{USED[x]=[];usedSet[x]=new Set()});
+  keys.forEach(x=>{USED[x]=[];usedSet[x]=new Set();contaHistLibera(x)});
   persist();renderHist();
 }
 let TAB='jogo';
@@ -1572,17 +1572,31 @@ function startTurn(){
 }
 function themeDone(t){if(fontes(t,activeThemes()).length)return false;/* com perguntas emprestadas, quem sabe se acabou é o servidor */return QN(t)>0&&countUsed(t)>=QN(t)}
 let EXIDS=null; // perguntas já usadas do baralho que acabou (quando o tema recebe perguntas de outros)
-function pedidoSorteio(t){
+// ----- histórico compartilhado: na sala, evita as perguntas que qualquer pessoa ali já viu -----
+let SALA_USADAS={},SALA_USADAS_T=null;
+function usadasTexto(){const o={};ORDER.forEach(k=>{if(USED[k]&&USED[k].length)o[k]=USED[k].slice(-6000).join(' ')});return o}
+async function mandaUsadasSala(){if(!online()||!NET||!NET.setUsadas||!ROOM)return;try{await NET.setUsadas(ROOM,MYDEV,usadasTexto())}catch(e){console.warn(e)}}
+async function carregaUsadasSala(){
+  if(!online()||!NET||!NET.getUsadas||!ROOM)return;
+  try{
+    const all=await NET.getUsadas(ROOM),m={};
+    Object.entries(all||{}).forEach(([d,o])=>{if(d===MYDEV||!o||typeof o!=='object')return;Object.entries(o).forEach(([k,txt])=>{if(!T[k]||typeof txt!=='string')return;const st=m[k]||(m[k]=new Set());txt.split(' ').forEach(id=>{if(ID_OK.test(id))st.add(id)})})});
+    SALA_USADAS=m;
+  }catch(e){console.warn(e)}
+}
+function carregaUsadasDepois(){clearTimeout(SALA_USADAS_T);SALA_USADAS_T=setTimeout(carregaUsadasSala,1500)}
+function pedidoSorteio(t,soMeu){
   const fs=fontes(t,activeThemes());
-  const usadas=fs.length?[...(USED[t]||[]),...fs.flatMap(s=>USED[s]||[])]:(USED[t]||[]);
+  const daSala=k=>soMeu||!online()?[]:[...(SALA_USADAS[k]||[])];
+  const usadas=[...new Set(fs.length?[...(USED[t]||[]),...daSala(t),...fs.flatMap(s=>[...(USED[s]||[]),...daSala(s)])]:[...(USED[t]||[]),...daSala(t)])];
   return {t,nivel:G.level||'misto',usadas,vistas:(G.seen||[]).slice(-200),sala:online()?ROOM:null,junta:fs.length?1:0};
 }
 async function approveReset(){
   const t=G.exTheme;
   if(fontes(t,activeThemes()).length){
     if(!EXIDS||EXIDS.t!==t){try{const r=await api('sortear',pedidoSorteio(t));EXIDS=r.esgotado?{t,ids:r.ids||{}}:null}catch(e){toast('Não consegui liberar: '+e.message);return}}
-    if(EXIDS)Object.entries(EXIDS.ids).forEach(([s,ids])=>{if(!USED[s])return;const rm=new Set(ids);USED[s]=USED[s].filter(x=>!rm.has(x));usedSet[s]=new Set(USED[s])});
-  }else{USED[t]=[];usedSet[t]=new Set()}
+    if(EXIDS)Object.entries(EXIDS.ids).forEach(([s,ids])=>{if(!USED[s])return;const rm=new Set(ids);USED[s]=USED[s].filter(x=>!rm.has(x));usedSet[s]=new Set(USED[s]);contaHistLibera(s,ids)});
+  }else{USED[t]=[];usedSet[t]=new Set();contaHistLibera(t)}
   EXIDS=null;persist();G.resetNote=`As perguntas de ${T[t].n} foram liberadas de novo.`;pickTheme(t,true)}
 function otherTheme(){const ops=activeThemes().filter(k=>k!==G.exTheme&&!themeDone(k));pickTheme(ops[rndInt(ops.length)])}
 let SORTEANDO=false,PRE={},API_N=0;
@@ -1616,6 +1630,7 @@ async function pickTheme(t,keepNote){
     r=pre?await pre.p:null;
     if(r&&!r.esgotado&&usedSet[r.t||t]&&usedSet[r.t||t].has(r.id))r=null; // já saiu por outro caminho
     if(!r)r=await api('sortear',pedidoSorteio(t));
+    if(r&&r.esgotado&&online())r=await api('sortear',pedidoSorteio(t,true));
   }
   catch(e){SORTEANDO=false;toast('Não consegui sortear a pergunta: '+e.message);G.phase='theme';G.themeOptions=[t];G.themeLabel='Não consegui sortear a pergunta. Toque no tema para tentar de novo.';forcePanel();render();return}
   SORTEANDO=false;
@@ -1804,6 +1819,7 @@ async function enterRoom(code,created,publica){
     VOTES={};chatZera();
     UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido});
     await NET.setMe(code,MYDEV,{nome:myName(),cor:myColor(),on:true,fora:false,ts:Date.now()});
+    SALA_USADAS={};mandaUsadasSala().then(carregaUsadasSala);
     render();
   }catch(e){console.error(e);CREATING=false;toast('Sem conexão com a sala. Tente de novo.')}
 }
@@ -1971,11 +1987,11 @@ function contaInicia(){
   if(!AUTH){CONTA.pronto=!!window.AUTH_DONE;contaPinta();if(window.AUTH_ERRO)fetch('/api/bugs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({tipo:'travou',texto:'Login não carregou: '+window.AUTH_ERRO,nome:myName()||'',info:bugInfo()})}).catch(()=>{});return}
   AUTH.onChange(async u=>{
     const antes=CONTA.user&&CONTA.user.uid;
-    CONTA.user=u;CONTA.admin=false;if(!u||u.uid!==antes){CONTA.perfil=null;CONTA.dados=null;CONTA.resumo=null}
+    CONTA.user=u;CONTA.admin=false;if(!u||u.uid!==antes){CONTA.perfil=null;CONTA.dados=null;CONTA.resumo=null;CONTA_HIST.ok=false}
     if(u){
       try{const j=await contaApi('POST',{acao:'entrar',nome:myName(),cor:myColor()});contaAplica(j.perfil);CONTA.admin=!!j.admin}
       catch(e){console.warn(e);CONTA_UI.erro='Você entrou, mas não consegui carregar o perfil agora: '+e.message}
-      contaResumo();
+      contaResumo();contaHistInicia();
       CONTA_UI.aba='entrar'; // quando sair, a janela volta na aba Entrar
       if(CONTA_UI.esperando){CONTA_UI.esperando=false;toast('✔ Você entrou'+(CONTA.perfil?' como '+CONTA.perfil.nome:'')+'!')}
     }
@@ -2146,6 +2162,32 @@ function rankingHtml(){
   if(!CONTA.user)h+=`<div class="rkcta"><span>Quer aparecer aqui?</span><button class="primary" onclick="contaAbre()">👤 Entrar ou criar conta</button></div>`;
   else if(!d.minha)h+=`<p class="ctdica" style="text-align:center">Você ainda não pontuou ${RANK.periodo==='semana'?'nesta semana':'neste mês'}.</p>`;
   return h+`<p class="rkregra">Só contam as partidas <b>online</b> de quem tem conta. Fácil 1 ponto · Médio 2 · Difícil 3 · Impossível 5 · Vitória +10.</p>`;
+}
+// ----- histórico de perguntas na conta: o mesmo em qualquer aparelho em que a pessoa entrar -----
+var CONTA_HIST={ok:false,conhecidas:{},t:null}; // var: o persist() pode rodar antes desta linha
+async function contaHistInicia(){ // ao entrar: junta o histórico da conta com o deste aparelho (nunca apaga nada)
+  CONTA_HIST.ok=false;
+  try{
+    const j=await contaApi('GET',{acao:'usadas'}),srv=(j&&j.usadas)||{};let mudou=false;
+    CONTA_HIST.conhecidas={};
+    Object.entries(srv).forEach(([k,txt])=>{if(!usedSet[k]||typeof txt!=='string')return;const st=CONTA_HIST.conhecidas[k]=new Set();txt.split(' ').forEach(id=>{if(!ID_OK.test(id))return;st.add(id);if(!usedSet[k].has(id)){USED[k].push(id);usedSet[k].add(id);mudou=true}})});
+    CONTA_HIST.ok=true;
+    if(mudou){saveLocal();if(typeof renderTabCount==='function')renderTabCount();if(online())mandaUsadasSala()}
+    contaHistManda();
+  }catch(e){console.warn('histórico da conta:',e.message)}
+}
+function contaHistDepois(){if(!CONTA_HIST||!CONTA_HIST.ok||!CONTA.user)return;clearTimeout(CONTA_HIST.t);CONTA_HIST.t=setTimeout(contaHistManda,4000)}
+async function contaHistManda(){
+  if(!CONTA_HIST.ok||!CONTA.user)return;
+  const add={};let n=0;
+  ORDER.forEach(k=>{const kn=CONTA_HIST.conhecidas[k]||(CONTA_HIST.conhecidas[k]=new Set());const novos=(USED[k]||[]).filter(id=>!kn.has(id));if(novos.length){add[k]=novos;n+=novos.length}});
+  if(!n)return;
+  try{await contaApi('POST',{acao:'usadas',add});Object.entries(add).forEach(([k,ids])=>ids.forEach(id=>CONTA_HIST.conhecidas[k].add(id)))}catch(e){console.warn(e)}
+}
+function contaHistLibera(k,ids){ // tema liberado de novo (com aprovação): tira da conta também, senão volta no próximo login
+  if(!CONTA_HIST||!CONTA_HIST.ok||!CONTA.user)return;
+  const body={acao:'usadas',limpa:[k]};if(ids)body.tira={[k]:ids};
+  contaApi('POST',body).then(()=>{const kn=CONTA_HIST.conhecidas[k];if(kn){if(ids)ids.forEach(id=>kn.delete(id));else kn.clear()}}).catch(e=>console.warn(e));
 }
 // ----- registra na conta as respostas de quem joga online logado -----
 const CONTA_REG=new Set();
@@ -2464,6 +2506,7 @@ function marcaVistas(){ // as perguntas que saem na sala também ficam marcadas 
 let LOBBY_N=0,LOBBY_VISTOS=null;const NOVOS={};
 let FORA_ANT={};
 function lobbyChanged(){
+  const devs=Object.keys(LOBBY).sort().join(',');if(devs!==lobbyChanged.devs){lobbyChanged.devs=devs;carregaUsadasDepois()} // entrou alguém: pega o histórico da pessoa
   // alguém saiu ou voltou para a aba durante a partida: todo mundo fica sabendo
   if(emPartida())Object.entries(LOBBY).forEach(([d,l])=>{if(d===MYDEV)return;const p=(G.players||[]).find(x=>x.dev===d),n=(p&&p.name)||(l.nome||'').trim()||'Alguém';if(l.fora&&!FORA_ANT[d]){toast('👀 '+n+' saiu da aba');SFX.pop&&SFX.pop()}else if(!l.fora&&FORA_ANT[d]&&l.on!==false)toast('↩ '+n+' voltou para o jogo')});
   FORA_ANT={};Object.entries(LOBBY).forEach(([d,l])=>{if(l.fora)FORA_ANT[d]=true});
@@ -2569,6 +2612,8 @@ function localNet(){
     chat:async(c,m)=>{const k='salas/'+c+'/chat';const a=rd(k)||[];const ts=Math.round(performance.timeOrigin+performance.now()); /* simula a hora do servidor */a.push(Object.assign({id:ts.toString(36)+Math.random().toString(36).slice(2,6)},m,{ts}));wr(k,a.slice(-60))},
     setMe:async(c,d,o)=>{const k='salas/'+c+'/jogadores';const all=rd(k)||{};all[d]=Object.assign(all[d]||{},o);wr(k,all)},
     removePlayer:async(c,d)=>{const k='salas/'+c+'/jogadores';const all=rd(k)||{};delete all[d];wr(k,all)},
+    setUsadas:async(c,d,o)=>{const k='salas/'+c+'/usadas';const all=rd(k)||{};all[d]=o;wr(k,all)},
+    getUsadas:async c=>rd('salas/'+c+'/usadas')||{},
     tx:async(c,base,val)=>{const k='salas/'+c+'/estado';const cur=rd(k);if(((cur&&cur.v)||0)!==base)return false;wr(k,val);return true},
     report:async r=>{const all=rd('reportes')||{};all['r'+Date.now()+Math.random().toString(36).slice(2,6)]=r;wr('reportes',all)}
   };
