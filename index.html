@@ -1345,60 +1345,62 @@ function chatManda(t){
 function chatEnvia(ev){ev.preventDefault();const i=document.getElementById('chatin');if(!i)return;chatManda(i.value);i.value=''}
 
 // ----- lupa do tabuleiro -----
+// Só a casa que está debaixo do mouse (ou que foi tocada) cresce; as vizinhas se afastam para dar espaço.
 let FOCO=null,FOCO_RAF=0,FOCO_TIMER=0,FOCO_ALVO=null;
-function anguloNoAnel(ev){ // posição do ponteiro em "casas" ao longo do anel, ou null fora da faixa das casas
-  const ring=document.getElementById('ring');if(!ring||!SQ.length)return null;
+function naFaixa(ev){ // o ponteiro está sobre o anel das casas?
+  const ring=document.getElementById('ring');if(!ring||!SQ.length)return false;
   const r=ring.getBoundingClientRect(),x=ev.clientX-r.left-r.width/2,y=ev.clientY-r.top-r.height/2;
   const d=Math.hypot(x,y)/(r.width/2)*50;
-  if(d<41-SZ*1.6||d>41+SZ*1.6)return null;
-  const ang=((Math.atan2(y,x)*180/Math.PI+90)%360+360)%360;
-  return ang/(360/(N+1));
+  return d>=41-SZ*1.6&&d<=41+SZ*1.6;
 }
-function aplicaFoco(f){
+function casaDoEvento(ev){const sp=ev.target&&ev.target.closest&&ev.target.closest('.sp');if(!sp)return -1;return SQ.findIndex(q=>q.el===sp)}
+function aplicaFoco(alvo){ // alvo = índice da casa, ou null
   if(!SQ.length)return;
-  FOCO=f;
+  if(alvo!=null&&(alvo<0||alvo>=SQ.length))alvo=null;
+  FOCO=alvo;
   const M=N+1,step=360/M,ring=document.getElementById('ring');
-  const pequeno=ring&&ring.getBoundingClientRect().width<560;
-  const A=pequeno?1.7:1.25,sig=pequeno?1.25:1.1;
-  const w=[];for(let j=0;j<M;j++){let d=f==null?99:Math.abs(j-f);d=Math.min(d,M-d);w.push(1+A*Math.exp(-d*d/(2*sig*sig)))}
+  const S=ring&&ring.getBoundingClientRect().width<560?2.4:2;
+  const w=[];for(let j=0;j<M;j++)w.push(alvo!=null&&j===alvo+1?S:1);
   const W=w.reduce((a,b)=>a+b,0),cum=[];let c=0;for(let j=0;j<M;j++){cum.push(c+w[j]/2);c+=w[j]}
-  const jf=f==null?0:Math.round(f)%M,rot=jf*step-cum[jf]/W*360;
-  let maior=-1,smax=1.05;
+  const jf=alvo==null?0:alvo+1,rot=jf*step-cum[jf]/W*360;
   SQ.forEach((q,i)=>{
-    const j=i+1,s=1+(w[j]-1)*.85,a=(cum[j]/W*360+rot-90)*Math.PI/180;
-    q.dx=f==null?q.x:50+41*Math.cos(a);q.dy=f==null?q.y:50+41*Math.sin(a);q.ds=f==null?1:s;
+    const j=i+1,s=w[j],a=(cum[j]/W*360+rot-90)*Math.PI/180;
+    q.dx=alvo==null?q.x:50+41*Math.cos(a);q.dy=alvo==null?q.y:50+41*Math.sin(a);q.ds=s;
     const el=q.el;if(!el)return;
     el.style.left=q.dx+'%';el.style.top=q.dy+'%';
-    el.style.transform=f==null?'':`translate(-50%,-50%) scale(${s.toFixed(3)})`;
-    el.style.zIndex=f==null||s<1.05?'':String(Math.round(s*10));
-    if(s>smax){smax=s;maior=i}
+    el.style.transform=s>1?`translate(-50%,-50%) scale(${s})`:'';
+    el.style.zIndex=s>1?'20':'';
+    el.classList.toggle('foco',s>1);
   });
-  SQ.forEach((q,i)=>q.el&&q.el.classList.toggle('foco',i===maior));
-  // legenda da casa em destaque
   const lb=document.getElementById('focolbl');
   if(lb){
-    if(maior>=0){const s=board[maior],q=SQ[maior];
-      lb.textContent=maior===0?'Início':maior===FINAL?'🏁 Última casa':`Casa ${maior} · ${s.themes.map(t=>T[t].n).join(' ou ')}`;
+    if(alvo!=null){const s=board[alvo],q=SQ[alvo];
+      lb.textContent=alvo===0?'Início':alvo===FINAL?'🏁 Última casa':`Casa ${alvo} · ${s.themes.map(t=>T[t].n).join(' ou ')}`;
       const vx=q.dx-50,vy=q.dy-50,vl=Math.hypot(vx,vy)||1,rr=vl-SZ*q.ds*.5-6; // a legenda fica do lado de dentro do anel
       lb.style.left=Math.max(24,Math.min(76,50+vx/vl*rr))+'%';lb.style.top=(50+vy/vl*rr)+'%';lb.style.opacity='1'}
     else lb.style.opacity='0';
   }
-  if(typeof repositionaPeoes==='function')repositionaPeoes();
+  repositionaPeoes();
 }
 function repositionaPeoes(){const sp=pawnSpots();PAWN_EL.forEach((el,k)=>{if(!PAWN_ANIM[k])placePw(el,sp[k])})}
-function focoAgenda(f){FOCO_ALVO=f;if(FOCO_RAF)return;FOCO_RAF=requestAnimationFrame(()=>{FOCO_RAF=0;if(FOCO_ALVO!==FOCO)aplicaFoco(FOCO_ALVO)})}
+function focoAgenda(alvo){FOCO_ALVO=alvo;if(FOCO_RAF)return;FOCO_RAF=requestAnimationFrame(()=>{FOCO_RAF=0;if(FOCO_ALVO!==FOCO)aplicaFoco(FOCO_ALVO)})}
 (()=>{
   const ring=document.getElementById('ring');if(!ring)return;
-  ring.addEventListener('pointermove',ev=>{if(ev.pointerType==='touch')return;focoAgenda(anguloNoAnel(ev))});
-  ring.addEventListener('pointerleave',ev=>{if(ev.pointerType==='touch')return;focoAgenda(null)});
+  ring.addEventListener('pointermove',ev=>{
+    if(ev.pointerType==='touch')return;
+    const i=casaDoEvento(ev);
+    if(i>=0)focoAgenda(i);            // em cima de uma casa: ela cresce
+    else if(!naFaixa(ev))focoAgenda(null); // saiu do anel: tudo volta; no vão entre duas casas, mantém como está
+  });
+  ring.addEventListener('pointerleave',ev=>{if(ev.pointerType!=='touch')focoAgenda(null)});
   // no celular: tocar numa casa amplia; tocar fora ou esperar alguns segundos volta ao normal (a rolagem continua livre)
   let toque=null;
-  ring.addEventListener('pointerdown',ev=>{if(ev.pointerType==='touch')toque={x:ev.clientX,y:ev.clientY,t:Date.now()}});
+  ring.addEventListener('pointerdown',ev=>{if(ev.pointerType==='touch')toque={x:ev.clientX,y:ev.clientY}});
   ring.addEventListener('pointerup',ev=>{
     if(ev.pointerType!=='touch'||!toque)return;
     const moveu=Math.hypot(ev.clientX-toque.x,ev.clientY-toque.y)>12;toque=null;if(moveu)return;
-    const f=anguloNoAnel(ev);clearTimeout(FOCO_TIMER);
-    aplicaFoco(f);if(f!=null)FOCO_TIMER=setTimeout(()=>aplicaFoco(null),4500);
+    const i=casaDoEvento(ev);clearTimeout(FOCO_TIMER);
+    aplicaFoco(i>=0&&i!==FOCO?i:null);if(FOCO!=null)FOCO_TIMER=setTimeout(()=>aplicaFoco(null),4500);
   });
   addEventListener('resize',()=>{if(FOCO!=null)aplicaFoco(null)});
 })();
