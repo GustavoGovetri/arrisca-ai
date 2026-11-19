@@ -627,6 +627,10 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
 .dztit{font-size:16px;line-height:1.35}
 .dztit .muted{margin-left:6px;font-family:'Lilita One',sans-serif}
 .dzbox .votos{margin:10px 0 4px}
+
+.cm .ch{display:block;text-align:right;font-size:11px;opacity:.65;margin-top:2px;font-weight:500}
+.cm.emo .ch{font-size:10.5px;text-align:left}
+.cm.me.emo .ch{text-align:right}
 </style>
 </head>
 <body>
@@ -2044,7 +2048,7 @@ function localNet(){
     create:async(c,m)=>wr('salas/'+c+'/meta',m),
     watch(c,h){const u=[sub('salas/'+c+'/meta',h.onMeta),sub('salas/'+c+'/jogadores',v=>h.onLobby(v||{})),sub('salas/'+c+'/estado',h.onState),sub('salas/'+c+'/votos',v=>h.onVotes&&h.onVotes(v||{})),sub('salas/'+c+'/chat',v=>h.onChat&&h.onChat(v||[]))];return ()=>u.forEach(f=>f())},
     vote:async(c,d,o)=>{const k='salas/'+c+'/votos';const all=rd(k)||{};all[d]=o;wr(k,all)},
-    chat:async(c,m)=>{const k='salas/'+c+'/chat';const a=rd(k)||[];a.push(m);wr(k,a.slice(-60))},
+    chat:async(c,m)=>{const k='salas/'+c+'/chat';const a=rd(k)||[];const ts=Math.round(performance.timeOrigin+performance.now()); /* simula a hora do servidor */a.push(Object.assign({id:ts.toString(36)+Math.random().toString(36).slice(2,6)},m,{ts}));wr(k,a.slice(-60))},
     setMe:async(c,d,o)=>{const k='salas/'+c+'/jogadores';const all=rd(k)||{};all[d]=Object.assign(all[d]||{},o);wr(k,all)},
     removePlayer:async(c,d)=>{const k='salas/'+c+'/jogadores';const all=rd(k)||{};delete all[d];wr(k,all)},
     tx:async(c,base,val)=>{const k='salas/'+c+'/estado';const cur=rd(k);if(((cur&&cur.v)||0)!==base)return false;wr(k,val);return true},
@@ -2228,33 +2232,37 @@ function tempoAcabou(){
 // ----- chat da sala -----
 function corOk(c){return /^#[0-9a-fA-F]{3,8}$/.test(String(c||''))?c:'#ffffff'}
 const REACOES=['😂','👏','😱','🤔','🔥','🙈','😭','🎉'];
-let CHAT=[],CHAT_OPEN=false,CHAT_SEEN=0,CHAT_LAST=0,CHAT_INIT=false;
-function chatZera(){CHAT=[];CHAT_OPEN=false;CHAT_SEEN=0;CHAT_LAST=0;CHAT_INIT=false;const pv=document.getElementById('chatprev');if(pv)pv.style.display='none';chatBadge();chatVis()}
+let CHAT=[],CHAT_OPEN=false,CHAT_INIT=false,CHAT_VISTAS=new Set(),CHAT_CONHECE=new Set();
+function chatZera(){CHAT=[];CHAT_OPEN=false;CHAT_INIT=false;CHAT_VISTAS=new Set();CHAT_CONHECE=new Set();const pv=document.getElementById('chatprev');if(pv)pv.style.display='none';chatBadge();chatVis()}
 function chatVis(){
   const b=document.getElementById('chatbtn'),x=document.getElementById('chatbox');if(!b||!x)return;
   const on=online();b.style.display=on?'':'none';x.style.display=on&&CHAT_OPEN?'':'none';
   const r=document.getElementById('chatreac');if(r&&!r.childElementCount)r.innerHTML=REACOES.map(e=>`<button type="button" onclick="chatManda('${e}')">${e}</button>`).join('');
 }
-function chatAbre(){CHAT_OPEN=true;CHAT_SEEN=Date.now();const pv=document.getElementById('chatprev');if(pv)pv.style.display='none';chatBadge();chatVis();chatPinta();setTimeout(()=>{const i=document.getElementById('chatin');if(i&&matchMedia('(pointer:fine)').matches)i.focus()},60)}
-function chatFecha(){CHAT_OPEN=false;CHAT_SEEN=Date.now();chatBadge();chatVis()}
-function chatBadge(){const n=CHAT.filter(m=>m&&m.ts>CHAT_SEEN&&m.dev!==MYDEV).length;const el=document.getElementById('chatn');if(el)el.textContent=n?(n>9?'9+':n):''}
+function chatAbre(){CHAT_OPEN=true;chatViu();const pv=document.getElementById('chatprev');if(pv)pv.style.display='none';chatBadge();chatVis();chatPinta();setTimeout(()=>{const i=document.getElementById('chatin');if(i&&matchMedia('(pointer:fine)').matches)i.focus()},60)}
+function chatFecha(){CHAT_OPEN=false;chatViu();chatBadge();chatVis()}
+function chatViu(){CHAT.forEach(m=>CHAT_VISTAS.add(m.id))}
+function chatBadge(){const n=CHAT.filter(m=>!CHAT_VISTAS.has(m.id)&&m.dev!==MYDEV).length;const el=document.getElementById('chatn');if(el)el.textContent=n?(n>9?'9+':n):''}
 function chatPinta(){
   if(!CHAT_OPEN)return;const el=document.getElementById('chatlist');if(!el)return;
-  el.innerHTML=CHAT.length?CHAT.map(m=>{const emo=REACOES.includes(m.t);return `<div class="cm${m.dev===MYDEV?' me':''}${emo?' emo':''}">${m.dev===MYDEV||emo?'':`<span class="cn" style="color:${corOk(m.c)}">${esc(m.n||'Alguém')}</span>`}${esc(m.t)}</div>`}).join(''):'<p class="muted chatvazio">Nenhuma mensagem ainda. Mande um oi! 👋</p>';
+  el.innerHTML=CHAT.length?CHAT.map(m=>{const emo=REACOES.includes(m.t),eu=m.dev===MYDEV,hr=horaChat(m.ts);return `<div class="cm${eu?' me':''}${emo?' emo':''}">${eu||emo?'':`<span class="cn" style="color:${corOk(m.c)}">${esc(m.n||'Alguém')}</span>`}${esc(m.t)}${hr?`<span class="ch">${emo&&!eu?esc(m.n||'')+' · ':''}${hr}</span>`:''}</div>`}).join(''):'<p class="muted chatvazio">Nenhuma mensagem ainda. Mande um oi! 👋</p>';
   el.scrollTop=el.scrollHeight;
 }
 function chatRecebido(a){
-  CHAT=(Array.isArray(a)?a:Object.values(a||{})).filter(m=>m&&m.t).sort((x,y)=>(x.ts||0)-(y.ts||0));
-  const ultimo=CHAT.reduce((x,m)=>Math.max(x,m.ts||0),0);
-  if(!CHAT_INIT){CHAT_INIT=true;CHAT_SEEN=Math.max(CHAT_SEEN,ultimo)}
+  // mensagens conferidas e em ordem pela hora do servidor (o relógio de cada aparelho pode estar adiantado ou atrasado)
+  CHAT=(Array.isArray(a)?a:Object.values(a||{})).filter(m=>m&&typeof m.t==='string'&&m.t).map((m,i)=>({
+    id:String(m.id||('m'+i)).slice(0,40),dev:sId(m.dev)||'',n:sStr(m.n,16),c:m.c,t:sStr(m.t,200),ts:Number(m.ts)||0
+  })).sort((x,y)=>(x.ts-y.ts)||(x.id<y.id?-1:x.id>y.id?1:0));
+  if(!CHAT_INIT){CHAT_INIT=true;CHAT.forEach(m=>{CHAT_CONHECE.add(m.id);CHAT_VISTAS.add(m.id)})}
   else{
-    const novos=CHAT.filter(m=>(m.ts||0)>CHAT_LAST&&m.dev!==MYDEV);
+    const novos=CHAT.filter(m=>!CHAT_CONHECE.has(m.id)&&m.dev!==MYDEV);
+    CHAT.forEach(m=>CHAT_CONHECE.add(m.id));
     if(novos.length){SFX.msg();novos.forEach(m=>{if(REACOES.includes(m.t))emojiVoa(m.t)});if(!CHAT_OPEN)chatPrevia(novos[novos.length-1])}
   }
-  CHAT_LAST=Math.max(CHAT_LAST,ultimo);
-  if(CHAT_OPEN)CHAT_SEEN=Date.now();
+  if(CHAT_OPEN)chatViu();
   chatBadge();chatPinta();
 }
+function horaChat(ts){if(!ts)return '';try{return new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}catch(e){return ''}}
 function chatPrevia(m){
   const el=document.getElementById('chatprev');if(!el)return;
   if(REACOES.includes(m.t))return;

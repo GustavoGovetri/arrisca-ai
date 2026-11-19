@@ -17,7 +17,7 @@ if(cfg&&cfg.databaseURL&&!sim){
                  d.onValue(R('salas/'+code+'/jogadores'),s=>h.onLobby(s.val()||{})),
                  d.onValue(R('salas/'+code+'/estado'),s=>h.onState(s.val())),
                  d.onValue(R('salas/'+code+'/votos'),s=>h.onVotes&&h.onVotes(s.val()||{})),
-                 d.onValue(d.query(R('salas/'+code+'/chat'),d.limitToLast(60)),s=>{const a=[];s.forEach(c=>{a.push(c.val())});h.onChat&&h.onChat(a)})];
+                 d.onValue(d.query(R('salas/'+code+'/chat'),d.limitToLast(60)),s=>{const a=[];s.forEach(c=>{const v=c.val();if(v&&typeof v==='object')a.push(Object.assign({},v,{id:c.key}))});h.onChat&&h.onChat(a)})];
         return ()=>u.forEach(f=>f());
       },
       async setMe(code,dev,obj){
@@ -31,7 +31,7 @@ if(cfg&&cfg.databaseURL&&!sim){
         return res.committed;
       },
       async vote(code,dev,obj){await d.set(R('salas/'+code+'/votos/'+dev),obj)},
-      async chat(code,msg){await d.push(R('salas/'+code+'/chat'),msg)},
+      async chat(code,msg){await d.push(R('salas/'+code+'/chat'),Object.assign({},msg,{ts:d.serverTimestamp()}))}, // hora do servidor: a ordem não depende do relógio de cada aparelho
       async report(r){await d.push(R('reportes'),r)},
       onConnected(cb){d.onValue(R('.info/connected'),s=>cb(!!s.val()))}
     };
