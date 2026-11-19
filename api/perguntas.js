@@ -227,3 +227,13 @@ module.exports = async (req, res) => {
   }
 };
 module.exports._handle = handle;
+// para as contas: confere o token de uma pergunta sorteada e diz o nível dela no banco
+module.exports._infoTk = async tk => {
+  const x = confere(tk);
+  if (!x || typeof x.i !== 'string' || typeof x.t !== 'string') return null;
+  const B = await banco(), T = B.temas[x.t];
+  if (!T) return null;
+  const i = T.idx.get(x.i);
+  if (i === undefined) return null;
+  return { qid: x.i, t: x.t, m: x.m, s: x.s || null, e: +x.e || 0, nivel: Math.min(4, Math.max(1, +qDiff(x.t, T.items[i]) || 2)) };
+};

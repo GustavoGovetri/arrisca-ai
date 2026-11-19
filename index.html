@@ -126,11 +126,16 @@ body.arrastando{user-select:none;-webkit-user-select:none;cursor:grabbing}
 .note2{background:#203225;color:#b6f0c6;padding:8px 10px;border-radius:8px;font-size:13px;margin-top:8px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#2e9e5b;color:#fff;padding:10px 16px;border-radius:10px;font-weight:700;opacity:0;pointer-events:none;transition:all .3s;z-index:10;box-shadow:0 6px 20px rgba(0,0,0,.4)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.tsel{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.opts.optsgrade{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.opts.optsgrade button{margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tsel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}
+.tsel .tchip{min-width:0}
 .tchip{display:flex;align-items:center;gap:6px;flex-wrap:wrap;text-align:left;padding:8px 10px;background:#242834;border:1px solid #2f3442;opacity:.55;font-size:13px}
 .tchip.on{opacity:1;border-color:var(--c);box-shadow:0 0 0 1px var(--c) inset}
 .tchip .tdot{width:12px;height:12px;border-radius:50%;background:var(--c);flex:none}
-.tchip small{width:100%;color:#9aa0ad;font-weight:500;margin-left:18px}
+.tchip{flex-wrap:nowrap;min-height:40px}
+.tchip .tnome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.tchip small{flex:none;color:#9aa0ad;font-weight:600;font-size:11.5px;white-space:nowrap}
 .win{text-align:center;font-size:26px;font-weight:800;margin:10px 0}
 details summary{cursor:pointer;font-weight:700}
 details ul{padding-left:18px;color:#c3c7d0;font-size:14px;line-height:1.5}
@@ -226,7 +231,9 @@ button:active:not(:disabled){transform:scale(.94)}
 .ic{width:17px;height:17px;vertical-align:-3px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 button.small .ic{width:15px;height:15px;margin-right:5px}
 .modos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.modos .modo{align-items:center;justify-content:center;text-align:center;padding:10px 6px;min-height:52px}
+.modos .modo{align-items:center;justify-content:center;text-align:center;padding:8px 6px;gap:2px}
+.modos .modo .me{font-size:22px;line-height:1}
+.modos .modo b{font-size:16px}
 .mododesc{margin:8px 2px 0;font-size:14px;line-height:1.4;text-align:center;opacity:.92}
 .modo{text-align:left;padding:10px 12px;background:#242834;border:1px solid #2f3442;opacity:.7;display:flex;flex-direction:column;gap:4px}
 .modo b{font-size:15px}
@@ -564,21 +571,92 @@ input.chama{animation:chama .9s}
 
 /* reportar bug */
 .bugbox{height:auto;max-height:86vh}
-.contalinha{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:-2px 0 12px;font-size:14px}
-.contalinha .ok{color:#d7ffe2}
-.contalinha button{padding:6px 12px;font-size:14px}
-.contabox{width:min(420px,calc(100vw - 24px))}
-.containtro{font-size:15px;line-height:1.45;margin:0 0 14px}
-.contabox form{display:flex;flex-direction:column;gap:10px}
-.contabox input{width:100%;font-size:16px;padding:11px 12px}
-.contabox label{font-size:13px;font-weight:700;margin-bottom:-4px}
+.homecards{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:0 0 12px}
+.hcard{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 10px;min-height:54px;border-radius:16px;background:linear-gradient(180deg,#7a1030,#5a0a22);text-align:left}
+.hcard.chama{background:linear-gradient(180deg,#2a7bff,#1653c9)}
+.hcard .hico{flex:none;width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:17px;background:rgba(0,0,0,.25);border:2px solid var(--k);color:#2a0410;font-weight:900}
+.hcard .htxt{min-width:0;display:flex;flex-direction:column;line-height:1.15}
+.hcard .htxt b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hcard .htxt small{font-size:12px;opacity:.85;white-space:nowrap}
+#modalfundo{display:none;position:fixed;inset:0;z-index:39;background:rgba(20,0,8,.62);backdrop-filter:blur(2px)}
+.chatbox.modal{z-index:40;left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:min(470px,calc(100vw - 20px));height:auto;max-height:min(92vh,860px);animation:modalIn .2s ease-out}
+.chatbox.modal.largo{width:min(780px,calc(100vw - 20px));height:min(86vh,820px)}
+@keyframes modalIn{from{opacity:0;transform:translate(-50%,-47%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%)}}
+@media(max-width:600px){.chatbox.modal,.chatbox.modal.largo{left:6px;right:6px;bottom:6px;top:auto;transform:none;width:auto;max-height:90vh;animation:pin .25s ease-out}.chatbox.modal.largo{height:86vh}}
+.chatbox.modal .chathead{justify-content:center;position:relative}
+.chatbox.modal .chathead>button,.chatbox.modal .chathead>.row{position:absolute;right:10px}
+.cthero{text-align:center;margin:2px 0 12px}
+.ctlogo{width:58px;height:58px;margin:0 auto 6px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;background:linear-gradient(180deg,#ffe36e,#ffc21a);border:3px solid var(--k);box-shadow:0 3px 0 var(--k)}
+.cthero h3{margin:0;font-family:'Lilita One',sans-serif;font-weight:400;font-size:22px;color:var(--amarelo);text-shadow:var(--txt-contorno)}
+.cthero p{margin:4px 0 0;font-size:14px;opacity:.9}
+.vantagens{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 14px}
+.vantagens div{background:rgba(0,0,0,.22);border-radius:12px;padding:8px 4px;text-align:center;font-size:12px;line-height:1.25;font-weight:700}
+.vantagens span{display:block;font-size:22px;margin-bottom:3px}
+.ctform{display:flex;flex-direction:column;gap:8px}
+.ctform label{font-size:13px;font-weight:700;margin:2px 0 -3px}
+.ctform input{width:100%;font-size:16px;padding:11px 12px}
+.ctform .primary{margin-top:6px}
+.senhawrap{position:relative}
+.senhawrap input{padding-right:48px}
+.olho{position:absolute;right:5px;top:50%;transform:translateY(-50%);width:38px;height:38px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:none!important;border:0!important;box-shadow:none!important;font-size:18px}
+.ctbanner{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 12px;margin:-2px 0 12px;border-radius:16px;background:linear-gradient(135deg,color-mix(in srgb,var(--c) 45%,#5a0a22),#3f0517);border:3px solid var(--k)}
+.ctav{width:58px!important;height:58px!important;border-width:3px!important;flex:none}
+.ctquem{min-width:0;text-align:left}
+.ctquem b{display:block;font-family:'Lilita One',sans-serif;font-weight:400;font-size:22px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ctquem small{display:block;opacity:.85;font-size:12.5px;word-break:break-all}
+.ctabas{margin-bottom:14px}
+.ctstats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ctstats div{background:rgba(0,0,0,.22);border-radius:14px;padding:8px 4px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.ctstats span{font-size:18px}
+.ctstats b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:22px;color:var(--amarelo);line-height:1.1}
+.ctstats small{font-size:11.5px;opacity:.85;line-height:1.2}
+.ctniveis{background:rgba(0,0,0,.18);border-radius:14px;padding:10px 12px;margin-top:10px}
+.ctnt{font-weight:800;font-size:14px;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px}
+.ctnt small{font-weight:600;opacity:.85}
+.ctnv{display:grid;grid-template-columns:78px 1fr 52px;align-items:center;gap:8px;font-size:13px;margin:4px 0}
+.ctnv i,.conq i{display:block;height:10px;border-radius:6px;background:rgba(0,0,0,.35);overflow:hidden}
+.ctnv em,.conq i em{display:block;height:100%;border-radius:6px}
+.ctnv small{text-align:right;opacity:.9}
+.ctdica{font-size:14px;line-height:1.45;margin:10px 0 0;opacity:.95}
+.ctsub{margin:18px 0 8px;font-family:'Lilita One',sans-serif;font-weight:400;font-size:18px;color:var(--amarelo);text-shadow:var(--txt-contorno);text-align:center}
+.ctpainel{width:100%;margin-top:14px}
+.conqs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.conq{background:rgba(0,0,0,.22);border-radius:14px;padding:10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
+.conq .cqe{font-size:28px;filter:grayscale(1) opacity(.45)}
+.conq.ok{background:linear-gradient(180deg,rgba(255,210,63,.22),rgba(0,0,0,.2));box-shadow:inset 0 0 0 2px rgba(255,210,63,.6)}
+.conq.ok .cqe{filter:none}
+.conq b{font-size:13.5px;line-height:1.2}
+.conq small{font-size:11.5px;opacity:.8;line-height:1.25}
+.conq i{width:100%;height:7px;margin-top:4px}
+.conq i em{background:var(--amarelo)}
+.cqdata{font-style:normal;font-size:11px;opacity:.85}
+.hist{display:flex;flex-direction:column;gap:8px}
+.hitem{background:rgba(0,0,0,.22);border-radius:14px;padding:9px 12px}
+.hitem.venceu{box-shadow:inset 0 0 0 2px rgba(255,210,63,.6)}
+.hl1{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.hl1 span,.hl2{font-size:12.5px;opacity:.85}
+.hl3{display:flex;gap:14px;font-size:14px;margin-top:3px}
+.hl3 b{margin-left:auto;color:var(--amarelo)}
+.rkper{text-align:center;margin:10px 0;font-weight:700;opacity:.9}
+.rklista{display:flex;flex-direction:column;gap:6px}
+.rk{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.22);border-radius:14px;padding:8px 12px}
+.rk.top{background:linear-gradient(90deg,rgba(255,210,63,.18),rgba(0,0,0,.2))}
+.rk.eu{box-shadow:inset 0 0 0 2px #40c4ff}
+.rkpos{width:34px;text-align:center;font-weight:800;font-size:18px;flex:none}
+.rk .swatch{width:20px;height:20px;border-width:2px}
+.rknome{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.rk b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:19px;color:var(--amarelo)}
+.rk b small{font-size:12px;font-family:inherit;opacity:.8}
+.rkcta{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:14px;text-align:center;font-weight:700}
+.rkregra{font-size:12.5px;opacity:.8;text-align:center;margin:14px 0 0;line-height:1.4}
+.containtro{font-size:15px;line-height:1.45;margin:0 0 14px;text-align:center}
 .btgoogle{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#fff;color:#1f1f1f;padding:12px 14px;font-size:16px}
 .btgoogle:hover:not(:disabled){background:#f1f1f1}
 .btgoogle svg{width:20px;height:20px;flex:none}
-.ou{display:flex;align-items:center;gap:10px;margin:16px 0 12px;font-size:13px;opacity:.85}
+.ou{display:flex;align-items:center;gap:10px;margin:14px 0 12px;font-size:13px;opacity:.85}
 .ou:before,.ou:after{content:'';flex:1;border-top:2px dashed rgba(255,255,255,.2)}
 .abas{display:flex;gap:6px;margin-bottom:12px}
-.abas button{flex:1;opacity:.7}
+.abas button{flex:1;opacity:.7;justify-content:center;text-align:center}
 .abas button.on{opacity:1;background:linear-gradient(180deg,#ffe36e,#ffc21a);color:#2a1600}
 .linkbtn{background:none!important;border:0!important;box-shadow:none!important;padding:4px;color:#ffe4ea;text-decoration:underline;font-weight:600;font-size:14px;align-self:center}
 .contaerro{background:rgba(0,0,0,.25);border-left:4px solid #ffb02e;border-radius:10px;padding:8px 10px;font-size:14px;margin:10px 0 0}
@@ -592,7 +670,7 @@ input.chama{animation:chama .9s}
 .contapes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:2px dashed rgba(255,255,255,.18)}
 .contapes button{flex:1}
 button.perigo{background:#5a0f22}
-.painelbox{width:min(760px,calc(100vw - 24px));height:min(760px,86vh)}
+
 .pfiltro{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .pfiltro label{font-size:14px;display:flex;align-items:center;gap:6px;margin-left:auto}
 .pitem{background:rgba(0,0,0,.22);border-radius:14px;padding:10px 12px;margin-bottom:10px}
@@ -699,7 +777,7 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
 <div class="wrap">
   <div class="ringwrap"><div class="ring" id="ring"></div></div>
   <div>
-    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Efeitos visuais" onclick="trocaEfeitos()"></button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" onclick="contaAbre()">👤</button><button id="bugbtn" class="tab snd" title="Reportar um problema no site" onclick="bugAbre()">🐞</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
+    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Efeitos visuais" onclick="trocaEfeitos()"></button><button id="rankbtn" class="tab snd" title="Ranking da semana e do mês" onclick="rankingAbre()">🏆</button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" onclick="contaAbre()">👤</button><button id="bugbtn" class="tab snd" title="Reportar um problema no site" onclick="bugAbre()">🐞</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
     <div id="view-jogo">
     <div class="card" id="panel"></div>
     <div class="card" id="scores" style="display:none"></div>
@@ -739,8 +817,10 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
   <p class="muted avisodica">Dica: deixe o Arrisca Aí aberto na tela durante a partida.</p>
   <label class="avisonao"><input type="checkbox" id="avisonao"><span>Não mostrar de novo<small class="muted">Volta a aparecer quando você abrir o site de novo.</small></span></label>
   <button class="primary" onclick="abaFecha()">Entendi</button></div></div>
-<div id="contabox" class="chatbox histbox bugbox contabox" style="display:none"><div class="chathead"><b id="contatit">👤 Sua conta</b><button class="small" onclick="contaFecha()">✕</button></div><div id="contacorpo" class="histcorpo"></div></div>
-<div id="painelbox" class="chatbox histbox painelbox" style="display:none"><div class="chathead"><b>🛠 Painel</b><div class="row"><button class="small" title="Atualizar" onclick="painelCarrega()">↻</button><button class="small" onclick="painelFecha()">✕</button></div></div><div id="painelcorpo" class="histcorpo"></div></div>
+<div id="modalfundo" onclick="modaisFecha()"></div>
+<div id="contabox" class="chatbox modal contabox" style="display:none"><div class="chathead"><b id="contatit">👤 Sua conta</b><button class="small" onclick="contaFecha()">✕</button></div><div id="contacorpo" class="histcorpo"></div></div>
+<div id="rankbox" class="chatbox modal rankbox" style="display:none"><div class="chathead"><b>🏆 Ranking</b><div class="row"><button class="small" title="Atualizar" onclick="rankingCarrega()">↻</button><button class="small" onclick="rankingFecha()">✕</button></div></div><div id="rankcorpo" class="histcorpo"></div></div>
+<div id="painelbox" class="chatbox modal largo painelbox" style="display:none"><div class="chathead"><b>🛠 Painel</b><div class="row"><button class="small" title="Atualizar" onclick="painelCarrega()">↻</button><button class="small" onclick="painelFecha()">✕</button></div></div><div id="painelcorpo" class="histcorpo"></div></div>
 <div id="bugbox" class="chatbox histbox bugbox" style="display:none"><div class="chathead"><b>🐞 Reportar um problema</b><button class="small" onclick="bugFecha()">✕</button></div><div id="bugcorpo" class="histcorpo"></div></div>
 <div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
 <div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b>💬 Chat da sala</b><button class="small" onclick="chatFecha()">✕</button></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
@@ -963,7 +1043,7 @@ function resetTheme(k){
 let TAB='jogo';
 // ---------- desfazer ----------
 const DRAWLOG=[];let UNDO=[];
-const SNAP_KEYS=['players','cur','round','phase','theme','q','qd','qid','hint','timeUp','lvNote','seen','token','lastTok','chosen','revealed','forcedNow','resetNote','themeOptions','themeLabel','msg','resp','tEnd','tk','sortTema','dobro','rasteira','qt','aba'];
+const SNAP_KEYS=['players','cur','round','phase','theme','q','qd','qid','hint','timeUp','lvNote','seen','token','lastTok','chosen','revealed','forcedNow','resetNote','themeOptions','themeLabel','msg','resp','tEnd','tk','sortTema','dobro','rasteira','qt','aba','ult'];
 function snapshot(label){
   const s={label,draws:DRAWLOG.length,state:{}};
   SNAP_KEYS.forEach(k=>s.state[k]=G[k]===undefined?undefined:JSON.parse(JSON.stringify(G[k])));
@@ -1165,7 +1245,7 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){document.body.classList.toggle('inicio',!MODE);document.body.classList.toggle('prep',!!MODE&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
+function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE);document.body.classList.toggle('prep',!!MODE&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
 
 function renderPanel(){
   const el=document.getElementById('panel');
@@ -1182,10 +1262,10 @@ function renderPanel(){
     h+='</div>';
     if(G.pickColor!=null&&G.pickColor<G.count)h+=`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.names[G.pickColor]||'Jogador '+(G.pickColor+1))}</b>:</span>${paletaHtml(G.colors[G.pickColor],`setupColor(${G.pickColor},'#C')`,G.colors.slice(0,G.count))}</div>`;
     h+=`<div class="row" style="margin:-2px 0 10px"><button class="small" onclick="shuffleSetup()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem; quem está em 1º começa. Toque na bolinha para trocar a cor.</span></div>`;
-    h+=`</div><div class="pcol"><h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${chipInfo(k,G.selThemes,true)}</small></button>`}).join('')}</div>
+    h+=`<div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
+    <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}${Q&&v!=='misto'?' · '+lvCount(+v).toLocaleString('pt-BR')+' perguntas':''}</option>`).join('')}</select></div>`;
+    h+=`</div><div class="pcol"><h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].n+': '+T[k].d+(chipInfo(k,G.selThemes,true)?' ('+chipInfo(k,G.selThemes,true)+')':''))}"><span class="tdot"></span><span class="tnome">${T[k].n}</span><small>${chipConta(k,G.selThemes,true)}</small></button>`}).join('')}</div>
     <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>${juntaNota(G.selThemes)}
-    <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
-    <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}${Q&&v!=='misto'?' · '+lvCount(+v).toLocaleString('pt-BR')+' perguntas':''}</option>`).join('')}</select></div>
     ${modosHtml(true)}
     ${G.selThemes.length<3?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Escolha pelo menos 3 temas.</p>':''}</div></div>`;
     h+=`<div class="prepfoot"><p class="muted">${Q?(()=>{const u=G.selThemes.reduce((s,k)=>s+usedJ(k,G.selThemes),0);return total.toLocaleString('pt-BR')+' perguntas no baralho'+(u?`, ${(total-u).toLocaleString('pt-BR')} ainda não saíram`:'')+'. '})():'Carregando perguntas… '}A pessoa seguinte na roda lê a pergunta e confere a resposta.</p><button class="primary" ${Q?'':'disabled'} ${G.selThemes.length<3?'disabled':''} onclick="startGame()">Começar</button></div>`;
@@ -1202,7 +1282,7 @@ function renderPanel(){
     return;
   }
   if(G.phase==='theme'){
-    el.innerHTML=head+`<p class="msg">${G.themeLabel}</p><div class="opts">${G.themeOptions.map(k=>`<button style="background:${T[k].c}" ${canTheme()?'':'disabled'} onclick="pickTheme('${k}')"><b>${sg(k)}</b> · ${T[k].n}</button>`).join('')}</div>${canTheme()?'':waitThemeHtml()}`;
+    el.innerHTML=head+`<p class="msg">${G.themeLabel}</p><div class="opts${G.themeOptions.length>4?' optsgrade':''}">${G.themeOptions.map(k=>`<button style="background:${T[k].c}" ${canTheme()?'':'disabled'} onclick="pickTheme('${k}')"><b>${sg(k)}</b> · ${T[k].n}</button>`).join('')}</div>${canTheme()?'':waitThemeHtml()}`;
     return;
   }
   if(G.phase==='won'){
@@ -1279,6 +1359,11 @@ function chipInfo(k,a,soma){ // texto pequeno embaixo do nome do tema
   if(juntaCom(a)&&!a.includes(k)&&Q.rotas&&Q.rotas[k])return 'vai para '+destinosDe(k).map(d=>T[d].n).join(' + ');
   const n=QNj(k,a),u=soma?usedJ(k,a):0;
   return (n-u).toLocaleString('pt-BR')+' perguntas';
+}
+function chipConta(k,a,soma){ // número curto no canto do chip: 2,1 mil perguntas, ou para onde o tema vai
+  const t=chipInfo(k,a,soma);if(!t)return '';
+  if(t.startsWith('vai para'))return '→ '+destinosDe(k).map(d=>sg(d)).join('+');
+  const n=parseInt(t.replace(/\D/g,''),10);return n>=1000?(n/1000).toFixed(1).replace('.',',')+' mil':String(n);
 }
 function toggleTheme(k){const i=G.selThemes.indexOf(k);if(i>=0)G.selThemes.splice(i,1);else{G.selThemes.push(k);G.selThemes.sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b))}render()}
 let timerId=null;
@@ -1384,7 +1469,7 @@ function sendReport(){
 }
 function removeReport(i){const r=REPORTS[i];if(r)RESOLVIDOS.push(repKey(r));REPORTS.splice(i,1);saveReports();renderHist()}
 function startGame(){
-  UNDO=[];
+  UNDO=[];G.jogo=Math.random().toString(36).slice(2,10);G.ult=null; // identifica a partida (para as contas)
   G.pickColor=null;G.editPl=false;
   G.players=online()?lobbyPlayers():G.names.slice(0,G.count).map((n,i)=>({name:(n||'').trim()||'Jogador '+(i+1),color:(G.colors&&G.colors[i])||PCOLORS[i],pos:0,used:[],forced:null,aj:{pular:0,dica:0}}));
   G.themes=[...G.selThemes];syncBoard();G.board=board;G.previewBoard=null;
@@ -1444,7 +1529,7 @@ const ORDEM_MODOS=['classico','bonus','arriscado'];
 function modo(){return G.modo==='semdo'?'arriscado':MODOS[G.modo]?G.modo:'classico'} // o Sem dó saiu: sala antiga nele segue como Arriscado
 function regra(r){const m=modo();return r==='bonus'?m!=='classico':r==='dobro'?m==='arriscado':false}
 function modosHtml(pode){
-  return `<h2 style="margin-top:16px">Modo de jogo</h2><div class="modos">${ORDEM_MODOS.map(k=>{const m=MODOS[k],on=modo()===k;return `<button class="modo${on?' on':''}" ${pode?'':'disabled'} onclick="G.modo='${k}';render()" title="${esc(m.d)}"><b>${m.e} ${m.n}</b></button>`}).join('')}</div><p class="mododesc">${MODOS[modo()].d}</p>`;
+  return `<h2 style="margin-top:16px">Modo de jogo</h2><div class="modos">${ORDEM_MODOS.map(k=>{const m=MODOS[k],on=modo()===k;return `<button class="modo${on?' on':''}" ${pode?'':'disabled'} onclick="G.modo='${k}';render()" title="${esc(m.d)}"><span class="me">${m.e}</span><b>${m.n}</b></button>`}).join('')}</div><p class="mododesc">${MODOS[modo()].d}</p>`;
 }
 function podeDobrar(){
   const p=G.players&&G.players[G.cur];
@@ -1541,6 +1626,7 @@ function resolve(ok,snapped,pre){
   const name=`<b style="color:${p.color}">${esc(p.name)}</b>`;
   const tok=G.token,lv=+G.qd||0,dif=lv===3,imp=lv>=4,dobro=!!G.dobro&&!isFinal;
   let msg;
+  G.ult={q:G.qid,ok:!!ok,d:p.dev||null,tk:G.tk||null,fim:!!(ok&&isFinal)}; // para registrar na conta de quem respondeu
   if(!isFinal&&tok)p.used.push(tok);
   if(ok){
     p.forced=null;
@@ -1666,7 +1752,7 @@ function homeHtml(){
         <button class="avatar grande" style="--c:${cor}" title="Trocar a cor" onclick="HOME_COR=!HOME_COR;render()"><i><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.6L15.6 5a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/></svg></i></button>
         <input id="homenome" value="${esc(myName())}" maxlength="16" placeholder="Seu nome" autocomplete="nickname" oninput="setMyName(this.value);contaSalvaDepois()" onkeydown="if(event.key==='Enter')this.blur()">
       </div>
-      <div id="homeconta">${contaLinhaHtml()}</div>
+      <div id="homeconta" class="homecards">${contaCartoesHtml()}</div>
       ${HOME_COR?`<div class="palette homepal">${PALETA.map(([c,n])=>`<button class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="homeCor('${c}')"></button>`).join('')}</div>`:''}
       <div class="hbtns">
         <button class="pilula amarela" ${ok?'':'disabled'} onclick="jogarRapido()"><span class="ico">${ICONES.jogar}</span><span><b>Jogar</b><small>Entra numa sala aberta</small></span></button>
@@ -1875,10 +1961,11 @@ function contaInicia(){
   if(!AUTH){CONTA.pronto=!!window.AUTH_DONE;contaPinta();if(window.AUTH_ERRO)fetch('/api/bugs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({tipo:'travou',texto:'Login não carregou: '+window.AUTH_ERRO,nome:myName()||'',info:bugInfo()})}).catch(()=>{});return}
   AUTH.onChange(async u=>{
     const antes=CONTA.user&&CONTA.user.uid;
-    CONTA.user=u;CONTA.admin=false;if(!u||u.uid!==antes)CONTA.perfil=null;
+    CONTA.user=u;CONTA.admin=false;if(!u||u.uid!==antes){CONTA.perfil=null;CONTA.dados=null;CONTA.resumo=null}
     if(u){
       try{const j=await contaApi('POST',{acao:'entrar',nome:myName(),cor:myColor()});contaAplica(j.perfil);CONTA.admin=!!j.admin}
       catch(e){console.warn(e);CONTA_UI.erro='Você entrou, mas não consegui carregar o perfil agora: '+e.message}
+      contaResumo();
       CONTA_UI.aba='entrar'; // quando sair, a janela volta na aba Entrar
       if(CONTA_UI.esperando){CONTA_UI.esperando=false;toast('✔ Você entrou'+(CONTA.perfil?' como '+CONTA.perfil.nome:'')+'!')}
     }
@@ -1903,17 +1990,40 @@ function contaSalvaDepois(){ // mudou nome ou cor na tela inicial: guarda na con
     try{const j=await contaApi('POST',d);CONTA.perfil=j.perfil;contaPinta()}catch(e){console.warn(e)}
   },1200);
 }
-function contaLinhaHtml(){
-  if(CONTA.user)return `<div class="contalinha"><span class="ok">✔ Conectado${CONTA.perfil?' como <b>'+esc(CONTA.perfil.nome)+'</b>':''}</span><button class="small" onclick="contaAbre()">Minha conta</button></div>`;
-  return `<div class="contalinha"><button class="small" onclick="contaAbre()">👤 Entrar ou criar conta</button></div>`;
+// ----- janelas por cima da tela (conta, ranking, painel), com fundo escurecido -----
+const MODAIS=['contabox','rankbox','painelbox'];
+function modalAbre(id){
+  chatFecha&&chatFecha();if(typeof fechaSalas==='function')fechaSalas();bugFecha();if(TAB==='hist')setTab('jogo');
+  MODAIS.forEach(m=>{if(m!==id){const b=document.getElementById(m);if(b)b.style.display='none'}});
+  document.getElementById(id).style.display='flex';document.getElementById('modalfundo').style.display='block';
 }
+function modalFecha(id){
+  const b=document.getElementById(id);if(b)b.style.display='none';
+  if(!MODAIS.some(m=>{const x=document.getElementById(m);return x&&x.style.display!=='none'})){const f=document.getElementById('modalfundo');if(f)f.style.display='none'}
+}
+function modaisFecha(){MODAIS.forEach(modalFecha)}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('modalfundo').style.display==='block')modaisFecha()});
+
+function contaCartoesHtml(){ // tela inicial: conta e ranking, lado a lado
+  const p=CONTA.perfil,u=CONTA.user,r=CONTA.resumo;
+  const conta=u
+    ?`<button class="hcard" onclick="contaAbre()"><span class="hico" style="background:${p&&p.cor||myColor()||'#ffd000'}">✔</span><span class="htxt"><b>${esc(p?p.nome:'Minha conta')}</b><small>${r?r.semana+' pts na semana':'Minha conta'}</small></span></button>`
+    :`<button class="hcard chama" onclick="contaAbre()"><span class="hico">👤</span><span class="htxt"><b>Entrar</b><small>ou criar conta</small></span></button>`;
+  return conta+`<button class="hcard" onclick="rankingAbre()"><span class="hico">🏆</span><span class="htxt"><b>Ranking</b><small>semana e mês</small></span></button>`;
+}
+function contaLinhaHtml(){return contaCartoesHtml()}
 function contaPinta(){
   const b=document.getElementById('contabtn');
   if(b){b.classList.toggle('on',!!CONTA.user);b.title=CONTA.user?'Sua conta':'Entrar ou criar conta'}
-  const h=document.getElementById('homeconta');if(h)h.innerHTML=contaLinhaHtml();
+  const h=document.getElementById('homeconta');if(h)h.innerHTML=contaCartoesHtml();
   if(document.getElementById('contabox').style.display!=='none')contaRender();
 }
+async function contaResumo(){ // pontos e conquistas para os cartões e para a janela da conta
+  if(!CONTA.user)return;
+  try{const j=await contaApi('GET',{acao:'eu'});CONTA.dados=j;CONTA.resumo={semana:j.stats.semana,mes:j.stats.mes,total:j.stats.p};contaPinta()}catch(e){console.warn(e)}
+}
 function contaMsgs(){return (CONTA_UI.erro?`<div class="contaerro">${esc(CONTA_UI.erro)}</div>`:'')+(CONTA_UI.ok?`<div class="contaok">${esc(CONTA_UI.ok)}</div>`:'')}
+function olhoSenha(){const i=document.getElementById('ctsenha'),b=document.getElementById('ctolho');if(!i)return;const v=i.type==='password';i.type=v?'text':'password';if(b){b.textContent=v?'🙈':'👁️';b.title=v?'Esconder a senha':'Mostrar a senha'}}
 function contaHtml(){
   if(!AUTH&&!CONTA.pronto)return `<p class="containtro">Carregando o login…</p>`;
   if(!AUTH)return `<p class="containtro">O login não carregou neste navegador. Recarregue a página e tente de novo.</p>${window.AUTH_ERRO?`<div class="contaerro">Detalhe: ${esc(window.AUTH_ERRO)}</div>`:''}<button class="primary" style="width:100%;margin-top:12px" onclick="location.reload()">Recarregar a página</button>`;
@@ -1921,46 +2031,119 @@ function contaHtml(){
   const u=CONTA.user;
   if(!u){
     const criar=CONTA_UI.aba==='criar';
-    return `<p class="containtro">Com uma conta, seu nome e sua cor ficam guardados para jogar de qualquer aparelho. Logo vêm o ranking da semana e do mês, conquistas e estatísticas das partidas online. Sem conta, você continua jogando normalmente como convidado.</p>
+    return `<div class="cthero"><div class="ctlogo">👤</div><h3>Sua conta no Arrisca Aí</h3><p>Opcional e grátis. Sem conta, você joga normalmente como convidado.</p></div>
+    <div class="vantagens"><div><span>🏆</span>Ranking da semana e do mês</div><div><span>🏅</span>Conquistas</div><div><span>📊</span>Histórico e estatísticas</div></div>
     <button class="btgoogle" ${dis} onclick="contaGoogle()">${GOOGLE_SVG}Continuar com Google</button>
     <div class="ou">ou com e-mail</div>
     <div class="abas"><button class="small${criar?'':' on'}" onclick="contaAba('entrar')">Entrar</button><button class="small${criar?' on':''}" onclick="contaAba('criar')">Criar conta</button></div>
-    <form onsubmit="event.preventDefault();contaEmail()">
+    <form class="ctform" onsubmit="event.preventDefault();contaEmail()">
       ${criar?`<label for="ctnome">Nome no jogo</label><input id="ctnome" maxlength="16" autocomplete="nickname" value="${esc(CONTA_UI.nome||myName())}" oninput="CONTA_UI.nome=this.value">`:''}
-      <label for="ctemail">E-mail</label><input id="ctemail" type="email" autocomplete="${criar?'email':'username'}" value="${esc(CONTA_UI.email)}" oninput="CONTA_UI.email=this.value">
-      <label for="ctsenha">Senha${criar?' (pelo menos 6 caracteres)':''}</label><input id="ctsenha" type="password" autocomplete="${criar?'new-password':'current-password'}">
+      <label for="ctemail">E-mail</label><input id="ctemail" type="email" autocomplete="${criar?'email':'username'}" placeholder="voce@exemplo.com" value="${esc(CONTA_UI.email)}" oninput="CONTA_UI.email=this.value">
+      <label for="ctsenha">Senha${criar?' <small>(pelo menos 6 caracteres)</small>':''}</label><div class="senhawrap"><input id="ctsenha" type="password" autocomplete="${criar?'new-password':'current-password'}"><button type="button" id="ctolho" class="olho" title="Mostrar a senha" onclick="olhoSenha()">👁️</button></div>
       <button class="primary" type="submit" ${dis}>${CONTA_UI.ocupado?'Aguarde…':criar?'Criar conta':'Entrar'}</button>
       ${criar?'':`<button type="button" class="linkbtn" ${dis} onclick="contaEsqueci()">Esqueci minha senha</button>`}
     </form>${contaMsgs()}`;
   }
-  const p=CONTA.perfil||{};
-  const cor=CONTA_UI.pcor||p.cor||myColor()||'#ffd23f';
-  const nome=CONTA_UI.pnome!=null?CONTA_UI.pnome:(p.nome||'');
+  const p=CONTA.perfil||{},d=CONTA.dados;
+  const cor=CONTA_UI.pcor||p.cor||myColor()||'#ffd000';
   const google=u.provedor==='google.com';
-  return `<div class="contatopo"><span class="avatar" style="--c:${cor}"></span><div><b>${esc(p.nome||u.nome||'Jogador')}</b><small>${esc(u.email)} · ${google?'Google':'e-mail e senha'}</small></div></div>
-    ${!google&&!u.verificado?`<div class="contaerro">📩 Confirme seu e-mail: mandamos um link para <b>${esc(u.email)}</b>. Não chegou? Olhe o spam. <button class="linkbtn" ${dis} onclick="contaReenvia()">Mandar de novo</button><button class="linkbtn" ${dis} onclick="contaJaConfirmei()">Já confirmei</button></div>`:''}
-    <form onsubmit="event.preventDefault();contaSalva()" style="margin-top:12px">
+  const topo=`<div class="ctbanner" style="--c:${p.cor||cor}"><span class="avatar ctav" style="--c:${p.cor||cor}"></span><div class="ctquem"><b>${esc(p.nome||u.nome||'Jogador')}</b><small>${esc(u.email)} · ${google?'Google':'e-mail e senha'}</small></div></div>
+    <div class="abas ctabas">${[['perfil','📊 Perfil'],['conq','🏅 Conquistas'],['hist','🕘 Histórico']].map(([k,l])=>`<button class="small${CONTA_UI.tab===k?' on':''}" onclick="CONTA_UI.tab='${k}';CONTA_UI.erro='';CONTA_UI.ok='';contaRender()">${l}</button>`).join('')}</div>`;
+  if(CONTA_UI.tab==='conq')return topo+conquistasHtml(d);
+  if(CONTA_UI.tab==='hist')return topo+historicoHtml(d);
+  const nome=CONTA_UI.pnome!=null?CONTA_UI.pnome:(p.nome||'');
+  return topo+`${!google&&!u.verificado?`<div class="contaerro">📩 Confirme seu e-mail: mandamos um link para <b>${esc(u.email)}</b>. Não chegou? Olhe o spam. <button class="linkbtn" ${dis} onclick="contaReenvia()">Mandar de novo</button><button class="linkbtn" ${dis} onclick="contaJaConfirmei()">Já confirmei</button></div>`:''}
+    ${statsHtml(d)}
+    <h4 class="ctsub">Editar perfil</h4>
+    <form class="ctform" onsubmit="event.preventDefault();contaSalva()">
       <label for="ctnome2">Nome no jogo</label><input id="ctnome2" maxlength="16" autocomplete="nickname" value="${esc(nome)}" oninput="CONTA_UI.pnome=this.value">
       <label>Cor</label><div class="palette">${PALETA.map(([c,n])=>`<button type="button" class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="CONTA_UI.pcor='${c}';contaRender()"></button>`).join('')}</div>
       <button class="primary" type="submit" ${dis}>Salvar</button>
     </form>${contaMsgs()}
-    <div class="embreve">📊 Em breve, para quem tem conta: ranking da semana e do mês, conquistas, histórico e estatísticas das partidas online.</div>
-    ${CONTA.admin?`<button style="width:100%" onclick="painelAbre()">🛠 Abrir o painel (bugs e perguntas reportadas)</button>`:''}
+    ${CONTA.admin?`<button class="ctpainel" onclick="painelAbre()">🛠 Painel do dono: bugs e perguntas reportadas</button>`:''}
     <div class="contapes"><button ${dis} onclick="contaSair()">Sair da conta</button><button class="perigo" ${dis} onclick="contaApaga()">${CONTA_UI.apagar?'Clique de novo para apagar':'Apagar conta'}</button></div>`;
+}
+const NIVEIS=[null,['Fácil','#00d65c'],['Médio','#ffd000'],['Difícil','#ff7a00'],['Impossível','#ff1f4b']];
+function statsHtml(d){
+  if(!d)return `<p class="pvazio">Carregando suas estatísticas…</p>`;
+  const s=d.stats,ac=s.a.reduce((x,y)=>x+y,0),er=s.e.reduce((x,y)=>x+y,0);
+  const fav=Object.entries(s.tema||{}).sort((a,b)=>b[1].a-a[1].a)[0];
+  const cards=[['🏆',s.semana,'pontos na semana'],['📅',s.mes,'pontos no mês'],['⭐',s.p,'pontos no total'],['🎮',s.np,s.np===1?'partida':'partidas'],['🥇',s.v,s.v===1?'vitória':'vitórias'],['🔥',s.maxSeq,'melhor sequência']];
+  let h=`<div class="ctstats">${cards.map(([e,n,l])=>`<div><span>${e}</span><b>${Number(n||0).toLocaleString('pt-BR')}</b><small>${l}</small></div>`).join('')}</div>`;
+  if(!ac&&!er)return h+`<p class="ctdica">Jogue uma partida <b>online</b> com a conta para começar a pontuar. Fácil vale 1 ponto, médio 2, difícil 3, impossível 5 e cada vitória +10.</p>`;
+  h+=`<div class="ctniveis"><div class="ctnt">Acertos por nível <small>${ac} de ${ac+er} (${Math.round(100*ac/Math.max(1,ac+er))}%)</small></div>`;
+  for(let i=1;i<=4;i++){const a=s.a[i],t=a+s.e[i];h+=`<div class="ctnv"><span>${NIVEIS[i][0]}</span><i><em style="width:${t?Math.round(100*a/t):0}%;background:${NIVEIS[i][1]}"></em></i><small>${a}/${t}</small></div>`}
+  h+='</div>';
+  if(fav&&fav[1].a&&T[fav[0]])h+=`<p class="ctdica">Seu tema mais forte: <b style="color:${T[fav[0]].c}">${T[fav[0]].n}</b> (${fav[1].a} acerto${fav[1].a>1?'s':''}).</p>`;
+  return h;
+}
+function conquistasHtml(d){
+  if(!d)return `<p class="pvazio">Carregando…</p>`;
+  const l=d.conquistas||[],feitas=l.filter(c=>c.quando).length;
+  return `<p class="ctdica" style="text-align:center"><b>${feitas}</b> de ${l.length} conquistas</p><div class="conqs">${l.map(c=>{const ok=!!c.quando,pc=Math.round(100*c.prog/c.alvo);
+    return `<div class="conq${ok?' ok':''}" title="${esc(c.d)}"><span class="cqe">${c.e}</span><b>${esc(c.n)}</b><small>${esc(c.d)}</small>${ok?`<em class="cqdata">✔ ${quandoTxt(c.quando).split(',')[0]}</em>`:`<i><em style="width:${pc}%"></em></i><em class="cqdata">${c.prog} de ${c.alvo}</em>`}</div>`}).join('')}</div>`;
+}
+function historicoHtml(d){
+  if(!d)return `<p class="pvazio">Carregando…</p>`;
+  const l=d.historico||[];
+  if(!l.length)return `<p class="pvazio">Nenhuma partida online ainda. As partidas que você jogar com a conta aparecem aqui.</p>`;
+  return `<div class="hist">${l.map(x=>`<div class="hitem${x.venceu?' venceu':''}"><div class="hl1"><b>${x.venceu?'🏆 Venceu':'🎲 Partida'}</b><span>${quandoTxt(x.fim||x.inicio)}</span></div><div class="hl2">Sala ${esc(x.sala||'')} · ${+x.nj||2} jogadores${x.modo&&MODOS[x.modo]?' · '+MODOS[x.modo].e+' '+MODOS[x.modo].n:''}</div><div class="hl3"><span>✔ ${+x.a||0}</span><span>✘ ${+x.e||0}</span><b>+${+x.p||0} pts</b></div></div>`).join('')}</div>`;
 }
 function contaRender(){
   const el=document.getElementById('contacorpo');if(!el)return;
-  const s=document.getElementById('ctsenha'),sv=s?s.value:'';
+  const s=document.getElementById('ctsenha'),sv=s?s.value:'',tipo=s?s.type:'password';
   el.innerHTML=contaHtml();
-  const s2=document.getElementById('ctsenha');if(s2&&sv)s2.value=sv;
+  const s2=document.getElementById('ctsenha');if(s2){if(sv)s2.value=sv;if(tipo==='text')olhoSenha()}
   const t=document.getElementById('contatit');if(t)t.textContent=CONTA.user?'👤 Sua conta':'👤 Entrar ou criar conta';
 }
-function contaAbre(){
-  chatFecha&&chatFecha();if(typeof fechaSalas==='function')fechaSalas();bugFecha();painelFecha();if(TAB==='hist')setTab('jogo');
-  Object.assign(CONTA_UI,{erro:'',ok:'',apagar:0,pnome:null,pcor:null});
-  contaRender();document.getElementById('contabox').style.display='flex';
+function contaAbre(tab){
+  Object.assign(CONTA_UI,{erro:'',ok:'',apagar:0,pnome:null,pcor:null,tab:tab||'perfil'});
+  contaRender();modalAbre('contabox');
+  if(CONTA.user)contaResumo().then(contaRender);
 }
-function contaFecha(){document.getElementById('contabox').style.display='none'}
+function contaFecha(){modalFecha('contabox')}
+// ----- ranking -----
+const RANK={periodo:'semana',dados:null,erro:''};
+function rankingAbre(){RANK.erro='';rankingRender();modalAbre('rankbox');rankingCarrega()}
+function rankingFecha(){modalFecha('rankbox')}
+function rankingRender(){const el=document.getElementById('rankcorpo');if(el)el.innerHTML=rankingHtml()}
+async function rankingCarrega(){
+  RANK.dados=null;RANK.erro='';rankingRender();
+  try{
+    const tk=AUTH&&CONTA.user?await AUTH.token():null;
+    const r=await fetch('/api/ranking?periodo='+RANK.periodo,{headers:tk?{authorization:'Bearer '+tk}:{}});
+    const j=await r.json();if(!r.ok)throw new Error(j.erro||('Erro '+r.status));RANK.dados=j;
+  }catch(e){RANK.erro=e.message}
+  rankingRender();
+}
+function rankingHtml(){
+  const d=RANK.dados;
+  let h=`<div class="abas"><button class="small${RANK.periodo==='semana'?' on':''}" onclick="RANK.periodo='semana';rankingCarrega()">🗓️ Semana</button><button class="small${RANK.periodo==='mes'?' on':''}" onclick="RANK.periodo='mes';rankingCarrega()">📅 Mês</button></div>`;
+  if(RANK.erro)return h+`<div class="contaerro">${esc(RANK.erro)}</div>`;
+  if(!d)return h+`<p class="pvazio">Carregando…</p>`;
+  h+=`<p class="rkper">${esc(d.texto)}</p>`;
+  if(!d.lista.length)h+=`<p class="pvazio">Ninguém pontuou ainda ${RANK.periodo==='semana'?'nesta semana':'neste mês'}. Jogue uma partida online com a sua conta e seja o primeiro! 🏆</p>`;
+  else h+=`<div class="rklista">${d.lista.map(x=>`<div class="rk${x.eu?' eu':''}${x.pos<=3?' top':''}"><span class="rkpos">${x.pos<=3?['🥇','🥈','🥉'][x.pos-1]:x.pos+'º'}</span><span class="swatch" style="background:${x.c||'#b0b8c4'}"></span><span class="rknome">${esc(x.n)}${x.eu?' <span class="you">você</span>':''}</span><b>${x.p.toLocaleString('pt-BR')} <small>pts</small></b></div>`).join('')}</div>`;
+  if(d.minha&&!d.lista.some(x=>x.eu))h+=`<div class="rk eu"><span class="rkpos">${d.minha.pos}º</span><span class="rknome">Você</span><b>${d.minha.p} <small>pts</small></b></div>`;
+  if(!CONTA.user)h+=`<div class="rkcta"><span>Quer aparecer aqui?</span><button class="primary" onclick="contaAbre()">👤 Entrar ou criar conta</button></div>`;
+  else if(!d.minha)h+=`<p class="ctdica" style="text-align:center">Você ainda não pontuou ${RANK.periodo==='semana'?'nesta semana':'neste mês'}.</p>`;
+  return h+`<p class="rkregra">Só contam as partidas <b>online</b> de quem tem conta. Fácil 1 ponto · Médio 2 · Difícil 3 · Impossível 5 · Vitória +10.</p>`;
+}
+// ----- registra na conta as respostas de quem joga online logado -----
+const CONTA_REG=new Set();
+function contaRegistra(){
+  const u=G.ult;
+  if(!u||!u.tk||!CONTA.user||!CONTA.perfil||!online()||!ROOM||u.d!==MYDEV||!G.jogo||!G.players)return;
+  if(G.phase==='result')return; // espera passar a vez: assim dá para desfazer um clique errado antes
+  const k=G.jogo+'|'+u.q;if(CONTA_REG.has(k))return;CONTA_REG.add(k);
+  contaApi('POST',{acao:'resposta',sala:ROOM,jogo:G.jogo,dev:MYDEV,tk:u.tk,ok:u.ok,fim:!!u.fim&&G.phase==='won',modo:modo(),nj:G.players.length})
+    .then(j=>{
+      if(!j||j.ja)return;
+      if(CONTA.resumo){CONTA.resumo.semana=j.semana;CONTA.resumo.total=j.total}
+      if(j.pts)toast(`🏆 +${j.pts} ponto${j.pts>1?'s':''} no ranking${j.fim?' (com a vitória!)':''}`);
+      (j.novas||[]).forEach((c,i)=>setTimeout(()=>{toast(`🏅 Conquista: ${c.e} ${c.n}`);SFX.correct&&SFX.correct()},2200*(i+1)));
+    }).catch(e=>console.warn('conta:',e.message));
+}
 function contaAba(a){CONTA_UI.aba=a;CONTA_UI.erro='';CONTA_UI.ok='';contaRender()}
 async function contaFaz(fn){ // trava os botões enquanto espera e mostra o erro em português
   CONTA_UI.erro='';CONTA_UI.ok='';CONTA_UI.ocupado=true;contaRender();
@@ -2009,8 +2192,8 @@ function contaApaga(){
 // ----- painel do dono: bugs e perguntas reportadas -----
 const BUG_NOME=Object.fromEntries(BUG_TIPOS);
 function quandoTxt(iso){const d=new Date(iso);return isNaN(d)?'':d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}
-function painelAbre(){contaFecha();document.getElementById('painelbox').style.display='flex';painelRender();painelCarrega()}
-function painelFecha(){const b=document.getElementById('painelbox');if(b)b.style.display='none'}
+function painelAbre(){painelRender();modalAbre('painelbox');painelCarrega()}
+function painelFecha(){modalFecha('painelbox')}
 function painelRender(){const el=document.getElementById('painelcorpo');if(el)el.innerHTML=painelHtml()}
 async function painelCarrega(){PAINEL.erro='';PAINEL.dados=null;painelRender();try{PAINEL.dados=await contaApi('GET',{acao:'painel'})}catch(e){PAINEL.erro=e.message}painelRender()}
 function painelHtml(){
@@ -2113,7 +2296,7 @@ pintaEfx();
 function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
 
 // ----- sincronização da partida -----
-const SYNC_KEYS=[...SNAP_KEYS,'exTheme','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica','desfazer'];
+const SYNC_KEYS=[...SNAP_KEYS,'jogo','exTheme','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica','desfazer'];
 function syncJson(){const o={};SYNC_KEYS.forEach(k=>{if(G[k]!==undefined)o[k]=G[k]});return JSON.stringify(o)}
 let PUSHING=false,PUSH_AGAIN=false,SENT=null;
 async function netPush(){
@@ -2189,7 +2372,9 @@ function limpaEstado(o){
   g.aba=o.aba&&typeof o.aba==='object'?{n:sInt(o.aba.n,0,999,0),ms:sInt(o.aba.ms,0,1e8,0),desde:Number.isFinite(o.aba.desde)?o.aba.desde:null,colou:!!o.aba.colou}:null;
   g.fichas=sInt(o.fichas,5,7,5);g.size=Object.prototype.hasOwnProperty.call(SIZES,o.size)?o.size:'normal';
   g.level=['misto','1','2','3','4'].includes(String(o.level))?String(o.level):'misto';
-  g.modo=Object.prototype.hasOwnProperty.call(MODOS,o.modo)?o.modo:'classico';
+  g.modo=o.modo==='semdo'?'arriscado':Object.prototype.hasOwnProperty.call(MODOS,o.modo)?o.modo:'classico';
+  g.jogo=sId(o.jogo);
+  const ul=o.ult;g.ult=ul&&typeof ul==='object'&&sId(ul.q)?{q:ul.q,ok:!!ul.ok,d:sId(ul.d),tk:typeof ul.tk==='string'&&/^[A-Za-z0-9._-]{1,800}$/.test(ul.tk)?ul.tk:null,fim:!!ul.fim}:null;
   g.board=Array.isArray(o.board)?o.board.slice(0,80).map(sCasa):null;
   g.previewBoard=Array.isArray(o.previewBoard)?o.previewBoard.slice(0,80).map(sCasa):null;
   g.ordem=Array.isArray(o.ordem)?o.ordem.map(sId).filter(Boolean).slice(0,30):[];
@@ -2270,10 +2455,10 @@ function lobbyHtml(){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
     h+=`<div class="row" style="margin:6px 0 4px"><button class="small" onclick="shuffleLobby()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem. Quem está em 1º começa.</span></div>
     <div class="setup-row"><label style="flex:none">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
-    </div><div class="pcol"><h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${chipInfo(k,G.selThemes,false)}</small></button>`}).join('')}</div>
-    <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>${juntaNota(G.selThemes)}
     <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;G.previewBoard=null;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
     <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}</option>`).join('')}</select></div>
+    </div><div class="pcol"><h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].n+': '+T[k].d+(chipInfo(k,G.selThemes,false)?' ('+chipInfo(k,G.selThemes,false)+')':''))}"><span class="tdot"></span><span class="tnome">${T[k].n}</span><small>${chipConta(k,G.selThemes,false)}</small></button>`}).join('')}</div>
+    <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>${juntaNota(G.selThemes)}
     ${modosHtml(true)}
     ${G.selThemes.length<3?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Escolha pelo menos 3 temas.</p>':''}
     </div></div><div class="prepfoot">${semNome?'<p class="muted">Quem ficar sem nome entra como "Jogador" com o número da vez.</p>':''}

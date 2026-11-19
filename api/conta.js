@@ -1,42 +1,20 @@
 // Contas do Arrisca Aí (função da Vercel). Toda chamada precisa do login: "Authorization: Bearer <ID token>".
 //   POST {acao:'entrar', nome, cor}      → devolve o perfil (cria na primeira vez) e se a conta é do dono
-//   POST {acao:'perfil', nome, cor}      → muda nome e cor
+//   GET  ?acao=eu                        → perfil, estatísticas, conquistas e histórico
+//   POST {acao:'perfil', nome, cor}      → muda nome e cor (no ranking também)
+//   POST {acao:'resposta', sala, jogo, dev, tk, ok, fim, modo, nj} → registra uma resposta de partida online
 //   POST {acao:'apagar'}                 → apaga os dados da conta guardados no banco
 //   GET  ?acao=painel                    → (só o dono) bugs e perguntas reportadas
 //   POST {acao:'resolver', lista, id, resolvido} → (só o dono) marca um aviso como resolvido
-const { DB, token, dbReq } = require('./_fb');
 const { quemE, ehAdmin } = require('./_auth');
+const { DEV, ler, grava, gravaVarios } = require('./_store');
+const ST = require('./_stats');
 
-const DEV = !!process.env.ARRISCA_DEV_SALAS; // testes locais: guarda em memória
-const MEM = { usuarios: {}, reportes: {
-  r1: { t: 'H', id: 'h12', q: 'Em que ano foi a Proclamação da República no Brasil?', a: '1889', motivo: 'Resposta errada', nota: 'acho que está certo, só testando', quando: '2026-11-18T22:10:00.000Z' },
-  r2: { t: 'GG', id: 'g7', q: 'Qual é o nome do encanador mais famoso dos games?', a: 'Mario', motivo: 'Nível de dificuldade errado', nivelAtual: 'Difícil', nivelCerto: 'Fácil', quando: '2026-11-19T10:00:00.000Z' }
-} };
-const LIMITE_LISTA = 300;
-
+const LIMITE_LISTA = 300, LIMITE_DIA = 400, HIST = 40;
 const txt = (x, n) => String(x == null ? '' : x).replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
 const corOk = c => typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c) ? c.toLowerCase() : null;
 const idOk = id => typeof id === 'string' && /^[-A-Za-z0-9_]{1,128}$/.test(id);
 const falha = (status, m) => Object.assign(new Error(m), { status });
-
-async function ler(caminho, consulta) {
-  if (DEV) return caminho.split('/').reduce((o, k) => (o == null ? undefined : o[k]), MEM) ?? null;
-  const url = DB + '/' + caminho + '.json?access_token=' + encodeURIComponent(await token()) + (consulta ? '&' + consulta : '');
-  const r = await fetch(url);
-  if (!r.ok) throw falha(502, 'O banco respondeu ' + r.status);
-  return r.json();
-}
-async function grava(metodo, caminho, valor) {
-  if (DEV) {
-    const ks = caminho.split('/'), ult = ks.pop();
-    let o = MEM; for (const k of ks) o = o[k] = o[k] || {};
-    if (metodo === 'DELETE') delete o[ult];
-    else if (metodo === 'PATCH') o[ult] = Object.assign(o[ult] || {}, valor);
-    else o[ult] = valor;
-    return;
-  }
-  await dbReq(metodo, caminho, valor);
-}
 function bugsDev() { try { return Object.fromEntries(require('./bugs.js').MEM.map((b, i) => ['b' + i, b])) } catch (e) { return {} } }
 
 function perfilPublico(p, u) {
@@ -55,28 +33,105 @@ async function entrar(u, body) {
 }
 
 async function mudaPerfil(u, body) {
-  const caminho = 'usuarios/' + u.uid + '/perfil';
+  const base = 'usuarios/' + u.uid;
   const muda = {};
   if (body.nome !== undefined) { const n = txt(body.nome, 16); if (!n) throw falha(400, 'Escolha um nome.'); muda.nome = n }
   if (body.cor !== undefined) { const c = corOk(body.cor); if (c) muda.cor = c }
   if (!Object.keys(muda).length) throw falha(400, 'Nada para mudar.');
-  const atual = await ler(caminho);
+  const [atual, st] = await Promise.all([ler(base + '/perfil'), ler(base + '/stats')]);
   if (!atual) throw falha(404, 'Conta não encontrada. Entre de novo.');
-  await grava('PATCH', caminho, muda);
-  return { perfil: perfilPublico(Object.assign({}, atual, muda), u) };
+  const p = Object.assign({}, atual, muda), per = ST.periodo(), s = ST.normaliza(st);
+  const mapa = { [base + '/perfil']: p };
+  // o nome e a cor aparecem no ranking da semana e do mês atuais
+  if (s.sem.id === per.semana && s.sem.p > 0) mapa['ranking/semana/' + per.semana + '/' + u.uid] = { p: s.sem.p, n: p.nome, c: p.cor || null };
+  if (s.mes.id === per.mes && s.mes.p > 0) mapa['ranking/mes/' + per.mes + '/' + u.uid] = { p: s.mes.p, n: p.nome, c: p.cor || null };
+  await gravaVarios(mapa);
+  return { perfil: perfilPublico(p, u) };
+}
+
+async function eu(u) {
+  const base = 'usuarios/' + u.uid;
+  const [perfil, st, conq, partidas] = await Promise.all([ler(base + '/perfil'), ler(base + '/stats'), ler(base + '/conquistas'), ler(base + '/partidas')]);
+  const s = ST.normaliza(st), per = ST.periodo();
+  const hist = Object.entries(partidas || {}).filter(([, v]) => v && typeof v === 'object').map(([id, v]) => Object.assign({ id }, v))
+    .sort((a, b) => String(b.fim || '').localeCompare(String(a.fim || ''))).slice(0, HIST);
+  return {
+    perfil: perfilPublico(perfil || {}, u), admin: ehAdmin(u),
+    stats: { p: s.p, a: s.a, e: s.e, v: s.v, np: s.np, maxSeq: s.maxSeq, seq: s.seq, tema: s.tema,
+      semana: s.sem.id === per.semana ? s.sem.p : 0, mes: s.mes.id === per.mes ? s.mes.p : 0 },
+    conquistas: ST.conquistasLista(s, conq || {}),
+    historico: hist
+  };
+}
+
+// uma resposta de partida online. O servidor confere a pergunta pelo token que ele mesmo assinou ao sortear,
+// e confere no estado da sala que ela saiu mesmo ali; cada pergunta da sala vale uma vez só.
+async function resposta(u, body) {
+  const info = await require('./perguntas.js')._infoTk(body.tk);
+  if (!info || info.m !== 'o' || !info.s) throw falha(400, 'Só perguntas de partidas online contam.');
+  if (info.e < Date.now() - 6 * 3600e3) throw falha(400, 'Essa pergunta já é antiga.');
+  const sala = info.s;
+  if (body.sala && body.sala !== sala) throw falha(400, 'A pergunta é de outra sala.');
+  const jogo = String(body.jogo || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 24) || 'x';
+  const ok = !!body.ok, dev = String(body.dev || '').slice(0, 40);
+  const base = 'usuarios/' + u.uid, regC = 'srv/reg/' + sala + '/' + info.qid, chave = sala + '_' + jogo;
+  const [reg, st, conq, part0, perfil, estado, jogadores] = await Promise.all([
+    ler(regC), ler(base + '/stats'), ler(base + '/conquistas'), ler(base + '/partidas/' + chave), ler(base + '/perfil'),
+    DEV ? null : ler('salas/' + sala + '/estado'), DEV ? null : ler('salas/' + sala + '/jogadores')
+  ]);
+  if (reg) return { ja: true };
+  if (!perfil) throw falha(404, 'Conta não encontrada. Entre de novo.');
+  let fim = !!body.fim && ok;
+  if (!DEV) {
+    if (!jogadores || Object.keys(jogadores).length < 2) throw falha(400, 'Só contam salas com 2 jogadores ou mais.');
+    let g = null; try { g = JSON.parse(estado && estado.g) } catch (e) { g = null }
+    if (!g || g.jogo !== jogo) throw falha(400, 'Partida não encontrada na sala.');
+    const saiu = Array.isArray(g.seen) && g.seen.some(x => Array.isArray(x) && x[1] === info.qid);
+    if (!saiu) throw falha(400, 'Essa pergunta não saiu nessa partida.');
+    const u2 = g.ult;
+    if (u2 && u2.q === info.qid && (!!u2.ok !== ok || u2.d !== dev)) throw falha(400, 'A resposta não confere com a sala.');
+    fim = fim && g.phase === 'won' && !!(u2 && u2.q === info.qid && u2.fim);
+  }
+  const s = ST.normaliza(st);
+  if (s.dia.id === ST.periodo().dia && s.dia.n >= LIMITE_DIA) throw falha(429, 'Limite de respostas de hoje.');
+  const agora = Date.now(), quando = new Date(agora).toISOString();
+  const nivel = info.nivel;
+  let part = part0 && typeof part0 === 'object' ? part0 : null;
+  if (!part) { s.np++; part = { sala, inicio: quando, a: 0, e: 0, p: 0, venceu: false, modo: txt(body.modo, 12), nj: Math.max(2, Math.min(10, +body.nj || 2)) } }
+  const pts = ST.aplica(s, { ok, nivel, tema: info.t, fim, agora });
+  if (ok) part.a++; else part.e++;
+  part.p += pts; part.fim = quando; if (fim) part.venceu = true;
+  const tem = conq || {}, ganhou = ST.novas(s, tem);
+  const per = ST.periodo(agora), nome = perfil.nome || 'Jogador', cor = perfil.cor || null;
+  const mapa = {
+    [regC]: { u: u.uid, ok, n: nivel, w: agora },
+    [base + '/stats']: s,
+    [base + '/partidas/' + chave]: part
+  };
+  if (s.sem.p > 0) { mapa['ranking/semana/' + per.semana + '/' + u.uid] = { p: s.sem.p, n: nome, c: cor }; mapa[base + '/rk/semana_' + per.semana] = true }
+  if (s.mes.p > 0) { mapa['ranking/mes/' + per.mes + '/' + u.uid] = { p: s.mes.p, n: nome, c: cor }; mapa[base + '/rk/mes_' + per.mes] = true }
+  ganhou.forEach(c => { mapa[base + '/conquistas/' + c.id] = quando });
+  await gravaVarios(mapa);
+  return { pts, nivel, fim, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n })) };
+}
+
+async function apagar(u) {
+  const base = 'usuarios/' + u.uid;
+  const rk = await ler(base + '/rk');
+  const mapa = { [base]: null };
+  Object.keys(rk || {}).forEach(k => { const m = /^(semana|mes)_([-A-Za-z0-9]+)$/.exec(k); if (m) mapa['ranking/' + m[1] + '/' + m[2] + '/' + u.uid] = null });
+  await gravaVarios(mapa);
 }
 
 function lista(obj) {
   return Object.entries(obj || {}).filter(([, v]) => v && typeof v === 'object').map(([id, v]) => Object.assign({}, v, { _id: id }))
     .sort((a, b) => String(b.quando || '').localeCompare(String(a.quando || ''))).slice(0, LIMITE_LISTA);
 }
-
 async function painel() {
   const q = 'orderBy=' + encodeURIComponent('"$key"') + '&limitToLast=' + LIMITE_LISTA;
   const [bugs, reportes] = await Promise.all([DEV ? bugsDev() : ler('bugs', q), ler('reportes', DEV ? '' : q)]);
   return { bugs: lista(bugs), reportes: lista(reportes) };
 }
-
 async function resolver(body) {
   const qual = body.lista === 'bugs' ? 'bugs' : body.lista === 'reportes' ? 'reportes' : null;
   if (!qual || !idOk(body.id)) throw falha(400, 'Aviso inválido.');
@@ -99,18 +154,16 @@ module.exports = async (req, res) => {
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body) } catch (e) { body = {} } }
     body = body && typeof body === 'object' ? body : {};
-    const acao = req.method === 'GET' ? (req.query && req.query.acao) : body.acao;
+    const get = req.method === 'GET', acao = get ? (req.query && req.query.acao) : body.acao;
     let r;
-    if (req.method === 'GET' && acao === 'painel') {
-      if (!ehAdmin(u)) throw falha(403, 'Só o dono do jogo vê o painel.');
-      r = await painel();
-    } else if (req.method === 'POST' && acao === 'entrar') r = await entrar(u, body);
-    else if (req.method === 'POST' && acao === 'perfil') r = await mudaPerfil(u, body);
-    else if (req.method === 'POST' && acao === 'apagar') { await grava('DELETE', 'usuarios/' + u.uid); r = { ok: true } }
-    else if (req.method === 'POST' && acao === 'resolver') {
-      if (!ehAdmin(u)) throw falha(403, 'Só o dono do jogo pode fazer isso.');
-      r = await resolver(body);
-    } else throw falha(400, 'Ação desconhecida.');
+    if (get && acao === 'eu') r = await eu(u);
+    else if (get && acao === 'painel') { if (!ehAdmin(u)) throw falha(403, 'Só o dono do jogo vê o painel.'); r = await painel() }
+    else if (!get && acao === 'entrar') r = await entrar(u, body);
+    else if (!get && acao === 'perfil') r = await mudaPerfil(u, body);
+    else if (!get && acao === 'resposta') r = await resposta(u, body);
+    else if (!get && acao === 'apagar') { await apagar(u); r = { ok: true } }
+    else if (!get && acao === 'resolver') { if (!ehAdmin(u)) throw falha(403, 'Só o dono do jogo pode fazer isso.'); r = await resolver(body) }
+    else throw falha(400, 'Ação desconhecida.');
     res.status(200).json(r);
   } catch (e) {
     res.status(e.status || 500).json({ erro: e.message || 'Erro' });
