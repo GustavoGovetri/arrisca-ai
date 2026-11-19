@@ -668,7 +668,7 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
         <li>Ajudas: cada jogador pode usar, uma vez por partida, o <b>Pular</b> (troca a pergunta por outra do mesmo tema) e a <b>Dica</b> (mostra a primeira letra e o tamanho da resposta; na múltipla escolha, elimina uma alternativa errada).</li>
         <li><b>Sala online:</b> quem cria a sala manda o link ou o código; cada um entra pelo próprio celular com nome e cor. Quem criou escolhe temas, tabuleiro e fichas e começa a partida. Na sua vez, você aposta e <b>digita a resposta</b>. Os outros veem o que você escreveu e a resposta oficial e votam se vale: ganha a maioria; no empate, decide o próximo da roda. Se você escrever igual à resposta oficial, vale direto. O timer da sala dura 20 segundos (10 na múltipla escolha) e aparece para todos; quando acaba, o que estiver escrito é enviado. Tem também um chat (💬) para conversar.</li>
         <li><b>Salas abertas:</b> quem cria a sala pode deixá-la <b>aberta a todos</b>. Aí ela aparece em <b>Salas</b> para qualquer pessoa entrar enquanto a partida não começa. O botão <b>Jogar</b> entra na sala aberta com mais gente; se não houver nenhuma, abre uma nova.</li>
-        <li><b>Modos de jogo:</b> 🎲 Tradicional (sem bônus); ⭐ Bônus (difícil +1 casa, impossível +2, errar impossível gasta a ficha mas não obriga a repetir o tema, ⭐ por impossível acertada); 🔥 Arriscado (Bônus + arriscar o dobro na difícil e na impossível); 😈 Sem dó (Arriscado + acertar impossível devolve uma ajuda e dá uma rasteira em alguém).</li>
+        <li><b>Modos de jogo:</b> 🎲 Tradicional (sem bônus); ⭐ Bônus (difícil +1 casa, impossível +2, errar impossível gasta a ficha mas não obriga a repetir o tema, ⭐ por impossível acertada); 🔥 Arriscado (Bônus + arriscar o dobro na difícil e na impossível).</li>
         <li><b>Desfazer na sala online:</b> quem pede para desfazer uma jogada precisa da aprovação da maioria dos outros jogadores (30 segundos para votar). Enquanto votam, ninguém passa a vez.</li>
         <li>Na sala online, durante a partida, todos são avisados quando alguém sai da aba, e o placar mostra 👀 ao lado do nome.</li>
         <li>Na sala online, se você for para outra aba durante a partida, aparece um aviso na volta (dá para desligar até fechar o site) e o título da aba pisca quando é a sua vez ou o seu voto.</li>
@@ -1175,7 +1175,7 @@ function renderPanel(){
   if(G.phase==='result'){
     if(isV)h+=optsHtml(true);
     else h+=(G.resp?respBox():'')+`<div class="answer"><div class="muted">${G.resp?'Resposta oficial':'Resposta'}</div>${esc(respostaTxt()??'carregando…')}</div>`;
-    h+=`<p class="msg">${G.msg}</p>${rasteiraHtml()}${resultBtns()}`+reportHtml();
+    h+=`<p class="msg">${G.msg}</p>${resultBtns()}`+reportHtml();
   }else if(canAnswer){
     h+=dobroHtml();
     if(isV)h+=optsHtml(false)+(online()&&!can('cur')?waitHtml('cur','escolher a alternativa'):'');
@@ -1383,12 +1383,11 @@ function newGame(){UNDO=[];G.seen=[];stopTimer();window.__c=0;G.players=null;G.b
 const MODOS={
   classico:{n:'Tradicional',e:'🎲',d:'Acertou, anda o número da ficha. Errou, perde a ficha e repete o tema.'},
   bonus:{n:'Bônus',e:'⭐',d:'Difícil vale +1 casa e impossível +2. Errar uma impossível gasta a ficha, mas não obriga a repetir o tema. Cada impossível acertada vira uma ⭐.'},
-  arriscado:{n:'Arriscado',e:'🔥',d:'Tudo do Bônus e mais: na difícil e na impossível dá para arriscar o dobro. Acertou, anda o dobro; errou, volta as casas da ficha.'},
-  semdo:{n:'Sem dó',e:'😈',d:'Tudo do Arriscado e mais: acertar uma impossível devolve uma ajuda usada e dá uma rasteira: você escolhe alguém para voltar 1 casa.'}
+  arriscado:{n:'Arriscado',e:'🔥',d:'Tudo do Bônus e mais: na difícil e na impossível dá para arriscar o dobro. Acertou, anda o dobro; errou, volta as casas da ficha.'}
 };
-const ORDEM_MODOS=['classico','bonus','arriscado','semdo'];
-function modo(){return MODOS[G.modo]?G.modo:'classico'}
-function regra(r){const m=modo();return r==='bonus'?m!=='classico':r==='dobro'?(m==='arriscado'||m==='semdo'):(r==='ajuda'||r==='rasteira')?m==='semdo':false}
+const ORDEM_MODOS=['classico','bonus','arriscado'];
+function modo(){return G.modo==='semdo'?'arriscado':MODOS[G.modo]?G.modo:'classico'} // o Sem dó saiu: sala antiga nele segue como Arriscado
+function regra(r){const m=modo();return r==='bonus'?m!=='classico':r==='dobro'?m==='arriscado':false}
 function modosHtml(pode){
   return `<h2 style="margin-top:16px">Modo de jogo</h2><div class="modos">${ORDEM_MODOS.map(k=>{const m=MODOS[k],on=modo()===k;return `<button class="modo${on?' on':''}" ${pode?'':'disabled'} onclick="G.modo='${k}';render()"><b>${m.e} ${m.n}</b><small>${m.d}</small></button>`}).join('')}</div>`;
 }
@@ -1408,21 +1407,6 @@ function reiHtml(){
   const max=Math.max(0,...G.players.map(x=>x.estrelas||0));if(!max)return '';
   const reis=G.players.filter(x=>(x.estrelas||0)===max);
   return `<p class="rei">👑 ${reis.length>1?'Reis':'Rei'} do Impossível: ${reis.map(x=>`<b style="color:${x.color}">${esc(x.name)}</b>`).join(' e ')} (⭐ ${max})</p>`;
-}
-function rasteiraHtml(){
-  if(G.phase!=='result'||G.rasteira!=='pendente')return '';
-  const p=G.players[G.cur];
-  const alvos=G.players.map((x,k)=>({x,k})).filter(o=>o.k!==G.cur&&o.x.pos>0);
-  if(!alvos.length)return '';
-  if(!can('cur'))return `<p class="wait">🦶 ${nm(p)} vai escolher quem leva a rasteira…</p>`;
-  return `<div class="rasteira"><b>🦶 Rasteira!</b> Escolha quem volta 1 casa:<div class="row" style="margin-top:8px">${alvos.map(o=>`<button class="small" style="background:${o.x.color};color:#111" onclick="daRasteira(${o.k})">${esc(o.x.name)}</button>`).join('')}<button class="small" onclick="G.rasteira=null;render()">Deixa pra lá</button></div></div>`;
-}
-function daRasteira(k){
-  if(G.rasteira!=='pendente'||!G.players[k])return;
-  const p=G.players[G.cur],v=G.players[k];
-  v.pos=Math.max(0,v.pos-1);G.rasteira=k;
-  G.msg+=` 🦶 <b style="color:${v.color}">${esc(v.name)}</b> levou uma rasteira e voltou 1 casa!`;
-  render();
 }
 function startTurn(){
   stopTimer();
@@ -1515,8 +1499,6 @@ function resolve(ok,snapped,pre){
     const extra=[];if(dobro)extra.push('arriscou o dobro');if(bonus)extra.push(`+${bonus} de bônus pela ${imp?'impossível':'difícil'}`);
     msg+=(extra.length?` (${extra.join(' e ')})`:'')+'.';
     if(imp&&regra('bonus'))msg+=` ⭐ Ganhou uma estrela!`;
-    if(imp&&regra('ajuda')){const aj=p.aj=Object.assign({pular:0,dica:0},p.aj||{});if(aj.pular){aj.pular=0;msg+=' Ganhou de volta o ⏭ Pular.'}else if(aj.dica){aj.dica=0;msg+=' Ganhou de volta a 💡 Dica.'}}
-    if(imp&&regra('rasteira')&&G.players.some((x,k)=>k!==G.cur&&x.pos>0))G.rasteira='pendente';
     if(p.pos===FINAL)msg+=' Chegou à <b>última casa</b>! Na próxima vez, os outros escolhem o tema da pergunta final.';
   }else if(salva){
     p.forced=null;
@@ -1574,7 +1556,6 @@ function wonBtns(){
 }
 function resultBtns(){
   if(G.desfazer)return '';
-  if(G.rasteira==='pendente')return UNDO.length?`<div class="row"><button onclick="desfazerClick()">↩ Clicou errado? Desfazer</button></div>`:'';
   if(!online())return `<div class="row"><button class="primary" onclick="nextTurn()">Próximo jogador ▶</button><button onclick="undo()">↩ Clicou errado? Desfazer</button></div>`;
   let h='<div class="row">';
   if(can('next'))h+=`<button class="primary" onclick="nextTurn()">Próximo jogador ▶</button>`;
@@ -1600,7 +1581,7 @@ const COMO=[
   {i:'fichas',t:'Aposte uma ficha',d:'Na sua vez, escolha uma ficha antes de ver a pergunta. O número dela é quanto você anda se acertar.'},
   {i:'❓',t:'Responda',d:'A pergunta é do tema da sua casa. Online, você digita a resposta e o pessoal vota se vale.'},
   {i:'✔️',t:'Acertou ou errou?',d:'Acertou, anda as casas da ficha. Errou, perde a ficha e responde o mesmo tema na próxima vez.'},
-  {i:'⭐',t:'Arrisque nas difíceis',d:'Nos modos com bônus, difícil e impossível valem casas a mais, estrelas e até rasteira.'},
+  {i:'⭐',t:'Arrisque nas difíceis',d:'Nos modos com bônus, difícil e impossível valem casas a mais e estrelas.'},
   {i:'🏆',t:'Chegue ao fim',d:'Na última casa, os outros escolhem o tema da pergunta final. Acertou, ganhou!'}
 ];
 let COMO_I=0,COMO_T=null,COMO_TOQUE=null;
