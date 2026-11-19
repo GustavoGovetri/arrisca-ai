@@ -609,6 +609,19 @@ html.leve .sp{will-change:auto}
 html.leve .logo .lt,html.leve .avatar.grande,html.leve .avatar::before,html.leve .pw::before,html.leve .avisoico,html.leve .sp.final::before{animation:none}
 html.leve .primary::after,html.leve .pilula.amarela::after{display:none}
 html.leve .card,html.leve .hbtns .pilula{animation:none}
+
+/* ===== tudo centralizado dentro dos botões e círculos ===== */
+.snd,.seta,.ponto,.chathead button.small,.comoico,.avatar.grande i{display:inline-flex;align-items:center;justify-content:center;line-height:1}
+.tok{display:inline-flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.snd{padding:0;height:46px}
+.seta{padding:0}
+.seta svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+.chathead button.small{min-width:34px;height:34px;padding:0 10px}
+.avatar.grande i{line-height:0}
+.avatar.grande i svg{width:13px;height:13px;fill:var(--k);display:block}
+.badge{display:inline-flex;align-items:center;gap:4px;line-height:1.1}
+.pill{display:inline-flex;align-items:center;justify-content:center;line-height:1.2}
+.timer{display:inline-flex;align-items:center;justify-content:center;line-height:1}
 </style>
 </head>
 <body>
@@ -1575,7 +1588,7 @@ function comoSlide(s){
 }
 function comoHtml(){
   return `<div class="como" onpointerdown="comoToque(event)" onpointerup="comoSolta(event)"><div class="trilho" id="comotrilho" style="transform:translateX(-${COMO_I*100}%)">${COMO.map(comoSlide).join('')}</div></div>
-  <div class="comonav"><button class="small seta" onclick="comoVai(COMO_I-1,true)" aria-label="Anterior">‹</button><div class="pontos">${COMO.map((_,k)=>`<button class="ponto${k===COMO_I?' on':''}" onclick="comoVai(${k},true)" aria-label="Passo ${k+1}"></button>`).join('')}</div><button class="small seta" onclick="comoVai(COMO_I+1,true)" aria-label="Próximo">›</button></div>`;
+  <div class="comonav"><button class="small seta" onclick="comoVai(COMO_I-1,true)" aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg></button><div class="pontos">${COMO.map((_,k)=>`<button class="ponto${k===COMO_I?' on':''}" onclick="comoVai(${k},true)" aria-label="Passo ${k+1}"></button>`).join('')}</div><button class="small seta" onclick="comoVai(COMO_I+1,true)" aria-label="Próximo"><svg viewBox="0 0 24 24"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg></button></div>`;
 }
 function comoVai(k,manual){
   COMO_I=(k+COMO.length)%COMO.length;
@@ -1597,7 +1610,7 @@ function homeHtml(){
     <section class="hbox">
       <h3>Jogue agora</h3>
       <div class="perfil">
-        <button class="avatar grande" style="--c:${cor}" title="Trocar a cor" onclick="HOME_COR=!HOME_COR;render()"><i>✎</i></button>
+        <button class="avatar grande" style="--c:${cor}" title="Trocar a cor" onclick="HOME_COR=!HOME_COR;render()"><i><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.6L15.6 5a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/></svg></i></button>
         <input id="homenome" value="${esc(myName())}" maxlength="16" placeholder="Seu nome" autocomplete="nickname" oninput="setMyName(this.value)" onkeydown="if(event.key==='Enter')this.blur()">
       </div>
       ${HOME_COR?`<div class="palette homepal">${PALETA.map(([c,n])=>`<button class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="homeCor('${c}')"></button>`).join('')}</div>`:''}
@@ -1639,7 +1652,7 @@ async function enterRoom(code,created,publica){
     try{history.replaceState(null,'','?sala='+code+(URLP.get('net')?'&net='+URLP.get('net'):''))}catch(e){}
     if(created){const j=syncJson();await NET.tx(code,0,{v:1,g:j,por:MYDEV,ts:Date.now()});RV=Math.max(RV,1);LASTSYNC=j;CREATING=false}
     VOTES={};chatZera();
-    UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=l||{};lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido});
+    UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido});
     await NET.setMe(code,MYDEV,{nome:myName(),cor:myColor(),on:true,ts:Date.now()});
     render();
   }catch(e){console.error(e);CREATING=false;toast('Sem conexão com a sala. Tente de novo.')}
@@ -1827,10 +1840,82 @@ async function netPush(){
   }catch(e){console.error(e);toast('Sem conexão: a jogada não foi enviada.')}
   finally{PUSHING=false;if(PUSH_AGAIN){PUSH_AGAIN=false;netPush()}}
 }
+// ----- segurança: tudo que chega da sala (Firebase) é conferido antes de entrar no jogo -----
+// Qualquer pessoa com o código da sala consegue escrever nela; então nada vindo de lá é usado como HTML ou código sem passar por aqui.
+const COR_OK=/^#[0-9a-fA-F]{6}$/,ID_OK=/^[A-Za-z0-9_-]{1,60}$/;
+const FASES=['setup','theme','sorteio','question','result','won','exhausted'];
+function sStr(x,n){return typeof x==='string'?x.replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,n):(typeof x==='number'?String(x).slice(0,n):'')}
+function sInt(x,min,max,def){x=Math.round(Number(x));return Number.isFinite(x)&&x>=min&&x<=max?x:def}
+function sCor(c,def){return COR_OK.test(String(c||''))?c:def}
+function sTema(k){if(typeof k!=='string')return null;k=LEGACY[k]||k;return Object.prototype.hasOwnProperty.call(T,k)?k:null}
+function sTemas(a){return Array.isArray(a)?[...new Set(a.map(sTema).filter(Boolean))]:[]}
+function sId(x){return typeof x==='string'&&ID_OK.test(x)?x:null}
+// HTML vindo da sala: só negrito, itálico, quebra de linha e cor (#rrggbb). Todo o resto vira texto.
+function sHtml(x,max){
+  if(typeof x!=='string'||!x)return '';
+  const doc=new DOMParser().parseFromString('<body>'+x.slice(0,max||3000)+'</body>','text/html'); // documento inerte: nada carrega nem roda aqui
+  const limpa=no=>{
+    if(no.nodeType===3)return esc(no.nodeValue);
+    if(no.nodeType!==1)return '';
+    const tag=no.tagName.toLowerCase(),dentro=[...no.childNodes].map(limpa).join('');
+    if(tag==='br')return '<br>';
+    if(['b','strong','i','em','small','span'].includes(tag)){
+      const m=/(?:^|;)\s*color\s*:\s*(#[0-9a-fA-F]{6})\s*(?:;|$)/.exec(no.getAttribute('style')||'');
+      const t=tag==='strong'?'b':tag==='em'?'i':tag;
+      return `<${t}${m?` style="color:${m[1]}"`:''}>${dentro}</${t}>`;
+    }
+    return dentro;
+  };
+  return [...doc.body.childNodes].map(limpa).join('');
+}
+function sJogador(p,i){
+  p=p&&typeof p==='object'?p:{};
+  const aj=p.aj&&typeof p.aj==='object'?p.aj:{};
+  return {name:sStr(p.name,16).trim()||'Jogador '+(i+1),color:sCor(p.color,PCOLORS[i%PCOLORS.length]),pos:sInt(p.pos,0,200,0),
+    used:Array.isArray(p.used)?p.used.map(v=>sInt(v,1,9,0)).filter(Boolean).slice(0,9):[],forced:sTema(p.forced),
+    aj:{pular:aj.pular?1:0,dica:aj.dica?1:0},dev:sId(p.dev)||undefined,estrelas:sInt(p.estrelas,0,999,0)};
+}
+function sCasa(s){s=s&&typeof s==='object'?s:{};const type=['start','final','normal'].includes(s.type)?s.type:'normal';return type==='normal'?{type,themes:sTemas(s.themes).slice(0,2)}:{type}}
+function limpaEstado(o){
+  const g={};if(!o||typeof o!=='object')return g;
+  if(Array.isArray(o.players))g.players=o.players.slice(0,10).map(sJogador);else g.players=null;
+  const np=g.players?g.players.length:0;
+  g.cur=np?sInt(o.cur,0,np-1,0):0;g.round=sInt(o.round,1,99999,1);
+  g.phase=FASES.includes(o.phase)?o.phase:'setup';
+  ['theme','qt','exTheme','sortTema'].forEach(k=>g[k]=sTema(o[k]));
+  if(Array.isArray(o.q)&&o.q.length){
+    const opts=Array.isArray(o.q[1])?o.q[1].slice(0,6).map(x=>sStr(x,300)):null;
+    g.q=opts?[sStr(o.q[0],500),opts,null,sStr(o.q[3],60),sInt(o.q[4],1,4,2)]:[sStr(o.q[0],500),null,sStr(o.q[2],60),sInt(o.q[3],1,4,2)];
+  }else g.q=null;
+  g.qd=sInt(o.qd,1,4,null);g.qid=sId(o.qid);g.tk=typeof o.tk==='string'&&/^[A-Za-z0-9._-]{1,800}$/.test(o.tk)?o.tk:null;
+  if(o.hint&&typeof o.hint==='object')g.hint=o.hint.mask!==undefined?{mask:sStr(o.hint.mask,200),n:sInt(o.hint.n,0,999,0),words:sInt(o.hint.words,0,99,1)}:{elim:sInt(o.hint.elim,0,5,0)};else g.hint=null;
+  ['timeUp','revealed','forcedNow','dobro','publica'].forEach(k=>g[k]=!!o[k]);
+  ['lvNote','resetNote','themeLabel','msg'].forEach(k=>g[k]=sHtml(o[k],3000));
+  g.seen=Array.isArray(o.seen)?o.seen.slice(-3000).filter(x=>Array.isArray(x)&&sTema(x[0])&&sId(x[1])).map(x=>[sTema(x[0]),x[1]]):[];
+  g.token=o.token==null?null:sInt(o.token,1,9,null);g.lastTok=o.lastTok==null?null:sInt(o.lastTok,1,9,null);
+  g.chosen=o.chosen==null?null:sInt(o.chosen,0,5,null);
+  g.themeOptions=sTemas(o.themeOptions);g.themes=o.themes==null?null:sTemas(o.themes);g.selThemes=sTemas(o.selThemes);
+  g.resp=o.resp&&typeof o.resp==='object'&&typeof o.resp.t==='string'?{t:sStr(o.resp.t,120),k:sId(o.resp.k)||'x',tarde:o.resp.tarde?1:0}:null;
+  g.tEnd=Number.isFinite(o.tEnd)?o.tEnd:null;
+  g.rasteira=o.rasteira==='pendente'?'pendente':(o.rasteira==null?null:sInt(o.rasteira,0,9,null));
+  g.aba=o.aba&&typeof o.aba==='object'?{n:sInt(o.aba.n,0,999,0),ms:sInt(o.aba.ms,0,1e8,0),desde:Number.isFinite(o.aba.desde)?o.aba.desde:null,colou:!!o.aba.colou}:null;
+  g.fichas=sInt(o.fichas,5,7,5);g.size=Object.prototype.hasOwnProperty.call(SIZES,o.size)?o.size:'normal';
+  g.level=['misto','1','2','3','4'].includes(String(o.level))?String(o.level):'misto';
+  g.modo=Object.prototype.hasOwnProperty.call(MODOS,o.modo)?o.modo:'classico';
+  g.board=Array.isArray(o.board)?o.board.slice(0,80).map(sCasa):null;
+  g.previewBoard=Array.isArray(o.previewBoard)?o.previewBoard.slice(0,80).map(sCasa):null;
+  g.ordem=Array.isArray(o.ordem)?o.ordem.map(sId).filter(Boolean).slice(0,30):[];
+  return g;
+}
+function limpaLobby(l){ // nomes e cores de quem está na sala
+  const out={};if(!l||typeof l!=='object')return out;
+  Object.keys(l).slice(0,40).forEach(d=>{if(!sId(d))return;const x=l[d]||{};out[d]={nome:sStr(x.nome,16),cor:COR_OK.test(String(x.cor||''))?x.cor:'',on:x.on!==false,ts:Number(x.ts)||0}});
+  return out;
+}
 function applyRemote(d){
   if(!online()||!d||typeof d.v!=='number'||d.v<=RV)return;
   if(SENT&&d.por===MYDEV&&d.v===SENT.v&&d.g===SENT.g){RV=d.v;LASTSYNC=d.g;return}
-  let o;try{o=JSON.parse(d.g)}catch(e){return}
+  let o;try{o=limpaEstado(JSON.parse(d.g))}catch(e){return}
   const prevQ=G.qid,prevPhase=G.phase,prevCur=G.cur,prevPl=!!G.players;
   APPLYING=true;
   try{
