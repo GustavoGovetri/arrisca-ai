@@ -553,6 +553,14 @@ input.chama{animation:chama .9s}
 .bugtec{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--suave);margin:10px 0 12px;line-height:1.35;cursor:pointer}
 .bugtec input{width:auto;margin-top:2px;flex:none;accent-color:#ffc21a}
 .bugenvia{width:100%;font-size:17px;padding:12px}
+
+/* tempo para responder (sala online) */
+.timerbox.tempo{align-items:center}
+.tempoinfo{flex:1;min-width:0}
+.tempobar{height:12px;margin-top:6px;border-radius:8px;background:rgba(0,0,0,.35);border:2px solid var(--k);overflow:hidden}
+.tempobar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#5ee88c,#22b558);transition:width .2s linear,background .3s}
+.tempobar i.meio{background:linear-gradient(90deg,#ffe36e,#ffc21a)}
+.tempobar i.low{background:linear-gradient(90deg,#ff8085,#e8404a)}
 </style>
 </head>
 <body>
@@ -577,7 +585,7 @@ input.chama{animation:chama .9s}
         <li>Variedades (V) tem perguntas de múltipla escolha, só dela (não repetem os outros temas).</li>
         <li>Perguntas que já saíram ficam marcadas e não se repetem entre partidas (veja o histórico no botão 📜).</li>
         <li>A partida fica salva: se a página recarregar ou for atualizada, o jogo continua de onde parou.</li>
-        <li>Depois que a pergunta aparece, dá para ligar o timer de 10 segundos. Quando o tempo acaba, a pergunta termina: nas de múltipla escolha conta como erro; nas outras, a resposta aparece e quem lê decide se deu tempo.</li>
+        <li><b>Tempo:</b> no jogo num aparelho só, depois que a pergunta aparece dá para ligar o timer de 10 segundos (nas de múltipla escolha, tempo esgotado conta como erro; nas outras, a resposta aparece e quem lê decide se deu tempo). Na <b>sala online</b>, quem responde tem <b>30 segundos</b>, contados sozinhos a partir da aposta: se o tempo acabar, vale o que já estiver digitado; sem nada digitado ou na múltipla escolha, conta como erro.</li>
         <li>Ajudas: cada jogador pode usar, uma vez por partida, o <b>Pular</b> (troca a pergunta por outra do mesmo tema) e a <b>Dica</b> (mostra a primeira letra e o tamanho da resposta; na múltipla escolha, elimina uma alternativa errada).</li>
         <li><b>Sala online:</b> quem cria a sala manda o link ou o código; cada um entra pelo próprio celular com nome e cor. Quem criou escolhe temas, tabuleiro e fichas e começa a partida. Na sua vez, você aposta e <b>digita a resposta</b>. Os outros veem o que você escreveu e a resposta oficial e votam se vale: ganha a maioria; no empate, decide o próximo da roda. Se você escrever igual à resposta oficial, vale direto. O timer da sala dura 20 segundos (10 na múltipla escolha) e aparece para todos; quando acaba, o que estiver escrito é enviado. Tem também um chat (💬) para conversar.</li>
         <li><b>Salas abertas:</b> quem cria a sala pode deixá-la <b>aberta a todos</b>. Aí ela aparece em <b>Salas</b> para qualquer pessoa entrar enquanto a partida não começa. O botão <b>Jogar</b> entra na sala aberta com mais gente; se não houver nenhuma, abre uma nova.</li>
@@ -1059,7 +1067,7 @@ function renderPanel(){
   let h=head+`<div style="margin-top:12px"><span class="badge" style="background:${T[G.theme].c}">${sg(G.theme)} · ${T[G.theme].n}</span> ${G.qt&&G.qt!==G.theme&&T[G.qt]?`<span class="veio">pergunta de ${T[G.qt].n}</span> `:''}${G.forcedNow?'<span class="badge" style="background:#5a4a1a">repetindo o tema</span>':''} ${isFinal?'<span class="badge" style="background:#b8860b">PERGUNTA FINAL</span>':''}${G.qd&&canShowLv()?` <span class="badge" style="background:${LVCOLOR[G.qd]}">${LEVELS[G.qd]}</span>`:''}</div>`;
   const canAnswer=isFinal||G.token||G.phase==='result';
   if(!isFinal){
-    h+=`<div class="muted" style="margin-top:12px">${G.token||G.phase==='result'?'Aposta feita:':can('cur')?'Faça sua aposta: escolha a ficha. A pergunta só aparece depois.':'⏳ Aguardando '+nm(p)+' apostar uma ficha…'}</div><div class="tokens">${fichasArr().map(v=>`<button class="tok${(G.token||G.lastTok)===v?' sel':''}" style="background:${p.color};color:#111" ${p.used.includes(v)&&!(G.phase==='result'&&G.lastTok===v)||G.token||locked||!can('cur')?'disabled':''} onclick="G.token=${v};render()">${v}</button>`).join('')}</div>`;
+    h+=`<div class="muted" style="margin-top:12px">${G.token||G.phase==='result'?'Aposta feita:':can('cur')?'Faça sua aposta: escolha a ficha. A pergunta só aparece depois.':'⏳ Aguardando '+nm(p)+' apostar uma ficha…'}</div><div class="tokens">${fichasArr().map(v=>`<button class="tok${(G.token||G.lastTok)===v?' sel':''}" style="background:${p.color};color:#111" ${p.used.includes(v)&&!(G.phase==='result'&&G.lastTok===v)||G.token||locked||!can('cur')?'disabled':''} onclick="apostar(${v})">${v}</button>`).join('')}</div>`;
   }
   if(canAnswer){
     if(G.resetNote&&G.phase==='question')h+=`<div class="note2">${G.resetNote}</div>`;
@@ -1129,7 +1137,7 @@ function stopTimer(){if(timerId){clearInterval(timerId);timerId=null}G.timerLeft
 function beep(f,d){try{const A=window.__ac||(window.__ac=new (window.AudioContext||window.webkitAudioContext)());const o=A.createOscillator(),g=A.createGain();o.frequency.value=f;o.connect(g);g.connect(A.destination);g.gain.setValueAtTime(.25,A.currentTime);g.gain.exponentialRampToValueAtTime(.001,A.currentTime+d);o.start();o.stop(A.currentTime+d)}catch(e){}}
 function paintTimer(){const el=document.getElementById('timer'),m=document.getElementById('timermsg');if(!el)return;el.style.display='';el.className='timer'+(G.timerLeft===0?' done':G.timerLeft<=3?' low':'');el.textContent=G.timerLeft===0?'⏰ 0':G.timerLeft;if(m)m.textContent=G.timerLeft===0?'Tempo esgotado!':''}
 function startTimer(){
-  if(online()){if(G.tEnd||G.resp)return;G.tEnd=Date.now()+(G.theme==='V'?DUR_V:DUR_DIG)*1000;SFX.go();render();return}
+  if(online())return; // na sala online o tempo começa sozinho
   if(timerId)clearInterval(timerId);
   G.timerLeft=10;SFX.go();forcePanel();render();
   timerId=setInterval(()=>{
@@ -1366,7 +1374,7 @@ async function pickTheme(t,keepNote){
   if(!Array.isArray(G.seen))G.seen=[];G.seen.push([src,r.id]);persist();
   G.qd=r.d;G.qid=r.id;G.tk=r.tk;G.dobro=false;G.lvNote=r.lvNote||'';G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;RASCUNHO='';G.chosen=null;G.revealed=false;
   G.q=src==='V'?[r.q,r.opts,null,r.b,r.d]:[r.q,null,r.b,r.d];
-  G.phase='question';render()}
+  G.phase='question';iniciaTempo();render()}
 
 function resolve(ok,snapped,pre){
   if(!snapped)snapshot(ok?'Acertou':'Errou');
@@ -1817,7 +1825,13 @@ setTimeout(netReady,10000);
 
 
 // ----- resposta digitada e votação (sala online) -----
-const DUR_DIG=20,DUR_V=10;
+const DUR_RESP=30; // sala online: tempo para responder, contado desde que a pergunta aparece
+function iniciaTempo(){ // começa sozinho quando a pergunta aparece (depois da aposta, ou direto na pergunta final)
+  if(!online()||G.phase!=='question'||G.tEnd||G.resp||G.chosen!==null||G.revealed)return;
+  const p=G.players&&G.players[G.cur];if(!p)return;
+  if(G.token||p.pos===FINAL)G.tEnd=Date.now()+DUR_RESP*1000;
+}
+function apostar(v){G.token=v;iniciaTempo();render()}
 let VOTES={},RASCUNHO='';
 function respKey(){return G.resp&&G.resp.k}
 function normResp(x){return String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/\(.*?\)/g,' ').replace(/^(o|a|os|as|um|uma)\s+/,'').replace(/[^a-z0-9]+/g,' ').trim()}
@@ -1896,10 +1910,9 @@ let TICK=null,TLAST=null;
 function restante(){return G.tEnd?Math.max(0,Math.ceil((G.tEnd-Date.now())/1000)):null}
 function timerAtivo(){return online()&&G.phase==='question'&&G.tEnd&&!G.resp&&G.chosen===null}
 function timerOnlineHtml(){
-  if(G.resp||G.chosen!==null)return '';
-  if(G.tEnd){const r=restante();return `<div class="timerbox"><div id="timer" class="timer${r===0?' done':r<=3?' low':''}">${r||'⏰ 0'}</div><span class="muted">${r?'segundos para responder':'Tempo esgotado!'}</span></div>`}
-  if(can('reader'))return `<div class="timerbox"><button onclick="startTimer()">⏱ Timer de ${G.theme==='V'?DUR_V:DUR_DIG} s</button><span class="muted">aparece para todos</span></div>`;
-  return '';
+  if(G.resp||G.chosen!==null||!G.tEnd)return '';
+  const r=restante(),pct=Math.max(0,Math.min(100,(G.tEnd-Date.now())/(DUR_RESP*10)));
+  return `<div class="timerbox tempo"><div id="timer" class="timer${r===0?' done':r<=5?' low':''}">${r||'⏰ 0'}</div><div class="tempoinfo"><span class="muted" id="timertxt">${r?(can('cur')?'segundos para você responder':'segundos para responder'):'Tempo esgotado!'}</span><div class="tempobar"><i id="tempobarra" class="${r<=5?'low':r<=10?'meio':''}" style="width:${pct}%"></i></div></div></div>`;
 }
 function onlineTimer(){
   if(!timerAtivo()){if(TICK){clearInterval(TICK);TICK=null}TLAST=null;return}
@@ -1909,10 +1922,12 @@ function onlineTimer(){
 function pintaTimer(){
   if(!timerAtivo()){if(TICK){clearInterval(TICK);TICK=null}return}
   const r=restante(),el=document.getElementById('timer');
-  if(el){el.textContent=r||'⏰ 0';el.className='timer'+(r===0?' done':r<=3?' low':'')}
+  if(el){el.textContent=r||'⏰ 0';el.className='timer'+(r===0?' done':r<=5?' low':'')}
+  const bar=document.getElementById('tempobarra');if(bar){bar.style.width=Math.max(0,Math.min(100,(G.tEnd-Date.now())/(DUR_RESP*10)))+'%';bar.className=r<=5?'low':r<=10?'meio':''}
+  if(r===0){const tx=document.getElementById('timertxt');if(tx)tx.textContent='Tempo esgotado!'}
   if(r===TLAST)return;
   const primeiro=TLAST===null;TLAST=r;
-  if(!primeiro&&r>0){if(r<=3)SFX.hurry();else SFX.tick();anim(el,[{transform:'scale(1)'},{transform:'scale(1.18)',offset:.3},{transform:'scale(1)'}],{duration:350})}
+  if(!primeiro&&r>0&&r<=10){if(r<=5)SFX.hurry();else SFX.tick();anim(el,[{transform:'scale(1)'},{transform:'scale(1.18)',offset:.3},{transform:'scale(1)'}],{duration:350})}
   if(r===0){
     clearInterval(TICK);TICK=null;
     if(!primeiro){SFX.timeup();vib([90,60,90])}
