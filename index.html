@@ -14,7 +14,7 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;b
 .ringwrap{container-type:inline-size;width:100%;max-width:780px;margin:0 auto}
 .ring{position:relative;width:100%;aspect-ratio:1}
 .ring svg.track{position:absolute;inset:0;width:100%;height:100%}
-.sp{position:absolute;width:var(--sp,8.4cqw);height:var(--sp,8.4cqw);transform:translate(-50%,-50%);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 .4cqw 1cqw rgba(0,0,0,.55),inset 0 -.5cqw 0 rgba(0,0,0,.25);border:.35cqw solid rgba(255,255,255,.85);transition:transform .2s,box-shadow .2s}
+.sp{position:absolute;width:var(--sp,8.4cqw);height:var(--sp,8.4cqw);transform:translate(-50%,-50%);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 .4cqw 1cqw rgba(0,0,0,.55),inset 0 -.5cqw 0 rgba(0,0,0,.25);border:.35cqw solid rgba(255,255,255,.85);transition:transform .2s ease-out,box-shadow .2s,left .2s ease-out,top .2s ease-out}
 .sp .lb{font-weight:900;font-size:calc(var(--sp,8.4cqw)*.23);line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.6)}
 .sp .n{font-size:calc(var(--sp,8.4cqw)*.15);opacity:.8;margin-top:.2cqw}
 .sp.start{background:#2a2e38;border-color:#ffd23f;width:calc(var(--sp,8.4cqw)*1.2);height:calc(var(--sp,8.4cqw)*1.2)}
@@ -198,6 +198,10 @@ button:active:not(:disabled){transform:scale(.94)}
 @keyframes prevIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
 .emojivoa{position:fixed;bottom:90px;z-index:29;font-size:46px;pointer-events:none;animation:voa 2.6s ease-out forwards}
 @keyframes voa{0%{transform:translateY(0) scale(.4);opacity:0}10%{opacity:1;transform:translateY(-20px) scale(1.25)}100%{transform:translateY(-55vh) scale(1);opacity:0}}
+.ring{touch-action:pan-y pinch-zoom}
+.sp.foco{box-shadow:0 .6cqw 2cqw rgba(0,0,0,.7),0 0 0 .35cqw rgba(255,255,255,.95)}
+.focolbl{position:absolute;transform:translate(-50%,-50%);background:rgba(17,19,24,.92);border:1px solid #3a4054;color:#fff;border-radius:1.2cqw;padding:.6cqw 1.4cqw;font-size:2.2cqw;font-weight:700;white-space:nowrap;pointer-events:none;z-index:40;transition:left .2s ease-out,top .2s ease-out,opacity .2s}
+@media(max-width:600px){.focolbl{font-size:3.4cqw}}
 </style>
 </head>
 <body>
@@ -539,12 +543,12 @@ function renderBoard(){
     BOARD_KEY=key;SZ=sz;ring.style.setProperty('--sp',sz.toFixed(2)+'cqw');
     let h=`<svg class="track" viewBox="0 0 100 100"><circle cx="50" cy="50" r="${R}" fill="none" stroke="#2c3140" stroke-width="5.5"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="#3b4256" stroke-width=".5" stroke-dasharray="1 1.5"/></svg>`;
     h+=`<div class="arrow">INÍCIO ▶ sentido horário ▶</div>`;
-    SQ=board.map((s,i)=>{const a=(-90+(i+1)*360/(N+1))*Math.PI/180;return {x:50+R*Math.cos(a),y:50+R*Math.sin(a)}});
+    SQ=board.map((s,i)=>{const a=(-90+(i+1)*360/(N+1))*Math.PI/180,x=50+R*Math.cos(a),y=50+R*Math.sin(a);return {x,y,dx:x,dy:y,ds:1}});FOCO=null;
     board.forEach((s,i)=>{
       const lb=s.type==='start'?'INÍCIO':s.type==='final'?'🏁<br>FIM':s.themes.map(sg).join('<br>');
       h+=`<div class="sp ${s.type}" style="left:${SQ[i].x}%;top:${SQ[i].y}%;${spStyle(s)}" title="${i===0?'Início':i===FINAL?'Última casa':'Casa '+i+' — '+s.themes.map(t=>T[t].n).join(' ou ')}"><div class="lb">${lb}</div>${s.type==='normal'?`<div class="n">${i}</div>`:''}</div>`;
     });
-    h+='<div class="center" id="center"></div><div class="pl-layer" id="pawns"></div>';
+    h+='<div class="center" id="center"></div><div class="pl-layer" id="pawns"></div><div class="focolbl" id="focolbl" style="opacity:0"></div>';
     ring.innerHTML=h;
     const els=ring.querySelectorAll('.sp');SQ.forEach((q,i)=>q.el=els[i]);
     CENTER_H='';PAWN_KEY='';
@@ -568,8 +572,8 @@ function renderBoard(){
 function pawnSpot(pos,j,m){ // posição (em %) do j-ésimo de m peões na casa pos
   const q=SQ[pos];if(!q)return null;
   const big=m>4,per=big?Math.ceil(m/2):m,row=big?Math.floor(j/per):0,col=big?j%per:j,cnt=big?(row?m-per:per):m;
-  const ps=SZ*(big?.24:m>2?.3:.36),gap=ps*1.02;
-  return {x:q.x+(col-(cnt-1)/2)*gap,y:q.y+SZ*.42+row*gap*.95,s:ps};
+  const k=Math.sqrt(q.ds||1),ps=SZ*(big?.24:m>2?.3:.36)*k,gap=ps*1.02;
+  return {x:q.dx+(col-(cnt-1)/2)*gap,y:q.dy+SZ*.42*(q.ds||1)+row*gap*.95,s:ps};
 }
 function pawnSpots(){
   const pl=G.players||[],by={},out=[];
@@ -1339,6 +1343,65 @@ function chatManda(t){
   NET.chat(ROOM,m).catch(()=>toast('Sem conexão: a mensagem não foi enviada.'));
 }
 function chatEnvia(ev){ev.preventDefault();const i=document.getElementById('chatin');if(!i)return;chatManda(i.value);i.value=''}
+
+// ----- lupa do tabuleiro -----
+let FOCO=null,FOCO_RAF=0,FOCO_TIMER=0,FOCO_ALVO=null;
+function anguloNoAnel(ev){ // posição do ponteiro em "casas" ao longo do anel, ou null fora da faixa das casas
+  const ring=document.getElementById('ring');if(!ring||!SQ.length)return null;
+  const r=ring.getBoundingClientRect(),x=ev.clientX-r.left-r.width/2,y=ev.clientY-r.top-r.height/2;
+  const d=Math.hypot(x,y)/(r.width/2)*50;
+  if(d<41-SZ*1.6||d>41+SZ*1.6)return null;
+  const ang=((Math.atan2(y,x)*180/Math.PI+90)%360+360)%360;
+  return ang/(360/(N+1));
+}
+function aplicaFoco(f){
+  if(!SQ.length)return;
+  FOCO=f;
+  const M=N+1,step=360/M,ring=document.getElementById('ring');
+  const pequeno=ring&&ring.getBoundingClientRect().width<560;
+  const A=pequeno?1.7:1.25,sig=pequeno?1.25:1.1;
+  const w=[];for(let j=0;j<M;j++){let d=f==null?99:Math.abs(j-f);d=Math.min(d,M-d);w.push(1+A*Math.exp(-d*d/(2*sig*sig)))}
+  const W=w.reduce((a,b)=>a+b,0),cum=[];let c=0;for(let j=0;j<M;j++){cum.push(c+w[j]/2);c+=w[j]}
+  const jf=f==null?0:Math.round(f)%M,rot=jf*step-cum[jf]/W*360;
+  let maior=-1,smax=1.05;
+  SQ.forEach((q,i)=>{
+    const j=i+1,s=1+(w[j]-1)*.85,a=(cum[j]/W*360+rot-90)*Math.PI/180;
+    q.dx=f==null?q.x:50+41*Math.cos(a);q.dy=f==null?q.y:50+41*Math.sin(a);q.ds=f==null?1:s;
+    const el=q.el;if(!el)return;
+    el.style.left=q.dx+'%';el.style.top=q.dy+'%';
+    el.style.transform=f==null?'':`translate(-50%,-50%) scale(${s.toFixed(3)})`;
+    el.style.zIndex=f==null||s<1.05?'':String(Math.round(s*10));
+    if(s>smax){smax=s;maior=i}
+  });
+  SQ.forEach((q,i)=>q.el&&q.el.classList.toggle('foco',i===maior));
+  // legenda da casa em destaque
+  const lb=document.getElementById('focolbl');
+  if(lb){
+    if(maior>=0){const s=board[maior],q=SQ[maior];
+      lb.textContent=maior===0?'Início':maior===FINAL?'🏁 Última casa':`Casa ${maior} · ${s.themes.map(t=>T[t].n).join(' ou ')}`;
+      const vx=q.dx-50,vy=q.dy-50,vl=Math.hypot(vx,vy)||1,rr=vl-SZ*q.ds*.5-6; // a legenda fica do lado de dentro do anel
+      lb.style.left=Math.max(24,Math.min(76,50+vx/vl*rr))+'%';lb.style.top=(50+vy/vl*rr)+'%';lb.style.opacity='1'}
+    else lb.style.opacity='0';
+  }
+  if(typeof repositionaPeoes==='function')repositionaPeoes();
+}
+function repositionaPeoes(){const sp=pawnSpots();PAWN_EL.forEach((el,k)=>{if(!PAWN_ANIM[k])placePw(el,sp[k])})}
+function focoAgenda(f){FOCO_ALVO=f;if(FOCO_RAF)return;FOCO_RAF=requestAnimationFrame(()=>{FOCO_RAF=0;if(FOCO_ALVO!==FOCO)aplicaFoco(FOCO_ALVO)})}
+(()=>{
+  const ring=document.getElementById('ring');if(!ring)return;
+  ring.addEventListener('pointermove',ev=>{if(ev.pointerType==='touch')return;focoAgenda(anguloNoAnel(ev))});
+  ring.addEventListener('pointerleave',ev=>{if(ev.pointerType==='touch')return;focoAgenda(null)});
+  // no celular: tocar numa casa amplia; tocar fora ou esperar alguns segundos volta ao normal (a rolagem continua livre)
+  let toque=null;
+  ring.addEventListener('pointerdown',ev=>{if(ev.pointerType==='touch')toque={x:ev.clientX,y:ev.clientY,t:Date.now()}});
+  ring.addEventListener('pointerup',ev=>{
+    if(ev.pointerType!=='touch'||!toque)return;
+    const moveu=Math.hypot(ev.clientX-toque.x,ev.clientY-toque.y)>12;toque=null;if(moveu)return;
+    const f=anguloNoAnel(ev);clearTimeout(FOCO_TIMER);
+    aplicaFoco(f);if(f!=null)FOCO_TIMER=setTimeout(()=>aplicaFoco(null),4500);
+  });
+  addEventListener('resize',()=>{if(FOCO!=null)aplicaFoco(null)});
+})();
 
 // ================= sons, confete e efeitos =================
 const SFX=(()=>{
