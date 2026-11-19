@@ -622,6 +622,11 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
 .badge{display:inline-flex;align-items:center;gap:4px;line-height:1.1}
 .pill{display:inline-flex;align-items:center;justify-content:center;line-height:1.2}
 .timer{display:inline-flex;align-items:center;justify-content:center;line-height:1}
+
+.dzbox{margin:12px 0;padding:12px;border-radius:16px;background:#2b1a4d;border:3px solid var(--k);box-shadow:inset 0 0 0 2px #c77dff,0 4px 0 var(--k);animation:pin .3s ease-out both}
+.dztit{font-size:16px;line-height:1.35}
+.dztit .muted{margin-left:6px;font-family:'Lilita One',sans-serif}
+.dzbox .votos{margin:10px 0 4px}
 </style>
 </head>
 <body>
@@ -651,6 +656,7 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
         <li><b>Sala online:</b> quem cria a sala manda o link ou o código; cada um entra pelo próprio celular com nome e cor. Quem criou escolhe temas, tabuleiro e fichas e começa a partida. Na sua vez, você aposta e <b>digita a resposta</b>. Os outros veem o que você escreveu e a resposta oficial e votam se vale: ganha a maioria; no empate, decide o próximo da roda. Se você escrever igual à resposta oficial, vale direto. O timer da sala dura 20 segundos (10 na múltipla escolha) e aparece para todos; quando acaba, o que estiver escrito é enviado. Tem também um chat (💬) para conversar.</li>
         <li><b>Salas abertas:</b> quem cria a sala pode deixá-la <b>aberta a todos</b>. Aí ela aparece em <b>Salas</b> para qualquer pessoa entrar enquanto a partida não começa. O botão <b>Jogar</b> entra na sala aberta com mais gente; se não houver nenhuma, abre uma nova.</li>
         <li><b>Modos de jogo:</b> 🎲 Tradicional (sem bônus); ⭐ Bônus (difícil +1 casa, impossível +2, errar impossível não tira a ficha, ⭐ por impossível acertada); 🔥 Arriscado (Bônus + arriscar o dobro na difícil e na impossível); 😈 Sem dó (Arriscado + acertar impossível devolve uma ajuda e dá uma rasteira em alguém).</li>
+        <li><b>Desfazer na sala online:</b> quem pede para desfazer uma jogada precisa da aprovação da maioria dos outros jogadores (30 segundos para votar). Enquanto votam, ninguém passa a vez.</li>
         <li>Na sala online, se você for para outra aba durante a partida, aparece um aviso na volta (dá para desligar até fechar o site) e o título da aba pisca quando é a sua vez ou o seu voto.</li>
         <li>Achou um problema no site (travou, tela estranha, sala online)? Use o botão <b>🐞</b> no alto da tela para avisar.</li>
         <li>Achou uma pergunta errada ou confusa? Use <b>Reportar pergunta</b> depois da resposta: ela fica guardada para correção.</li>
@@ -949,7 +955,7 @@ function toast(msg){const t=document.getElementById('toast');if(!t)return;t.text
 function undoBtn(){
   if(!UNDO.length)return '';
   const l=UNDO[UNDO.length-1].label;
-  return `<button title="Desfazer: ${esc(l)}" onclick="undo()">↩ Desfazer</button>`;
+  return `<button title="Desfazer: ${esc(l)}" onclick="desfazerClick()">↩ Desfazer</button>`;
 }
 function setTab(t){TAB=t;const b=document.getElementById('histbox');if(b)b.style.display=t==='hist'?'':'none';const hb=document.getElementById('histbtn');if(hb)hb.classList.toggle('on',t==='hist');if(t==='hist'){HIST_N=40;if(typeof CHAT_OPEN!=='undefined'&&CHAT_OPEN)chatFecha();renderHist()}}
 addEventListener('keydown',e=>{if(e.key==='Escape'&&TAB==='hist')setTab('jogo')});
@@ -1090,7 +1096,7 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){document.body.classList.toggle('inicio',!MODE);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
+function render(){document.body.classList.toggle('inicio',!MODE);if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
 
 function renderPanel(){
   const el=document.getElementById('panel');
@@ -1118,7 +1124,7 @@ function renderPanel(){
   }
   const p=G.players[G.cur];
   const reader=G.players[(G.cur+1)%G.players.length];
-  const head=`<div class="row" style="align-items:center;justify-content:space-between"><h2 style="margin:0">${turnTitle(p)}</h2><div class="row">${online()?'':undoBtn()}${headBtns()}</div></div>`;
+  const head=`<div class="row" style="align-items:center;justify-content:space-between"><h2 style="margin:0">${turnTitle(p)}</h2><div class="row">${online()?'':undoBtn()}${headBtns()}</div></div>${desfazerHtml()}`;
   if(G.phase==='sorteio'){const t=G.sortTema;el.innerHTML=head+`<p class="msg"><span class="dots">🎲 Sorteando uma pergunta de <b style="color:${T[t]?T[t].c:'#fff'}">${T[t]?T[t].n:''}</b></span></p>${!SORTEANDO&&(can('cur')||canTheme())?`<button class="small" onclick="pickTheme('${t}',true)">Tentar de novo</button>`:''}`;return}
   if(G.phase==='exhausted'){
     const t=G.exTheme,outros=activeThemes().some(k=>k!==t&&!themeDone(k));
@@ -1552,11 +1558,12 @@ function wonBtns(){
   return `<p class="wait" style="text-align:center">Quem criou a sala decide se vocês jogam de novo.</p>`;
 }
 function resultBtns(){
-  if(G.rasteira==='pendente')return UNDO.length?`<div class="row"><button onclick="undo()">↩ Clicou errado? Desfazer</button></div>`:'';
+  if(G.desfazer)return '';
+  if(G.rasteira==='pendente')return UNDO.length?`<div class="row"><button onclick="desfazerClick()">↩ Clicou errado? Desfazer</button></div>`:'';
   if(!online())return `<div class="row"><button class="primary" onclick="nextTurn()">Próximo jogador ▶</button><button onclick="undo()">↩ Clicou errado? Desfazer</button></div>`;
   let h='<div class="row">';
   if(can('next'))h+=`<button class="primary" onclick="nextTurn()">Próximo jogador ▶</button>`;
-  if(UNDO.length)h+=`<button onclick="undo()">↩ Clicou errado? Desfazer</button>`;
+  if(UNDO.length)h+=`<button onclick="desfazerClick()">↩ Clicou errado? Desfazer</button>`;
   h+='</div>';
   if(!can('next'))h+=`<p class="wait">⏳ ${nm(G.players[G.cur])} ou ${nm(G.players[readerIdx()])} passa a vez.</p>`;
   return h;
@@ -1825,7 +1832,7 @@ pintaEfx();
 function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
 
 // ----- sincronização da partida -----
-const SYNC_KEYS=[...SNAP_KEYS,'exTheme','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica'];
+const SYNC_KEYS=[...SNAP_KEYS,'exTheme','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica','desfazer'];
 function syncJson(){const o={};SYNC_KEYS.forEach(k=>{if(G[k]!==undefined)o[k]=G[k]});return JSON.stringify(o)}
 let PUSHING=false,PUSH_AGAIN=false,SENT=null;
 async function netPush(){
@@ -1905,6 +1912,7 @@ function limpaEstado(o){
   g.board=Array.isArray(o.board)?o.board.slice(0,80).map(sCasa):null;
   g.previewBoard=Array.isArray(o.previewBoard)?o.previewBoard.slice(0,80).map(sCasa):null;
   g.ordem=Array.isArray(o.ordem)?o.ordem.map(sId).filter(Boolean).slice(0,30):[];
+  const dz=o.desfazer;g.desfazer=dz&&typeof dz==='object'&&sId(dz.id)&&sId(dz.dev)?{id:dz.id,dev:dz.dev,nome:sStr(dz.nome,16),label:sStr(dz.label,40),ate:Number(dz.ate)||0}:null;
   return g;
 }
 function limpaLobby(l){ // nomes e cores de quem está na sala
@@ -2072,6 +2080,51 @@ function igualOficial(txt){
   const a=String(respostaTxt()||'');
   const ops=[a,...a.split(/\s*[;\/]\s*|\s+ou\s+/)].map(normResp).filter(Boolean);
   return ops.includes(t);
+}
+// ----- desfazer na sala online: precisa do voto da turma -----
+const DUR_DESFAZER=30;
+function desfazerClick(){if(!online()){undo();return}pedirDesfazer()}
+function votantesDesfazer(quem){ // todos os jogadores conectados, menos quem pediu
+  quem=quem||(G.desfazer&&G.desfazer.dev)||MYDEV;
+  return (G.players||[]).filter(p=>p.dev&&p.dev!==quem&&LOBBY[p.dev]&&LOBBY[p.dev].on!==false);
+}
+function pedirDesfazer(){
+  if(!UNDO.length||G.desfazer)return;
+  if(!votantesDesfazer(MYDEV).length){undo();return} // sozinho na sala: desfaz direto
+  const me=G.players&&G.players[myIdx()];
+  G.desfazer={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),dev:MYDEV,nome:(me&&me.name)||myName()||'Alguém',label:UNDO[UNDO.length-1].label||'última jogada',ate:Date.now()+DUR_DESFAZER*1000};
+  SFX.whoosh&&SFX.whoosh();render();
+}
+function votoDesfazer(v){
+  const dz=G.desfazer;if(!dz||!NET||dz.dev===MYDEV)return;
+  const o={k:'u:'+dz.id,v:!!v,ts:Date.now()};
+  VOTES=Object.assign({},VOTES,{[MYDEV+'_u']:o});SFX.vote();
+  NET.vote(ROOM,MYDEV+'_u',o).catch(()=>toast('Sem conexão: o voto não foi enviado.'));
+  render();
+}
+function contaDesfazer(){
+  const dz=G.desfazer;if(!dz)return null;
+  const k='u:'+dz.id,vs=votantesDesfazer();let sim=0,nao=0;const falta=[];
+  vs.forEach(p=>{const v=VOTES[p.dev+'_u'];if(v&&v.k===k){v.v?sim++:nao++}else falta.push(p)});
+  return {sim,nao,n:vs.length,falta};
+}
+function confereDesfazer(){ // quem pediu (que tem a jogada guardada) aplica ou cancela; quem criou a sala limpa pedido esquecido
+  const dz=G.desfazer;if(!dz||!online())return;
+  const c=contaDesfazer(),agora=Date.now();
+  if(dz.dev===MYDEV){
+    if(c.sim>c.n/2){G.desfazer=null;toast('↩ A turma aprovou: jogada desfeita.');undo();return}
+    if(c.nao>=c.n/2||agora>dz.ate){G.desfazer=null;toast(c.nao>=c.n/2?'A turma não aprovou desfazer a jogada.':'O tempo para votar acabou: a jogada continua valendo.');render();return}
+  }else if(amHost()&&(agora>dz.ate+8000||!LOBBY[dz.dev]||LOBBY[dz.dev].on===false)){G.desfazer=null;render()}
+}
+setInterval(()=>{if(G.desfazer)confereDesfazer();const el=document.getElementById('dztempo');if(el&&G.desfazer)el.textContent=Math.max(0,Math.ceil((G.desfazer.ate-Date.now())/1000))+' s'},1000);
+function desfazerHtml(){
+  const dz=G.desfazer;if(!dz||!online())return '';
+  const c=contaDesfazer(),meu=VOTES[MYDEV+'_u'],mv=meu&&meu.k==='u:'+dz.id?meu.v:null;
+  let h=`<div class="dzbox"><div class="dztit">↩ <b>${esc(dz.nome)}</b> quer desfazer: <b>${esc(dz.label)}</b> <span class="muted" id="dztempo">${Math.max(0,Math.ceil((dz.ate-Date.now())/1000))} s</span></div>`;
+  if(dz.dev===MYDEV)h+=`<p class="muted">Esperando a turma votar… precisa da maioria.</p><div class="row"><button class="small" onclick="G.desfazer=null;render()">Cancelar pedido</button></div>`;
+  else if(myIdx()>=0)h+=`<div class="row votos"><button class="ok${mv===true?' on':''}" onclick="votoDesfazer(true)">✔ Pode desfazer</button><button class="bad${mv===false?' on':''}" onclick="votoDesfazer(false)">✘ Deixa como está</button></div>`;
+  h+=`<p class="muted">Votos: ✔ ${c.sim} · ✘ ${c.nao} de ${c.n}${c.falta.length?' · falta: '+c.falta.map(p=>esc(p.name)).join(', '):''}</p></div>`;
+  return h;
 }
 function eleitores(){ // os outros jogadores conectados (ou que já votaram)
   const k=respKey();
