@@ -202,13 +202,23 @@ button:active:not(:disabled){transform:scale(.94)}
 .sp.foco{box-shadow:0 .6cqw 2cqw rgba(0,0,0,.7),0 0 0 .35cqw rgba(255,255,255,.95)}
 .focolbl{position:absolute;transform:translate(-50%,-50%);background:rgba(17,19,24,.92);border:1px solid #3a4054;color:#fff;border-radius:1.2cqw;padding:.6cqw 1.4cqw;font-size:2.2cqw;font-weight:700;white-space:nowrap;pointer-events:none;z-index:40;transition:left .2s ease-out,top .2s ease-out,opacity .2s}
 @media(max-width:600px){.focolbl{font-size:3.4cqw}}
+.toolbar{display:flex;gap:6px;justify-content:flex-end;margin-bottom:12px}
+.histbox{width:min(480px,calc(100vw - 24px));height:min(640px,82vh)}
+@media(max-width:600px){.histbox{height:82vh}}
+.histcorpo{flex:1;overflow:auto;padding:12px 14px}
+.hv{padding:9px 0;border-bottom:1px solid #2a2e3a}
+.hv .hq{font-size:14px;line-height:1.35;margin-top:4px}
+.hv .ha{font-size:15px;font-weight:800;margin-top:3px;color:#ffd79a}
+.hv .badge{font-size:11px;padding:2px 8px}
+.histcorpo details{margin-top:14px}
+.histcorpo summary{color:#c3c7d0}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="ringwrap"><div class="ring" id="ring"></div></div>
   <div>
-    <div class="tabs"><button id="tab-jogo" class="tab on" onclick="setTab('jogo')">🎲 Jogo</button><button id="tab-hist" class="tab" onclick="setTab('hist')">📊 Perguntas usadas <span id="tabcount" class="pill"></span></button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
+    <div class="toolbar"><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
     <div id="view-jogo">
     <div class="card" id="panel"></div>
     <div class="card" id="scores" style="display:none"></div>
@@ -223,7 +233,7 @@ button:active:not(:disabled){transform:scale(.94)}
         <li>Errou? Perde a ficha, fica na mesma casa e, na próxima rodada, responde outra pergunta do mesmo tema.</li>
         <li>Na última casa, os outros jogadores escolhem juntos o tema. Vence quem chegar lá e acertar a pergunta final.</li>
         <li>Variedades (V) tem perguntas de múltipla escolha, só dela (não repetem os outros temas).</li>
-        <li>Perguntas que já saíram ficam marcadas e não se repetem entre partidas (veja a aba Perguntas usadas).</li>
+        <li>Perguntas que já saíram ficam marcadas e não se repetem entre partidas (veja o histórico no botão 📜).</li>
         <li>A partida fica salva: se a página recarregar ou for atualizada, o jogo continua de onde parou.</li>
         <li>Depois que a pergunta aparece, dá para ligar o timer de 10 segundos. Quando o tempo acaba, a pergunta termina: nas de múltipla escolha conta como erro; nas outras, a resposta aparece e quem lê decide se deu tempo.</li>
         <li>Ajudas: cada jogador pode usar, uma vez por partida, o <b>Pular</b> (troca a pergunta por outra do mesmo tema) e a <b>Dica</b> (mostra a primeira letra e o tamanho da resposta; na múltipla escolha, elimina uma alternativa errada).</li>
@@ -232,11 +242,11 @@ button:active:not(:disabled){transform:scale(.94)}
       </ul></details>
     </div>
     </div>
-    <div id="view-hist" style="display:none"><div class="card" id="hist"></div></div>
   </div>
 </div>
 <div id="toast"></div>
 <div id="chatprev" class="chatprev" style="display:none" onclick="chatAbre()"></div>
+<div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
 <div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b>💬 Chat da sala</b><button class="small" onclick="chatFecha()">✕</button></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
 <script>
 const T={
@@ -389,10 +399,10 @@ async function api(acao,body){
   return j;
 }
 const ANS={};let BUSCA={};
-// textos das perguntas que já saíram neste aparelho (para a aba Perguntas usadas)
+// textos das perguntas que já saíram neste aparelho (para o histórico 📜)
 const VIS_KEY='arrisca-vistas-v1';let VISTAS={};
 try{VISTAS=JSON.parse(localStorage.getItem(VIS_KEY)||'{}')||{}}catch(e){VISTAS={}}
-function guardaVista(t,id,q,a){VISTAS[id]=[t,q,a];const ks=Object.keys(VISTAS);if(ks.length>4000)ks.slice(0,ks.length-4000).forEach(k=>delete VISTAS[k]);try{localStorage.setItem(VIS_KEY,JSON.stringify(VISTAS))}catch(e){}}
+function guardaVista(t,id,q,a){delete VISTAS[id];VISTAS[id]=[t,q,a,Date.now()];const ks=Object.keys(VISTAS);if(ks.length>4000)ks.slice(0,ks.length-4000).forEach(k=>delete VISTAS[k]);try{localStorage.setItem(VIS_KEY,JSON.stringify(VISTAS))}catch(e){}}
 function respostaTxt(){return G.qid?ANS[G.qid]:undefined}
 function certaIdx(){const a=respostaTxt();return G.theme==='V'&&a!=null&&G.q?G.q[1].indexOf(a):null}
 function buscaResposta(){
@@ -491,31 +501,30 @@ function undoBtn(){
   const l=UNDO[UNDO.length-1].label;
   return `<button title="Desfazer: ${esc(l)}" onclick="undo()">↩ Desfazer</button>`;
 }
-function setTab(t){TAB=t;document.getElementById('view-jogo').style.display=t==='jogo'?'':'none';document.getElementById('view-hist').style.display=t==='hist'?'':'none';document.getElementById('tab-jogo').classList.toggle('on',t==='jogo');document.getElementById('tab-hist').classList.toggle('on',t==='hist');if(t==='hist')renderHist()}
-function renderTabCount(){if(!Q)return;const n=ORDER.reduce((s,k)=>s+countUsed(k),0);document.getElementById('tabcount').textContent=n?n.toLocaleString('pt-BR'):''}
+function setTab(t){TAB=t;const b=document.getElementById('histbox');if(b)b.style.display=t==='hist'?'':'none';const hb=document.getElementById('histbtn');if(hb)hb.classList.toggle('on',t==='hist');if(t==='hist'){HIST_N=40;if(typeof CHAT_OPEN!=='undefined'&&CHAT_OPEN)chatFecha();renderHist()}}
+addEventListener('keydown',e=>{if(e.key==='Escape'&&TAB==='hist')setTab('jogo')});
+function renderTabCount(){}
+let HIST_N=40;
 function renderHist(){
-  const el=document.getElementById('hist');
-  if(!Q){el.innerHTML='<p class="muted">Carregando perguntas…</p>';return}
+  const el=document.getElementById('hist');if(!el)return;
+  if(!Q){el.innerHTML='<p class="muted">Carregando…</p>';return}
   let tot=0,totU=0;
-  const linhas=ORDER.map(k=>{const n=QN(k),u=countUsed(k);tot+=n;totU+=u;
+  ORDER.forEach(k=>{tot+=QN(k);totU+=countUsed(k)});
+  const vistas=Object.entries(VISTAS).map(([id,v])=>({id,t:v[0],q:v[1],a:v[2],ts:v[3]||0})).filter(v=>v.q).sort((x,y)=>y.ts-x.ts);
+  const itens=vistas.slice(0,HIST_N).map(v=>`<div class="hv"><span class="badge" style="background:${(T[v.t]||{c:'#555'}).c}">${esc(T[v.t]?sg(v.t)+' · '+T[v.t].n:v.t)}</span><div class="hq">${esc(v.q)}</div><div class="ha">${esc(v.a)}</div></div>`).join('');
+  const linhas=ORDER.map(k=>{const n=QN(k),u=countUsed(k);
     const conf=G.confirmReset===k;
-    return `<div class="hrow"><span class="badge" style="background:${T[k].c}">${sg(k)}</span><div class="hinfo"><div class="hname">${T[k].n}</div><div class="muted">${u.toLocaleString('pt-BR')} já saíram · ${(n-u).toLocaleString('pt-BR')} disponíveis</div><div class="bar"><i style="width:${(u/n*100).toFixed(1)}%;background:${T[k].c}"></i></div></div><button class="small${conf?' bad':''}" ${u?'':'disabled'} onclick="resetTheme('${k}')">${conf?'Confirmar?':'Liberar'}</button></div>`}).join('');
-  const listas=ORDER.filter(k=>countUsed(k)).map(k=>{
-    const ids=USED[k].slice().reverse();
-    const itens=ids.slice(0,300).map(id=>{const v=VISTAS[id];return v?`<li>${esc(v[1])} <span class="muted">— ${esc(v[2])}</span></li>`:'<li class="muted">(pergunta sem texto guardado neste aparelho)</li>'}).join('');
-    return `<details><summary>${T[k].n} (${ids.length.toLocaleString('pt-BR')})</summary><ol class="hlist">${itens}</ol>${ids.length>300?'<p class="muted">Mostrando as 300 mais recentes.</p>':''}</details>`}).join('');
+    return `<div class="hrow"><span class="badge" style="background:${T[k].c}">${sg(k)}</span><div class="hinfo"><div class="hname">${T[k].n}</div><div class="muted">${u.toLocaleString('pt-BR')} já saíram · ${(n-u).toLocaleString('pt-BR')} disponíveis</div><div class="bar"><i style="width:${n?(u/n*100).toFixed(1):0}%;background:${T[k].c}"></i></div></div><button class="small${conf?' bad':''}" ${u?'':'disabled'} onclick="resetTheme('${k}')">${conf?'Confirmar?':'Liberar'}</button></div>`}).join('');
   const confAll=G.confirmReset==='ALL';
-  const onde=dbRef?'Salvo na sua conta: o histórico vale em qualquer computador em que você abrir o jogo.':localOk?'Salvo neste navegador.':'Não foi possível salvar o histórico neste navegador: ele vale só até fechar a página.';
-  el.innerHTML=`<h2>Perguntas usadas</h2>
-  <p class="muted">Cada pergunta que sai fica marcada e não volta a cair, de partida em partida, até você liberar. A pergunta é sorteada ao acaso entre as que ainda não saíram daquele tema, misturando os assuntos (para não cair só um tipo de pergunta). Se um tema acabar, o jogo pergunta antes de liberar.</p>
-  <div class="bigcount">${totU.toLocaleString('pt-BR')} <span class="muted" style="font-size:15px;font-weight:600">de ${tot.toLocaleString('pt-BR')} já saíram</span></div>
-  <div class="bar" style="height:10px"><i style="width:${(totU/tot*100).toFixed(1)}%;background:#ffb02e"></i></div>
+  el.innerHTML=`<p class="muted" style="margin-top:0">Já saíram <b>${totU.toLocaleString('pt-BR')}</b> de ${tot.toLocaleString('pt-BR')} perguntas neste aparelho. Elas não voltam a cair.</p>
+  ${itens||'<p class="muted">Ainda não tem nada aqui. As perguntas aparecem depois que a resposta é mostrada.</p>'}
+  ${vistas.length>HIST_N?`<div class="row" style="justify-content:center;margin-top:10px"><button class="small" onclick="HIST_N+=100;renderHist()">Mostrar mais (${(vistas.length-HIST_N).toLocaleString('pt-BR')})</button></div>`:''}
+  ${REPORTS.length?`<details><summary>⚑ Perguntas que você reportou (${REPORTS.length})</summary><p class="muted">Enviadas para revisão. Quando a correção entrar no jogo, elas saem desta lista.</p><ol class="hlist">${REPORTS.map((r,i)=>`<li>${esc(r.q)} <span class="muted">— ${esc(r.a)} · <b>${esc(r.motivo)}</b></span> <button class="small" onclick="removeReport(${i})">✕</button></li>`).join('')}</ol></details>`:''}
+  <details><summary>Avançado: liberar perguntas</summary>
+  <p class="muted">Liberar faz as perguntas de um tema voltarem a cair neste aparelho. Quando um tema acaba, o jogo já pergunta se você quer liberar.</p>
   ${linhas}
-  <div class="row" style="margin-top:14px"><button class="${confAll?'bad':'primary'}" ${totU?'':'disabled'} onclick="resetTheme('ALL')">${confAll?'Clique de novo para confirmar':'Liberar todas as perguntas'}</button></div>
-  <p class="muted" style="margin-top:10px">${onde}${syncNote?'<br>'+syncNote:''}</p>
-  ${listas?'<h2 style="margin-top:16px;font-size:16px">Ver as que já saíram</h2>'+listas:''}
-  ${REPORTS.length?`<h2 style="margin-top:16px;font-size:16px">Perguntas reportadas (${REPORTS.length})</h2><p class="muted">Enviadas para revisão. Quando a correção entrar no jogo, elas saem desta lista.</p><ol class="hlist">${REPORTS.map((r,i)=>`<li><span class="badge" style="background:${(T[r.t]||{c:'#555'}).c}">${esc(r.t)}</span> ${esc(r.q)} <span class="muted">— ${esc(r.a)} · <b>${esc(r.motivo)}</b>${r.nivelCerto?' ('+esc(r.nivelAtual||'?')+' → '+esc(r.nivelCerto)+')':''}${r.nota?': '+esc(r.nota):''}</span> <button class="small" onclick="removeReport(${i})">remover</button></li>`).join('')}</ol>`:''}`;
-  renderTabCount();
+  <div class="row" style="margin-top:12px"><button class="${confAll?'bad':''}" ${totU?'':'disabled'} onclick="resetTheme('ALL')">${confAll?'Clique de novo para confirmar':'Liberar todas as perguntas'}</button></div>
+  </details>`;
 }
 
 let G={phase:'setup',count:4,fichas:5,names:['Jogador 1','Jogador 2','Jogador 3','Jogador 4','Jogador 5','Jogador 6','Jogador 7','Jogador 8','Jogador 9','Jogador 10'],colors:[...PCOLORS],selThemes:[...ORDER],size:'normal',level:'misto',seen:[]};
@@ -1405,6 +1414,15 @@ function focoAgenda(alvo){FOCO_ALVO=alvo;if(FOCO_RAF)return;FOCO_RAF=requestAnim
   addEventListener('resize',()=>{if(FOCO!=null)aplicaFoco(null)});
 })();
 
+// ----- painel para ouvir os sons (abra o site com ?sons) -----
+function painelSons(){
+  const L=[['Toque em botão','tap'],['Apostar ficha','chip'],['Pergunta aparece','whoosh'],['Mostrar resposta','flip'],['Escolher tema','pop'],['Peão andando','passos'],['Acertou','correct'],['Errou','wrong'],['Timer começa','go'],['Timer (segundos)','tick'],['Timer (3 últimos)','hurry'],['Tempo esgotado','timeup'],['Vez de outro','turn'],['Sua vez (online)','myturn'],['Dica','magic'],['Alguém entrou na sala','join'],['Mensagem no chat','msg'],['Voto','vote'],['Começar partida','start'],['Chegou na última casa','final'],['Vitória','win']];
+  const d=document.createElement('div');d.className='chatbox histbox';d.style.zIndex='50';
+  d.innerHTML='<div class="chathead"><b>🔊 Sons do jogo</b><button class="small" onclick="this.closest(\'.chatbox\').remove()">✕</button></div><div class="histcorpo"><p class="muted" style="margin-top:0">Toque para ouvir cada som.</p><div style="display:grid;gap:8px">'+L.map(([t,f])=>`<button onclick="${f==='passos'?'[1,2,3,4,5].forEach(i=>setTimeout(()=>SFX.step(i),i*230))':'SFX.'+f+'()'}">▶ ${t}</button>`).join('')+'</div></div>';
+  document.body.appendChild(d);
+}
+if(URLP.get('sons')!==null)setTimeout(painelSons,300);
+
 // ================= sons, confete e efeitos =================
 const SFX=(()=>{
   let A=null,M=null,NB=null,on=true;
@@ -1430,36 +1448,64 @@ const SFX=(()=>{
     s.connect(f);f.connect(g);g.connect(M);s.start(t);s.stop(t+d+.05);
   }
   const arp=(fs,dt,d,o)=>fs.forEach((f,i)=>tone(f,i*dt,d,o));
+  // ---- sons gravados (batucada brasileira, Freesound CC0; veja sons/CREDITOS.md) ----
+  const NOMES=['toque','ficha1','ficha2','passo','ganza','triangulo','agogo_agudo','agogo_grave','pandeiro','pandeiro_curto','cuica','cuica_curta','clave','apito','batucada','tantan','surdo'];
+  // volume de cada um (os arquivos têm intensidades diferentes)
+  const VOL={toque:.22,ficha1:.9,ficha2:.9,passo:.8,ganza:.75,triangulo:.8,agogo_agudo:.75,agogo_grave:.75,pandeiro:.8,pandeiro_curto:.8,cuica:.42,cuica_curta:.4,clave:.7,apito:.32,batucada:.75,tantan:.5,surdo:.6};
+  const BUF={};let carregando=false;
+  function carrega(){
+    if(carregando)return;const a=ctx();if(!a)return;carregando=true;
+    NOMES.forEach(n=>fetch('sons/'+n+'.mp3').then(r=>r.arrayBuffer()).then(b=>new Promise((ok,erro)=>a.decodeAudioData(b,ok,erro))).then(buf=>{BUF[n]=buf}).catch(()=>{}));
+  }
+  // toca um som gravado; devolve false se ainda não carregou (aí entra o som sintetizado)
+  function som(n,o={}){
+    if(!on)return true;const a=ctx();if(!a)return true;const b=BUF[n];if(!b){carrega();return false}
+    const s=a.createBufferSource(),g=a.createGain(),t=a.currentTime+(o.t||0)+.005;
+    s.buffer=b;const r=o.rate||1;s.playbackRate.setValueAtTime(r,t);
+    if(o.rateTo)s.playbackRate.linearRampToValueAtTime(o.rateTo,t+(o.rateDur||.6));
+    g.gain.value=(VOL[n]||.7)*(o.vol==null?1:o.vol);
+    s.connect(g);g.connect(M);s.start(t);if(o.dur)s.stop(t+o.dur);
+    return true;
+  }
+  const varia=()=>.94+Math.random()*.12;
+  let fichaAlt=0;
   return {
     get on(){return on},
-    unlock(){if(on)ctx()},
-    toggle(){on=!on;try{localStorage.setItem('arrisca-som',on?'1':'0')}catch(e){}const b=document.getElementById('snd');if(b)b.textContent=on?'🔊':'🔇';if(on){ctx();arp([660,990],.07,.12,{vol:.15})}toast(on?'🔊 Som ligado':'🔇 Som desligado')},
-    tap(){tone(700,0,.045,{type:'triangle',vol:.07})},
-    chip(){tone(1300,0,.05,{type:'square',vol:.05});tone(1750,.05,.09,{type:'square',vol:.05});tone(2300,.11,.12,{vol:.06})},
-    whoosh(){noise(0,.38,{vol:.22,f:350,f2:3200})},
-    flip(){noise(0,.18,{vol:.15,f:1500,f2:4000});tone(880,.05,.12,{type:'triangle',vol:.12})},
-    pop(){tone(260,0,.14,{vol:.28,f2:880})},
-    step(i){const f=392*Math.pow(1.122,i);tone(f,0,.11,{type:'triangle',vol:.22});tone(f*2,0,.05,{vol:.06})},
-    correct(){arp([523,659,784,1047],.085,.28,{type:'triangle',vol:.2});tone(1568,.34,.35,{vol:.08})},
-    wrong(){tone(233,0,.2,{type:'sawtooth',vol:.11,f2:200});tone(175,.19,.42,{type:'sawtooth',vol:.11,f2:120})},
-    go(){arp([523,784],.07,.12,{type:'triangle',vol:.16})},
-    tick(){tone(1100,0,.03,{type:'square',vol:.035})},
-    hurry(){tone(950,0,.11,{type:'square',vol:.1})},
-    timeup(){[0,.16,.32].forEach(t=>tone(440,t,.13,{type:'square',vol:.13}));tone(330,.48,.4,{type:'square',vol:.12})},
-    turn(){tone(587,0,.13,{vol:.16});tone(880,.1,.22,{vol:.16})},
-    myturn(){arp([784,988,1175,1568],.08,.22,{type:'triangle',vol:.2})},
-    magic(){arp([1047,1319,1568,2093,2637],.045,.18,{vol:.07})},
-    join(){tone(600,0,.1,{vol:.15});tone(900,.08,.16,{vol:.15})},
-    msg(){tone(880,0,.07,{vol:.12});tone(1320,.06,.1,{vol:.1})},
-    vote(){tone(520,0,.06,{type:'triangle',vol:.12});tone(780,.05,.08,{type:'triangle',vol:.1})},
-    start(){noise(0,.45,{vol:.18,f:300,f2:2500});arp([392,523,659,784],.07,.3,{type:'triangle',vol:.15})},
-    final(){arp([659,784,988,1319],.06,.25,{vol:.14})},
+    unlock(){if(on){ctx();carrega()}},
+    toggle(){on=!on;try{localStorage.setItem('arrisca-som',on?'1':'0')}catch(e){}const b=document.getElementById('snd');if(b)b.textContent=on?'🔊':'🔇';if(on){ctx();carrega();som('agogo_agudo')||arp([660,990],.07,.12,{vol:.15})}toast(on?'🔊 Som ligado':'🔇 Som desligado')},
+    tap(){som('toque',{rate:varia()})||tone(700,0,.045,{type:'triangle',vol:.07})},
+    chip(){som((fichaAlt++)%2?'ficha2':'ficha1',{rate:varia()})||(tone(1300,0,.05,{type:'square',vol:.05}),tone(1750,.05,.09,{type:'square',vol:.05}))},
+    whoosh(){som('ganza')||noise(0,.38,{vol:.22,f:350,f2:3200})},
+    flip(){som('triangulo',{vol:.8,dur:.8})||(noise(0,.18,{vol:.15,f:1500,f2:4000}),tone(880,.05,.12,{type:'triangle',vol:.12}))},
+    pop(){som('pandeiro_curto',{rate:varia()})||tone(260,0,.14,{vol:.28,f2:880})},
+    step(i){som('passo',{rate:Math.min(1.7,.95+i*.08)})||tone(392*Math.pow(1.122,i),0,.11,{type:'triangle',vol:.22})},
+    correct(){
+      if(!som('agogo_grave'))return arp([523,659,784,1047],.085,.28,{type:'triangle',vol:.2});
+      som('agogo_agudo',{t:.12});som('agogo_agudo',{t:.24});som('pandeiro',{t:.36});som('agogo_grave',{t:.36,vol:.8});
+    },
+    wrong(){ // cuíca chorando, descendo
+      if(!som('cuica',{rate:1.12,rateTo:.62,rateDur:.85,dur:.95}))return(tone(233,0,.2,{type:'sawtooth',vol:.11,f2:200}),tone(175,.19,.42,{type:'sawtooth',vol:.11,f2:120}));
+      som('surdo',{t:.02,vol:.9});
+    },
+    go(){som('clave')?som('clave',{t:.13,rate:1.2}):arp([523,784],.07,.12,{type:'triangle',vol:.16})},
+    tick(){som('clave',{vol:.35})||tone(1100,0,.03,{type:'square',vol:.035})},
+    hurry(){som('agogo_agudo',{vol:.8})||tone(950,0,.11,{type:'square',vol:.1})},
+    timeup(){som('apito')||([0,.16,.32].forEach(t=>tone(440,t,.13,{type:'square',vol:.13})),tone(330,.48,.4,{type:'square',vol:.12}))},
+    turn(){som('agogo_grave',{vol:.8})||(tone(587,0,.13,{vol:.16}),tone(880,.1,.22,{vol:.16}))},
+    myturn(){if(!som('agogo_agudo'))return arp([784,988,1175,1568],.08,.22,{type:'triangle',vol:.2});som('agogo_grave',{t:.13});som('agogo_agudo',{t:.26});som('agogo_agudo',{t:.39,rate:1.06})},
+    magic(){som('triangulo',{rate:1.5,vol:.55,dur:.6})||arp([1047,1319,1568,2093,2637],.045,.18,{vol:.07})},
+    join(){som('pandeiro_curto')?som('agogo_agudo',{t:.1,vol:.6}):(tone(600,0,.1,{vol:.15}),tone(900,.08,.16,{vol:.15}))},
+    msg(){som('triangulo',{rate:1.25,vol:.4,dur:.5})||(tone(880,0,.07,{vol:.12}),tone(1320,.06,.1,{vol:.1}))},
+    vote(){som('ficha2',{vol:.7})||(tone(520,0,.06,{type:'triangle',vol:.12}),tone(780,.05,.08,{type:'triangle',vol:.1}))},
+    start(){if(!som('tantan'))return(noise(0,.45,{vol:.18,f:300,f2:2500}),arp([392,523,659,784],.07,.3,{type:'triangle',vol:.15}));som('ganza',{t:.05,vol:.7})},
+    final(){som('triangulo',{vol:.9})?som('agogo_agudo',{t:.05}):arp([659,784,988,1319],.06,.25,{vol:.14})},
     win(){
+      if(som('batucada')){som('apito',{t:2.2,vol:.8,dur:.9});som('triangulo',{t:2.3,vol:.7});return}
       const n=[[523,0],[523,.12],[523,.24],[659,.36],[784,.6],[659,.78],[784,.9],[1047,1.08]];
       n.forEach(([f,t])=>{tone(f,t,.2,{type:'triangle',vol:.2});tone(f/2,t,.2,{type:'square',vol:.04})});
       [523,659,784,1047].forEach(f=>tone(f,1.3,1.1,{type:'triangle',vol:.12}));
-      noise(1.3,.8,{vol:.12,f:2000,f2:6000,q:.5});
-    }
+    },
+    teste(n,o){return som(n,o)}
   };
 })();
 const CONF=(()=>{

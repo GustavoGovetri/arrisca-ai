@@ -20,7 +20,7 @@ Na sala online:
 - tem um chat (💬) com reações rápidas;
 - quem criou a sala pode mudar a ordem, tirar alguém e ligar o "Controle total" para jogar por quem caiu da conexão (e decidir a votação na hora).
 
-O jogo tem animações e sons; o botão 🔊 liga e desliga o som.
+O jogo tem animações e sons de batucada (cuíca, agogô, pandeiro, apito; créditos em `sons/CREDITOS.md`). O botão 🔊 liga e desliga o som, e abrindo o site com `?sons` aparece um painel para ouvir todos.
 
 Se alguém fechar o navegador, é só abrir o link de novo que volta para a mesma partida.
 
