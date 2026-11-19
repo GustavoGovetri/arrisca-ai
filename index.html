@@ -212,6 +212,8 @@ button:active:not(:disabled){transform:scale(.94)}
 .hv .badge{font-size:11px;padding:2px 8px}
 .histcorpo details{margin-top:14px}
 .histcorpo summary{color:#c3c7d0}
+.lob.novo{animation:novoPop 1.4s ease-out;border-radius:10px}
+@keyframes novoPop{0%{transform:scale(.6);opacity:0;background:#ffb02e55}20%{transform:scale(1.06);opacity:1;box-shadow:0 0 0 3px #ffb02e,0 0 24px 6px #ffb02e88}100%{transform:none;background:transparent;box-shadow:none}}
 </style>
 </head>
 <body>
@@ -1022,7 +1024,7 @@ async function enterRoom(code,created){
     if(!created&&!(await NET.exists(code))){toast('Sala '+code+' não encontrada');if(!online()){MODE=null;try{history.replaceState(null,'',location.pathname)}catch(e){}render()}return}
     if(UNWATCH){UNWATCH();UNWATCH=null}
     stopTimer();
-    MODE='online';ROOM=code;RV=0;LASTSYNC='';UNDO=[];HOST=created?MYDEV:null;LOBBY={};LOBBY_N=0;HOSTALL=false;
+    MODE='online';ROOM=code;RV=0;LASTSYNC='';UNDO=[];HOST=created?MYDEV:null;LOBBY={};LOBBY_N=0;LOBBY_VISTOS=null;HOSTALL=false;
     G=JSON.parse(G_DEFAULT);G.ordem=created?[MYDEV]:[];
     try{history.replaceState(null,'','?sala='+code+(URLP.get('net')?'&net='+URLP.get('net'):''))}catch(e){}
     if(created){const j=syncJson();await NET.tx(code,0,{v:1,g:j,por:MYDEV,ts:Date.now()});RV=Math.max(RV,1);LASTSYNC=j;CREATING=false}
@@ -1083,9 +1085,15 @@ function marcaVistas(){ // as perguntas que saem na sala também ficam marcadas 
   (G.seen||[]).forEach(([t,id])=>{if(usedSet[t]&&!usedSet[t].has(id)){USED[t].push(id);usedSet[t].add(id);mudou=true}});
   if(mudou)persist();
 }
-let LOBBY_N=0;
+let LOBBY_N=0,LOBBY_VISTOS=null;const NOVOS={};
 function lobbyChanged(){
-  const nl=Object.keys(LOBBY).length;if(nl>LOBBY_N&&LOBBY_N>0&&G.phase==='setup')SFX.join();LOBBY_N=nl;
+  // alguém novo na sala: chamada de apito, aviso e a linha da pessoa piscando
+  if(LOBBY_VISTOS){
+    const novos=Object.keys(LOBBY).filter(d=>!LOBBY_VISTOS.has(d)&&d!==MYDEV);
+    if(novos.length&&G.phase==='setup'){SFX.join();vib([40,40,80])}
+    novos.forEach(d=>{NOVOS[d]=Date.now();const n=(LOBBY[d].nome||'').trim();toast('🎉 '+(n||'Alguém')+' entrou na sala!');setTimeout(()=>{delete NOVOS[d];render()},2600)});
+  }else LOBBY_VISTOS=new Set();
+  Object.keys(LOBBY).forEach(d=>LOBBY_VISTOS.add(d));
   const me=LOBBY[MYDEV]; // se outro aparelho que entrou antes já usa a mesma cor, larga a minha
   if(NET&&me&&me.cor&&G.phase==='setup'&&Object.entries(LOBBY).some(([d,l])=>d!==MYDEV&&l.cor===me.cor&&((l.ts||0)<(me.ts||0)||((l.ts||0)===(me.ts||0)&&d<MYDEV)))){me.cor='';NET.setMe(ROOM,MYDEV,{cor:''}).catch(()=>{})}
   if(amHost()&&G.phase==='setup'){
@@ -1111,7 +1119,7 @@ function lobbyHtml(){
   ${G.pickColor==='me'||(!me.cor&&(me.nome||'').trim())?`<div class="pal-wrap"><span class="muted">Escolha sua cor:</span><div class="palette">${PALETA.map(([c,n])=>{const tomada=usadas.includes(c);return `<button class="swatch${c===me.cor?' on':''}${tomada?' taken':''}" style="background:${c}" title="${n}${tomada?' (já escolhida)':''}" ${tomada?'disabled':''} onclick="setMyColor('${c}')"></button>`}).join('')}</div></div>`:''}
   ${!(me.nome||'').trim()?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Digite seu nome para entrar na partida.</p>':''}
   <h2 style="margin-top:16px">Jogadores <span class="muted">(${ord.length})</span></h2><div class="plist">`;
-  ord.forEach((d,i)=>{const l=LOBBY[d]||{};h+=`<div class="setup-row lob${l.on===false?' offline':''}" data-idx="${i}">${amHost()?`<span class="grip" title="Arraste para mudar a ordem" onpointerdown="dragRow(event,'lobby')">⠿</span>`:''}<span class="ordem">${i+1}º</span><span class="swatch" style="background:${l.cor||'#3a4054'}"></span><span class="lname">${esc((l.nome||'').trim()||'(sem nome)')}${d===MYDEV?' <span class="you">você</span>':''}${d===HOST?' <span class="host">criou a sala</span>':''}${l.on===false?' <span class="off">offline</span>':''}</span>${amHost()&&d!==MYDEV?`<button class="small" title="Tirar da sala" onclick="kick('${d}')">✕</button>`:''}</div>`});
+  ord.forEach((d,i)=>{const l=LOBBY[d]||{};h+=`<div class="setup-row lob${l.on===false?' offline':''}${NOVOS[d]?' novo':''}" data-idx="${i}">${amHost()?`<span class="grip" title="Arraste para mudar a ordem" onpointerdown="dragRow(event,'lobby')">⠿</span>`:''}<span class="ordem">${i+1}º</span><span class="swatch" style="background:${l.cor||'#3a4054'}"></span><span class="lname">${esc((l.nome||'').trim()||'(sem nome)')}${d===MYDEV?' <span class="you">você</span>':''}${d===HOST?' <span class="host">criou a sala</span>':''}${l.on===false?' <span class="off">offline</span>':''}</span>${amHost()&&d!==MYDEV?`<button class="small" title="Tirar da sala" onclick="kick('${d}')">✕</button>`:''}</div>`});
   h+='</div>';
   if(amHost()){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
@@ -1416,9 +1424,9 @@ function focoAgenda(alvo){FOCO_ALVO=alvo;if(FOCO_RAF)return;FOCO_RAF=requestAnim
 
 // ----- painel para ouvir os sons (abra o site com ?sons) -----
 function painelSons(){
-  const L=[['Toque em botão','tap'],['Apostar ficha','chip'],['Pergunta aparece','whoosh'],['Mostrar resposta','flip'],['Escolher tema','pop'],['Peão andando','passos'],['Acertou','correct'],['Errou','wrong'],['Timer começa','go'],['Timer (segundos)','tick'],['Timer (3 últimos)','hurry'],['Tempo esgotado','timeup'],['Vez de outro','turn'],['Sua vez (online)','myturn'],['Dica','magic'],['Alguém entrou na sala','join'],['Mensagem no chat','msg'],['Voto','vote'],['Começar partida','start'],['Chegou na última casa','final'],['Vitória','win']];
+  const L=[['Toque em botão','tap'],['Apostar ficha','chip'],['Pergunta aparece','whoosh'],['Mostrar resposta','flip'],['Escolher tema','pop'],['Peão andando','passos'],['Acertou','correct'],['Errou','wrong'],['Timer começa','go'],['Timer (segundos)','tick'],['Timer (3 últimos)','hurry'],['Tempo esgotado','timeup'],['Vez de outro','turn'],['Sua vez (online)','myturn'],['Dica','magic'],['Alguém entrou na sala','join'],['Mensagem no chat — opção 1','msg(\'chat1\')'],['Mensagem no chat — opção 2','msg(\'chat2\')'],['Mensagem no chat — opção 3','msg(\'chat3\')'],['Mensagem no chat — opção 4','msg(\'chat4\')'],['Mensagem no chat — opção 5','msg(\'chat5\')'],['Voto','vote'],['Começar partida','start'],['Chegou na última casa','final'],['Vitória','win']];
   const d=document.createElement('div');d.className='chatbox histbox';d.style.zIndex='50';
-  d.innerHTML='<div class="chathead"><b>🔊 Sons do jogo</b><button class="small" onclick="this.closest(\'.chatbox\').remove()">✕</button></div><div class="histcorpo"><p class="muted" style="margin-top:0">Toque para ouvir cada som.</p><div style="display:grid;gap:8px">'+L.map(([t,f])=>`<button onclick="${f==='passos'?'[1,2,3,4,5].forEach(i=>setTimeout(()=>SFX.step(i),i*230))':'SFX.'+f+'()'}">▶ ${t}</button>`).join('')+'</div></div>';
+  d.innerHTML='<div class="chathead"><b>🔊 Sons do jogo</b><button class="small" onclick="this.closest(\'.chatbox\').remove()">✕</button></div><div class="histcorpo"><p class="muted" style="margin-top:0">Toque para ouvir cada som.</p><div style="display:grid;gap:8px">'+L.map(([t,f])=>`<button onclick="${f==='passos'?'[1,2,3,4,5].forEach(i=>setTimeout(()=>SFX.step(i),i*230))':'SFX.'+(f.includes('(')?f:f+'()')}">▶ ${t}</button>`).join('')+'</div></div>';
   document.body.appendChild(d);
 }
 if(URLP.get('sons')!==null)setTimeout(painelSons,300);
@@ -1449,9 +1457,10 @@ const SFX=(()=>{
   }
   const arp=(fs,dt,d,o)=>fs.forEach((f,i)=>tone(f,i*dt,d,o));
   // ---- sons gravados (batucada brasileira, Freesound CC0; veja sons/CREDITOS.md) ----
-  const NOMES=['toque','ficha1','ficha2','passo','ganza','triangulo','agogo_agudo','agogo_grave','pandeiro','pandeiro_curto','cuica','cuica_curta','clave','apito','batucada','tantan','surdo'];
+  const NOMES=['toque','ficha1','ficha2','passo','ganza','triangulo','agogo_agudo','agogo_grave','pandeiro','pandeiro_curto','cuica','cuica_curta','clave','apito','batucada','tantan','surdo','chat1','chat2','chat3','chat4','chat5'];
   // volume de cada um (os arquivos têm intensidades diferentes)
-  const VOL={toque:.22,ficha1:.9,ficha2:.9,passo:.8,ganza:.75,triangulo:.8,agogo_agudo:.75,agogo_grave:.75,pandeiro:.8,pandeiro_curto:.8,cuica:.42,cuica_curta:.4,clave:.7,apito:.32,batucada:.75,tantan:.5,surdo:.6};
+  const VOL={toque:.22,ficha1:.9,ficha2:.9,passo:.8,ganza:.75,triangulo:.8,agogo_agudo:.75,agogo_grave:.75,pandeiro:.8,pandeiro_curto:.8,cuica:.42,cuica_curta:.4,clave:.7,apito:.32,batucada:.75,tantan:.5,surdo:.6,chat1:.85,chat2:.4,chat3:.55,chat4:.5,chat5:.42};
+  let CHAT_SOM='chat1';
   const BUF={};let carregando=false;
   function carrega(){
     if(carregando)return;const a=ctx();if(!a)return;carregando=true;
@@ -1464,7 +1473,8 @@ const SFX=(()=>{
     s.buffer=b;const r=o.rate||1;s.playbackRate.setValueAtTime(r,t);
     if(o.rateTo)s.playbackRate.linearRampToValueAtTime(o.rateTo,t+(o.rateDur||.6));
     g.gain.value=(VOL[n]||.7)*(o.vol==null?1:o.vol);
-    s.connect(g);g.connect(M);s.start(t);if(o.dur)s.stop(t+o.dur);
+    if(o.dur){g.gain.setValueAtTime(g.gain.value,t+Math.max(0,o.dur-.03));g.gain.linearRampToValueAtTime(0,t+o.dur)}
+    s.connect(g);g.connect(M);s.start(t);if(o.dur)s.stop(t+o.dur+.01);
     return true;
   }
   const varia=()=>.94+Math.random()*.12;
@@ -1494,8 +1504,12 @@ const SFX=(()=>{
     turn(){som('agogo_grave',{vol:.8})||(tone(587,0,.13,{vol:.16}),tone(880,.1,.22,{vol:.16}))},
     myturn(){if(!som('agogo_agudo'))return arp([784,988,1175,1568],.08,.22,{type:'triangle',vol:.2});som('agogo_grave',{t:.13});som('agogo_agudo',{t:.26});som('agogo_agudo',{t:.39,rate:1.06})},
     magic(){som('triangulo',{rate:1.5,vol:.55,dur:.6})||arp([1047,1319,1568,2093,2637],.045,.18,{vol:.07})},
-    join(){som('pandeiro_curto')?som('agogo_agudo',{t:.1,vol:.6}):(tone(600,0,.1,{vol:.15}),tone(900,.08,.16,{vol:.15}))},
-    msg(){som('triangulo',{rate:1.25,vol:.4,dur:.5})||(tone(880,0,.07,{vol:.12}),tone(1320,.06,.1,{vol:.1}))},
+    join(){ // chamada de samba: apito, apito, apiiito, surdo e agogô
+      if(!som('apito',{dur:.13,vol:.9}))return(tone(600,0,.1,{vol:.15}),tone(900,.08,.16,{vol:.15}));
+      som('apito',{t:.2,dur:.13,vol:.9});som('apito',{t:.4,dur:.38,vol:.9,rate:1.04});
+      som('tantan',{t:.82,vol:.9});som('pandeiro',{t:.82});som('agogo_grave',{t:1.0});som('agogo_agudo',{t:1.12});som('agogo_agudo',{t:1.24});
+    },
+    msg(n){som(n||CHAT_SOM)||(tone(880,0,.07,{vol:.12}),tone(1320,.06,.1,{vol:.1}))},
     vote(){som('ficha2',{vol:.7})||(tone(520,0,.06,{type:'triangle',vol:.12}),tone(780,.05,.08,{type:'triangle',vol:.1}))},
     start(){if(!som('tantan'))return(noise(0,.45,{vol:.18,f:300,f2:2500}),arp([392,523,659,784],.07,.3,{type:'triangle',vol:.15}));som('ganza',{t:.05,vol:.7})},
     final(){som('triangulo',{vol:.9})?som('agogo_agudo',{t:.05}):arp([659,784,988,1319],.06,.25,{vol:.14})},

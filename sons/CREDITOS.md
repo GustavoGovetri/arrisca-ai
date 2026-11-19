@@ -21,3 +21,8 @@ Todos os sons vêm do [Freesound](https://freesound.org) e têm licença **CC0**
 | `batucada.mp3` | [freesound.org/people/matiasromero/sounds/65462/](https://freesound.org/people/matiasromero/sounds/65462/) | matiasromero |
 | `tantan.mp3` | [freesound.org/people/justinrobert/sounds/73754/](https://freesound.org/people/justinrobert/sounds/73754/) | justinrobert |
 | `surdo.mp3` | [freesound.org/people/gilblack1234/sounds/527796/](https://freesound.org/people/gilblack1234/sounds/527796/) | gilblack1234 |
+| `chat1.mp3` | [freesound.org/people/Froey_/sounds/760369/](https://freesound.org/people/Froey_/sounds/760369/) | Froey_ |
+| `chat2.mp3` | [freesound.org/people/GabrielAraujo/sounds/242502/](https://freesound.org/people/GabrielAraujo/sounds/242502/) | GabrielAraujo |
+| `chat3.mp3` | [freesound.org/people/Breviceps/sounds/447910/](https://freesound.org/people/Breviceps/sounds/447910/) | Breviceps |
+| `chat4.mp3` | [freesound.org/people/deadrobotmusic/sounds/750608/](https://freesound.org/people/deadrobotmusic/sounds/750608/) | deadrobotmusic |
+| `chat5.mp3` | [freesound.org/people/Jofae/sounds/380482/](https://freesound.org/people/Jofae/sounds/380482/) | Jofae |
