@@ -2,7 +2,7 @@
 
 Jogo de perguntas e respostas para jogar com a família ou os amigos, no navegador.
 
-**Jogar:** https://gustavogovetri.github.io/arrisca-ai/
+**Jogar:** https://arrisca-ai.vercel.app/
 
 ## Como jogar
 
