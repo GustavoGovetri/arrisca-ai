@@ -24,6 +24,8 @@ O jogo tem animações e sons de batucada (cuíca, agogô, pandeiro, apito; cré
 
 A tela inicial tem o botão **Jogar** (entra numa sala aberta), **Criar sala**, **Salas** (lista das salas abertas a todos) e o jogo num aparelho só. A lista é mantida pela função `api/salas.js`, que confere cada sala no Firebase antes de mostrar.
 
+O botão 🐞 manda avisos de problema para `api/bugs.js`, que guarda em `/bugs` no Firebase (só a função escreve e ninguém de fora lê). Para ler: console do Firebase → Realtime Database → Dados → `bugs`.
+
 As fontes são a Fredoka e a Lilita One, ambas com licença SIL Open Font License (os arquivos e as licenças ficam em `fonts/`).
 
 Se alguém fechar o navegador, é só abrir o link de novo que volta para a mesma partida.

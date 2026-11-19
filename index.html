@@ -543,6 +543,16 @@ input.chama{animation:chama .9s}
 .visib{display:flex;gap:6px;margin:6px 0 2px}
 .visib button{flex:1;padding:9px 8px;font-size:14px;opacity:.65}
 .visib button.on{opacity:1;background:linear-gradient(180deg,#ffe36e,#ffc21a);color:#2a1600}
+
+/* reportar bug */
+.bugbox{height:auto;max-height:86vh}
+.bugtipos{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.bugtipos button{opacity:.7}
+.bugtipos button.on{opacity:1;background:linear-gradient(180deg,#ffe36e,#ffc21a);color:#2a1600}
+#bugtexto{width:100%;min-height:110px;resize:vertical;font-size:16px;line-height:1.4;padding:10px 12px}
+.bugtec{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--suave);margin:10px 0 12px;line-height:1.35;cursor:pointer}
+.bugtec input{width:auto;margin-top:2px;flex:none;accent-color:#ffc21a}
+.bugenvia{width:100%;font-size:17px;padding:12px}
 </style>
 </head>
 <body>
@@ -550,7 +560,7 @@ input.chama{animation:chama .9s}
 <div class="wrap">
   <div class="ringwrap"><div class="ring" id="ring"></div></div>
   <div>
-    <div class="toolbar"><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
+    <div class="toolbar"><button id="bugbtn" class="tab snd" title="Reportar um problema no site" onclick="bugAbre()">🐞</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
     <div id="view-jogo">
     <div class="card" id="panel"></div>
     <div class="card" id="scores" style="display:none"></div>
@@ -572,6 +582,7 @@ input.chama{animation:chama .9s}
         <li><b>Sala online:</b> quem cria a sala manda o link ou o código; cada um entra pelo próprio celular com nome e cor. Quem criou escolhe temas, tabuleiro e fichas e começa a partida. Na sua vez, você aposta e <b>digita a resposta</b>. Os outros veem o que você escreveu e a resposta oficial e votam se vale: ganha a maioria; no empate, decide o próximo da roda. Se você escrever igual à resposta oficial, vale direto. O timer da sala dura 20 segundos (10 na múltipla escolha) e aparece para todos; quando acaba, o que estiver escrito é enviado. Tem também um chat (💬) para conversar.</li>
         <li><b>Salas abertas:</b> quem cria a sala pode deixá-la <b>aberta a todos</b>. Aí ela aparece em <b>Salas</b> para qualquer pessoa entrar enquanto a partida não começa. O botão <b>Jogar</b> entra na sala aberta com mais gente; se não houver nenhuma, abre uma nova.</li>
         <li><b>Modos de jogo:</b> 🎲 Tradicional (sem bônus); ⭐ Bônus (difícil +1 casa, impossível +2, errar impossível não tira a ficha, ⭐ por impossível acertada); 🔥 Arriscado (Bônus + arriscar o dobro na difícil e na impossível); 😈 Sem dó (Arriscado + acertar impossível devolve uma ajuda e dá uma rasteira em alguém).</li>
+        <li>Achou um problema no site (travou, tela estranha, sala online)? Use o botão <b>🐞</b> no alto da tela para avisar.</li>
         <li>Achou uma pergunta errada ou confusa? Use <b>Reportar pergunta</b> depois da resposta: ela fica guardada para correção.</li>
       </ul></details>
     </div>
@@ -581,9 +592,13 @@ input.chama{animation:chama .9s}
 <div id="toast"></div>
 <div id="chatprev" class="chatprev" style="display:none" onclick="chatAbre()"></div>
 <div id="salasbox" class="chatbox histbox salasbox" style="display:none"><div class="chathead"><b>🌍 Salas abertas</b><div class="row"><button class="small" onclick="carregaSalas()">↻ Atualizar</button><button class="small" onclick="fechaSalas()">✕</button></div></div><div id="salascorpo" class="histcorpo"></div><div class="salaspe"><button class="primary" onclick="fechaSalas();createRoom(true)">＋ Criar sala aberta</button></div></div>
+<div id="bugbox" class="chatbox histbox bugbox" style="display:none"><div class="chathead"><b>🐞 Reportar um problema</b><button class="small" onclick="bugFecha()">✕</button></div><div id="bugcorpo" class="histcorpo"></div></div>
 <div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
 <div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b>💬 Chat da sala</b><button class="small" onclick="chatFecha()">✕</button></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
 <script>
+const ERROS=[];
+addEventListener('error',e=>{ERROS.push({m:String(e.message||'erro').slice(0,300),f:String(e.filename||'').split('/').pop()+':'+(e.lineno||0)+':'+(e.colno||0),t:Date.now()});if(ERROS.length>12)ERROS.shift()});
+addEventListener('unhandledrejection',e=>{const r=e.reason;ERROS.push({m:String((r&&r.message)||r||'promise').slice(0,300),t:Date.now()});if(ERROS.length>12)ERROS.shift()});
 const T={
   M:{n:'Mundo',d:'geografia e geopolítica',c:'#2563eb'},
   H:{n:'História',d:'do Brasil e do mundo, mitologia e folclore',c:'#9a5b13'},
@@ -1607,6 +1622,37 @@ async function jogarRapido(){
   if(livre){enterRoom(livre.sala,false);return}
   await createRoom(true);
   if(online())toast('Nenhuma sala aberta agora: abrimos uma para você. É só esperar a turma chegar!');
+}
+// ----- reportar bug: vai para /api/bugs (guardado no Firebase, fechado para o público) -----
+const BUG_TIPOS=[['travou','😵 Travou ou não carregou'],['visual','🎨 Tela estranha'],['online','🌐 Sala online'],['som','🔊 Som'],['outro','💬 Outra coisa']];
+let BUG={tipo:'',texto:'',tecnico:true,enviando:false};
+function bugInfo(){
+  return {tela:innerWidth+'x'+innerHeight,dpr:devicePixelRatio,ua:navigator.userAgent.slice(0,240),idioma:navigator.language,
+    endereco:location.pathname+(ROOM?'?sala='+ROOM:''),modo:MODE||'inicio',fase:G.phase||'',sala:ROOM||'',online:online(),
+    jogadores:G.players?G.players.length:0,rodada:G.round||0,modoJogo:G.modo||'',temas:(G.selThemes||[]).length,tema:G.theme||'',qt:G.qt||'',qid:G.qid||'',
+    som:!!(SFX&&SFX.on),conectado:typeof CONNECTED==='undefined'?null:CONNECTED,erros:ERROS.slice(-8),quando:new Date().toISOString()};
+}
+function bugHtml(){
+  return `<p class="muted" style="margin-top:0">Achou algo errado no site? Conte aqui que a gente corrige. <b>Pergunta com resposta errada</b> se reporta pelo botão <b>⚑ Reportar pergunta</b>, que aparece depois da resposta.</p>
+  <div class="bugtipos">${BUG_TIPOS.map(([k,l])=>`<button class="small${BUG.tipo===k?' on':''}" onclick="BUG.tipo='${k}';bugRender()">${l}</button>`).join('')}</div>
+  <textarea id="bugtexto" maxlength="1500" placeholder="O que você estava fazendo e o que aconteceu?" oninput="BUG.texto=this.value">${esc(BUG.texto)}</textarea>
+  <label class="bugtec"><input type="checkbox" ${BUG.tecnico?'checked':''} onchange="BUG.tecnico=this.checked"> Mandar junto informações técnicas (tamanho da tela, navegador, em que parte do jogo você estava e erros do site).</label>
+  <p class="muted" style="margin:-4px 0 12px;font-size:12.5px">Seu nome no jogo vai junto, para saber quem avisou. Nenhuma senha ou outro dado pessoal é enviado.</p>
+  <button class="primary bugenvia" ${BUG.enviando?'disabled':''} onclick="bugEnvia()">${BUG.enviando?'Enviando…':'Enviar'}</button>`;
+}
+function bugRender(){const el=document.getElementById('bugcorpo');if(el)el.innerHTML=bugHtml()}
+function bugAbre(){chatFecha&&chatFecha();if(typeof fechaSalas==='function')fechaSalas();if(TAB==='hist')setTab('jogo');bugRender();document.getElementById('bugbox').style.display='flex';setTimeout(()=>{const t=document.getElementById('bugtexto');if(t&&innerWidth>700)t.focus()},50)}
+function bugFecha(){document.getElementById('bugbox').style.display='none'}
+async function bugEnvia(){
+  const t=(BUG.texto||'').trim();
+  if(t.length<5){toast('Conte um pouco do que aconteceu');const el=document.getElementById('bugtexto');if(el){el.focus();el.classList.add('chama');setTimeout(()=>el.classList.remove('chama'),900)}return}
+  BUG.enviando=true;bugRender();
+  try{
+    const r=await fetch('/api/bugs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({tipo:BUG.tipo||'outro',texto:t,nome:myName()||(G.players&&G.players[G.cur]&&G.players[G.cur].name)||'',info:BUG.tecnico?bugInfo():null,dev:URLP.get('net')==='local'?MYDEV:undefined})});
+    let j=null;try{j=await r.json()}catch(e){}
+    if(!r.ok)throw new Error((j&&j.erro)||('Erro '+r.status));
+    BUG={tipo:'',texto:'',tecnico:true,enviando:false};bugFecha();toast('Valeu! O problema foi enviado. 🐞');
+  }catch(e){BUG.enviando=false;bugRender();toast('Não consegui enviar: '+e.message)}
 }
 function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
 
