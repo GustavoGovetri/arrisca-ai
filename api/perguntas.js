@@ -42,11 +42,6 @@ async function token() {
   TOKEN = j.access_token; TOKEN_EXP = Date.now() + (j.expires_in || 3600) * 1000;
   return TOKEN;
 }
-async function dbPut(path, val) {
-  const r = await fetch(DB + '/' + path + '.json?access_token=' + encodeURIComponent(await token()), { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(val) });
-  if (!r.ok) throw new Error('Firebase respondeu ' + r.status + ' ao gravar');
-  return r.json();
-}
 async function dbGet(path, admin = true) {
   const url = DB + '/' + path + '.json' + (admin ? '?access_token=' + encodeURIComponent(await token()) : '');
   const r = await fetch(url);
@@ -181,24 +176,7 @@ function mascara(a) {
 }
 
 // ---------------------------------------------------------------- rotas
-// Primeira carga do banco (só funciona uma vez, enquanto /banco está vazio): vem da versão publicada no GitHub.
-const SEMENTE = 'https://raw.githubusercontent.com/GustavoGovetri/arrisca-ai/08c7e4ae01b92aeb98c26977806b81d6dc7a6e49/questions.json';
-async function semear() {
-  if (await dbGet('banco/versao')) return { ok: false, msg: 'O banco já existe; nada a fazer.' };
-  const r = await fetch(SEMENTE);
-  if (!r.ok) throw new Error('Não consegui baixar a semente (' + r.status + ')');
-  const txt = await r.text(), data = JSON.parse(txt);
-  const n = {}; ORDER.forEach(t => { n[t] = Array.isArray(data[t]) ? data[t].length : 0 });
-  if (ORDER.some(t => n[t] < 100)) throw new Error('Semente incompleta');
-  const versao = crypto.createHash('sha256').update(txt).digest('hex').slice(0, 12);
-  await dbPut('banco/perguntas', data);
-  await dbPut('banco/versao', versao);
-  BANCO = null; CHECADO = 0;
-  return { ok: true, versao, n };
-}
-
 async function handle(acao, body) {
-  if (acao === 'semear') return semear();
   const B = await banco();
   if (acao === 'meta') {
     const n = {}, lv = {};
