@@ -6,8 +6,10 @@ const sim=new URLSearchParams(location.search).get('net')==='local';
 if(cfg&&cfg.databaseURL&&!sim){
   try{
     const app=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
+    const fbApp=app.initializeApp(cfg);
+    carregaLogin(fbApp); // em paralelo: não atrasa o modo online
     const d=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-database.js`);
-    const db=d.getDatabase(app.initializeApp(cfg));
+    const db=d.getDatabase(fbApp);
     const R=p=>d.ref(db,p);
     let OFF=0;d.onValue(R('.info/serverTimeOffset'),x=>{OFF=Number(x.val())||0}); // diferença entre o relógio do aparelho e o do servidor
     window.NET_IMPL={
@@ -39,5 +41,34 @@ if(cfg&&cfg.databaseURL&&!sim){
     };
   }catch(e){console.warn('Modo online indisponível:',e)}
 }
+// ----- login (contas): Google ou e-mail e senha -----
+async function carregaLogin(fbApp){
+  try{
+    const a=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+    const auth=a.getAuth(fbApp);
+    auth.languageCode='pt-BR'; // e-mails de confirmação e de nova senha em português
+    const quem=u=>u&&!u.isAnonymous?{uid:u.uid,email:u.email||'',nome:u.displayName||'',verificado:!!u.emailVerified,
+      provedor:((u.providerData||[]).find(x=>x&&x.providerId==='google.com')?'google.com':'password')}:null;
+    window.AUTH_IMPL={
+      onChange(cb){return a.onAuthStateChanged(auth,u=>cb(quem(u)))},
+      async google(){const p=new a.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});await a.signInWithPopup(auth,p)},
+      async entrar(email,senha){await a.signInWithEmailAndPassword(auth,email,senha)},
+      async criar(email,senha,nome){
+        const c=await a.createUserWithEmailAndPassword(auth,email,senha);
+        if(nome){try{await a.updateProfile(c.user,{displayName:nome})}catch(e){}}
+        try{await a.sendEmailVerification(c.user)}catch(e){}
+      },
+      async esqueci(email){await a.sendPasswordResetEmail(auth,email)},
+      async reenviar(){if(auth.currentUser)await a.sendEmailVerification(auth.currentUser)},
+      async recarrega(){if(auth.currentUser){await auth.currentUser.reload();return quem(auth.currentUser)}return null},
+      async token(forca){return auth.currentUser?auth.currentUser.getIdToken(!!forca):null},
+      async sair(){await a.signOut(auth)},
+      async apagar(){if(auth.currentUser)await auth.currentUser.delete()}
+    };
+  }catch(e){console.warn('Login indisponível:',e)}
+  window.AUTH_DONE=true;
+  window.dispatchEvent(new Event('auth-ready'));
+}
+if(!(cfg&&cfg.databaseURL&&!sim)){window.AUTH_DONE=true;window.dispatchEvent(new Event('auth-ready'))}
 window.NET_DONE=true;
 window.dispatchEvent(new Event('net-ready'));

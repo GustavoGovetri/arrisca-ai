@@ -50,3 +50,5 @@ module.exports = async (req, res) => {
   try { res.status(200).json(await handle(body || {}, quem)) }
   catch (e) { res.status(e.status || 500).json({ erro: e.message || 'Erro' }) }
 };
+
+module.exports.MEM = MEM; // testes locais: o painel lê daqui

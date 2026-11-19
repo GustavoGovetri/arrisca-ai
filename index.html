@@ -554,9 +554,51 @@ input.chama{animation:chama .9s}
 
 /* reportar bug */
 .bugbox{height:auto;max-height:86vh}
+.contalinha{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:-2px 0 12px;font-size:14px}
+.contalinha .ok{color:#d7ffe2}
+.contalinha button{padding:6px 12px;font-size:14px}
+.contabox{width:min(420px,calc(100vw - 24px))}
+.containtro{font-size:15px;line-height:1.45;margin:0 0 14px}
+.contabox form{display:flex;flex-direction:column;gap:10px}
+.contabox input{width:100%;font-size:16px;padding:11px 12px}
+.contabox label{font-size:13px;font-weight:700;margin-bottom:-4px}
+.btgoogle{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;background:#fff;color:#1f1f1f;padding:12px 14px;font-size:16px}
+.btgoogle:hover:not(:disabled){background:#f1f1f1}
+.btgoogle svg{width:20px;height:20px;flex:none}
+.ou{display:flex;align-items:center;gap:10px;margin:16px 0 12px;font-size:13px;opacity:.85}
+.ou:before,.ou:after{content:'';flex:1;border-top:2px dashed rgba(255,255,255,.2)}
+.abas{display:flex;gap:6px;margin-bottom:12px}
+.abas button{flex:1;opacity:.7}
+.abas button.on{opacity:1;background:linear-gradient(180deg,#ffe36e,#ffc21a);color:#2a1600}
+.linkbtn{background:none!important;border:0!important;box-shadow:none!important;padding:4px;color:#ffe4ea;text-decoration:underline;font-weight:600;font-size:14px;align-self:center}
+.contaerro{background:rgba(0,0,0,.25);border-left:4px solid #ffb02e;border-radius:10px;padding:8px 10px;font-size:14px;margin:10px 0 0}
+.contaok{background:rgba(85,224,138,.15);border-left:4px solid #55e08a;border-radius:10px;padding:8px 10px;font-size:14px;margin:10px 0 0}
+.contatopo{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.contatopo .avatar{width:54px;height:54px;border-width:3px}
+.contatopo b{display:block;font-size:19px}
+.contatopo small{display:block;opacity:.85;word-break:break-all}
+.contabox .palette{margin:4px 0 2px}
+.embreve{background:rgba(0,0,0,.2);border-radius:12px;padding:10px 12px;font-size:14px;line-height:1.45;margin:16px 0}
+.contapes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:2px dashed rgba(255,255,255,.18)}
+.contapes button{flex:1}
+button.perigo{background:#5a0f22}
+.painelbox{width:min(760px,calc(100vw - 24px));height:min(760px,86vh)}
+.pfiltro{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.pfiltro label{font-size:14px;display:flex;align-items:center;gap:6px;margin-left:auto}
+.pitem{background:rgba(0,0,0,.22);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.pitem.feito{opacity:.55}
+.phead{font-size:13px;opacity:.9;display:flex;flex-wrap:wrap;gap:4px 10px;margin-bottom:6px}
+.phead b{color:var(--amarelo)}
+.ptexto{white-space:pre-wrap;word-break:break-word;font-size:15px;line-height:1.4}
+.pq{font-weight:700}
+.pitem pre{white-space:pre-wrap;word-break:break-all;font-size:12px;max-height:260px;overflow:auto;background:rgba(0,0,0,.3);padding:8px;border-radius:8px}
+.pitem .row{margin-top:8px}
+.pvazio{text-align:center;opacity:.8;padding:30px 0}
 .bugtipos{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
 .bugtipos button{opacity:.7}
 .bugtipos button.on{opacity:1;background:linear-gradient(180deg,#ffe36e,#ffc21a);color:#2a1600}
+#contabtn{position:relative}
+#contabtn.on:after{content:'';position:absolute;right:3px;top:3px;width:10px;height:10px;border-radius:50%;background:#55e08a;border:2px solid var(--k)}
 #bugtexto{width:100%;min-height:110px;resize:vertical;font-size:16px;line-height:1.4;padding:10px 12px}
 .bugtec{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--suave);margin:10px 0 12px;line-height:1.35;cursor:pointer}
 .bugtec input{width:auto;margin-top:2px;flex:none;accent-color:#ffc21a}
@@ -647,7 +689,7 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
 <div class="wrap">
   <div class="ringwrap"><div class="ring" id="ring"></div></div>
   <div>
-    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Efeitos visuais" onclick="trocaEfeitos()"></button><button id="bugbtn" class="tab snd" title="Reportar um problema no site" onclick="bugAbre()">🐞</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
+    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Efeitos visuais" onclick="trocaEfeitos()"></button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" onclick="contaAbre()">👤</button><button id="bugbtn" class="tab snd" title="Reportar um problema no site" onclick="bugAbre()">🐞</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
     <div id="view-jogo">
     <div class="card" id="panel"></div>
     <div class="card" id="scores" style="display:none"></div>
@@ -687,6 +729,8 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
   <p class="muted avisodica">Dica: deixe o Arrisca Aí aberto na tela durante a partida.</p>
   <label class="avisonao"><input type="checkbox" id="avisonao"><span>Não mostrar de novo<small class="muted">Volta a aparecer quando você abrir o site de novo.</small></span></label>
   <button class="primary" onclick="abaFecha()">Entendi</button></div></div>
+<div id="contabox" class="chatbox histbox bugbox contabox" style="display:none"><div class="chathead"><b id="contatit">👤 Sua conta</b><button class="small" onclick="contaFecha()">✕</button></div><div id="contacorpo" class="histcorpo"></div></div>
+<div id="painelbox" class="chatbox histbox painelbox" style="display:none"><div class="chathead"><b>🛠 Painel</b><div class="row"><button class="small" title="Atualizar" onclick="painelCarrega()">↻</button><button class="small" onclick="painelFecha()">✕</button></div></div><div id="painelcorpo" class="histcorpo"></div></div>
 <div id="bugbox" class="chatbox histbox bugbox" style="display:none"><div class="chathead"><b>🐞 Reportar um problema</b><button class="small" onclick="bugFecha()">✕</button></div><div id="bugcorpo" class="histcorpo"></div></div>
 <div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
 <div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b>💬 Chat da sala</b><button class="small" onclick="chatFecha()">✕</button></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
@@ -1624,7 +1668,7 @@ function comoToque(e){COMO_TOQUE=e.clientX}
 function comoSolta(e){if(COMO_TOQUE==null)return;const dx=e.clientX-COMO_TOQUE;COMO_TOQUE=null;if(Math.abs(dx)>40)comoVai(COMO_I+(dx<0?1:-1),true)}
 function avatarHtml(cor,cls){return `<span class="avatar ${cls||''}" style="--c:${cor||'#ffd23f'}"></span>`}
 let HOME_COR=false;
-function homeCor(c){try{localStorage.setItem('arrisca-cor',c)}catch(e){}HOME_COR=false;render()}
+function homeCor(c){try{localStorage.setItem('arrisca-cor',c)}catch(e){}HOME_COR=false;contaSalvaDepois();render()}
 function homeHtml(){
   const ok=!!NET,cor=myColor()||'#ffd23f';
   return `<div class="homelogo">${LOGO_HTML}<div class="homesub">jogo de perguntas</div></div>
@@ -1633,8 +1677,9 @@ function homeHtml(){
       <h3>Jogue agora</h3>
       <div class="perfil">
         <button class="avatar grande" style="--c:${cor}" title="Trocar a cor" onclick="HOME_COR=!HOME_COR;render()"><i><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.6L15.6 5a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/></svg></i></button>
-        <input id="homenome" value="${esc(myName())}" maxlength="16" placeholder="Seu nome" autocomplete="nickname" oninput="setMyName(this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+        <input id="homenome" value="${esc(myName())}" maxlength="16" placeholder="Seu nome" autocomplete="nickname" oninput="setMyName(this.value);contaSalvaDepois()" onkeydown="if(event.key==='Enter')this.blur()">
       </div>
+      <div id="homeconta">${contaLinhaHtml()}</div>
       ${HOME_COR?`<div class="palette homepal">${PALETA.map(([c,n])=>`<button class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="homeCor('${c}')"></button>`).join('')}</div>`:''}
       <div class="hbtns">
         <button class="pilula amarela" ${ok?'':'disabled'} onclick="jogarRapido()"><span class="ico">${ICONES.jogar}</span><span><b>Jogar</b><small>Entra numa sala aberta</small></span></button>
@@ -1780,6 +1825,231 @@ async function bugEnvia(){
     if(!r.ok)throw new Error((j&&j.erro)||('Erro '+r.status));
     BUG={tipo:'',texto:'',tecnico:true,enviando:false};bugFecha();toast('Valeu! O problema foi enviado. 🐞');
   }catch(e){BUG.enviando=false;bugRender();toast('Não consegui enviar: '+e.message)}
+}
+// ================= Contas: login (Google ou e-mail), perfil e painel do dono =================
+let AUTH=null,CONTA_T=null,PAINEL={aba:'bugs',dados:null,erro:'',resolvidos:false};
+const CONTA={user:null,perfil:null,admin:false,pronto:false};
+const CONTA_UI={aba:'entrar',email:'',nome:'',pnome:null,pcor:null,ocupado:false,esperando:false,erro:'',ok:'',apagar:0};
+const GOOGLE_SVG=`<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
+function contaErroTxt(e){
+  const c=(e&&e.code)||'';
+  const M={'auth/invalid-credential':'E-mail ou senha errados.','auth/invalid-login-credentials':'E-mail ou senha errados.','auth/wrong-password':'E-mail ou senha errados.','auth/user-not-found':'E-mail ou senha errados.',
+    'auth/email-already-in-use':'Já existe uma conta com esse e-mail. Use a aba "Entrar".','auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.',
+    'auth/invalid-email':'Esse e-mail não parece certo.','auth/missing-password':'Digite a senha.','auth/missing-email':'Digite o e-mail.',
+    'auth/popup-closed-by-user':'','auth/cancelled-popup-request':'','auth/user-cancelled':'',
+    'auth/popup-blocked':'O navegador bloqueou a janela do Google. Libere as janelas pop-up deste site e tente de novo.',
+    'auth/too-many-requests':'Muitas tentativas seguidas. Espere um pouco e tente de novo.','auth/network-request-failed':'Sem conexão. Confira a internet e tente de novo.',
+    'auth/requires-recent-login':'Por segurança, saia e entre de novo na conta antes de apagar.',
+    'auth/account-exists-with-different-credential':'Esse e-mail já tem conta com outro jeito de entrar.',
+    'auth/unauthorized-domain':'O login com Google ainda não está liberado neste endereço do site.','auth/operation-not-allowed':'Esse jeito de entrar está desligado no momento.'};
+  if(c in M)return M[c];
+  return !c&&e&&e.message?e.message:'Não deu certo. Tente de novo.';
+}
+async function contaApi(metodo,dados,tk){
+  tk=tk||(AUTH&&await AUTH.token());
+  if(!tk)throw new Error('Entre na sua conta.');
+  const get=metodo==='GET';
+  const r=await fetch('/api/conta'+(get?'?acao='+encodeURIComponent(dados.acao):''),{method:metodo,headers:Object.assign({authorization:'Bearer '+tk},get?{}:{'content-type':'application/json'}),body:get?undefined:JSON.stringify(dados)});
+  let j=null;try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error((j&&j.erro)||('Erro '+r.status));
+  return j;
+}
+// login de mentira para os testes locais (?net=local)
+function localAuth(){
+  const K='netsim:auth',KL='netsim:auth-logado',subs=[];
+  const rd=k=>{try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}};
+  const wr=(k,v)=>{if(v==null)localStorage.removeItem(k);else localStorage.setItem(k,JSON.stringify(v))};
+  const atual=()=>rd(KL),avisa=()=>{const u=atual();subs.forEach(cb=>setTimeout(()=>cb(u),0))};
+  const err=c=>Object.assign(new Error(c),{code:c}),espera=()=>new Promise(r=>setTimeout(r,120));
+  const hs=s=>{let h=2166136261;for(const ch of String(s)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)>>>0}return h.toString(36)};
+  const b64=s=>btoa(unescape(encodeURIComponent(s))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  return {
+    onChange(cb){subs.push(cb);setTimeout(()=>cb(atual()),0)},
+    async google(){await espera();if(localStorage.getItem('netsim:google-cancela'))throw err('auth/popup-closed-by-user');wr(KL,{uid:'loc-g1',email:'google@teste.local',nome:'Teste Google',verificado:true,provedor:'google.com'});avisa()},
+    async entrar(email,senha){await espera();const c=(rd(K)||{})[email.toLowerCase()];if(!c||c.h!==hs(senha))throw err('auth/invalid-credential');wr(KL,c.user);avisa()},
+    async criar(email,senha,nome){
+      await espera();const e=email.toLowerCase();
+      if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))throw err('auth/invalid-email');if(senha.length<6)throw err('auth/weak-password');
+      const all=rd(K)||{};if(all[e])throw err('auth/email-already-in-use');
+      const user={uid:e.startsWith('admin@')?'loc-admin':'loc-'+hs(e),email:e,nome,verificado:false,provedor:'password'};
+      all[e]={h:hs(senha),user};wr(K,all);wr(KL,user);avisa();
+    },
+    async esqueci(email){await espera();if(!email.includes('@'))throw err('auth/invalid-email')},
+    async reenviar(){await espera()},
+    async recarrega(){const u=atual();if(u){u.verificado=true;wr(KL,u)}return u},
+    async token(){const u=atual();return u?'local.'+b64(JSON.stringify(u)):null},
+    async sair(){wr(KL,null);avisa()},
+    async apagar(){const u=atual();if(!u)return;const all=rd(K)||{};Object.keys(all).forEach(k=>{if(all[k].user.uid===u.uid)delete all[k]});wr(K,all);wr(KL,null);avisa()}
+  };
+}
+function contaInicia(){
+  if(AUTH)return;
+  AUTH=URLP.get('net')==='local'?localAuth():(window.AUTH_IMPL||null);
+  if(!AUTH){CONTA.pronto=!!window.AUTH_DONE;contaPinta();return}
+  AUTH.onChange(async u=>{
+    const antes=CONTA.user&&CONTA.user.uid;
+    CONTA.user=u;CONTA.admin=false;if(!u||u.uid!==antes)CONTA.perfil=null;
+    if(u){
+      try{const j=await contaApi('POST',{acao:'entrar',nome:myName(),cor:myColor()});contaAplica(j.perfil);CONTA.admin=!!j.admin}
+      catch(e){console.warn(e);CONTA_UI.erro='Você entrou, mas não consegui carregar o perfil agora: '+e.message}
+      CONTA_UI.aba='entrar'; // quando sair, a janela volta na aba Entrar
+      if(CONTA_UI.esperando){CONTA_UI.esperando=false;toast('✔ Você entrou'+(CONTA.perfil?' como '+CONTA.perfil.nome:'')+'!')}
+    }
+    CONTA.pronto=true;contaPinta();
+  });
+}
+window.addEventListener('auth-ready',contaInicia);
+if(window.AUTH_DONE||URLP.get('net')==='local')setTimeout(contaInicia,0);
+setTimeout(()=>{if(!AUTH){window.AUTH_DONE=true;contaInicia()}},12000);
+function contaAplica(p){ // o nome e a cor da conta valem neste aparelho também
+  if(!p)return;CONTA.perfil=p;let mudou=false;
+  if(p.nome&&p.nome!==myName()){try{localStorage.setItem('arrisca-nome',p.nome)}catch(e){}if(NET&&ROOM)NET.setMe(ROOM,MYDEV,{nome:p.nome}).catch(()=>{});mudou=true}
+  if(p.cor&&p.cor!==myColor()){try{localStorage.setItem('arrisca-cor',p.cor)}catch(e){}if(NET&&ROOM)NET.setMe(ROOM,MYDEV,{cor:p.cor}).catch(()=>{});mudou=true}
+  if(mudou&&!MODE)render(); // na tela inicial: mostra o nome e a cor da conta
+}
+function contaSalvaDepois(){ // mudou nome ou cor na tela inicial: guarda na conta também
+  if(!CONTA.perfil)return;clearTimeout(CONTA_T);
+  CONTA_T=setTimeout(async()=>{
+    const d={acao:'perfil'},nome=myName().trim(),cor=myColor();
+    if(nome&&nome!==CONTA.perfil.nome)d.nome=nome;if(cor&&cor!==CONTA.perfil.cor)d.cor=cor;
+    if(!d.nome&&!d.cor)return;
+    try{const j=await contaApi('POST',d);CONTA.perfil=j.perfil;contaPinta()}catch(e){console.warn(e)}
+  },1200);
+}
+function contaLinhaHtml(){
+  if(!AUTH||!CONTA.pronto)return '';
+  if(CONTA.user)return `<div class="contalinha"><span class="ok">✔ Conectado${CONTA.perfil?' como <b>'+esc(CONTA.perfil.nome)+'</b>':''}</span><button class="small" onclick="contaAbre()">Minha conta</button></div>`;
+  return `<div class="contalinha"><button class="small" onclick="contaAbre()">👤 Entrar ou criar conta</button></div>`;
+}
+function contaPinta(){
+  const b=document.getElementById('contabtn');
+  if(b){b.classList.toggle('on',!!CONTA.user);b.title=CONTA.user?'Sua conta':'Entrar ou criar conta';b.style.display=AUTH?'':'none'}
+  const h=document.getElementById('homeconta');if(h)h.innerHTML=contaLinhaHtml();
+  if(document.getElementById('contabox').style.display!=='none')contaRender();
+}
+function contaMsgs(){return (CONTA_UI.erro?`<div class="contaerro">${esc(CONTA_UI.erro)}</div>`:'')+(CONTA_UI.ok?`<div class="contaok">${esc(CONTA_UI.ok)}</div>`:'')}
+function contaHtml(){
+  if(!AUTH)return `<p class="containtro">O login não está disponível agora. Tente de novo daqui a pouco.</p>`;
+  const dis=CONTA_UI.ocupado?'disabled':'';
+  const u=CONTA.user;
+  if(!u){
+    const criar=CONTA_UI.aba==='criar';
+    return `<p class="containtro">Com uma conta, seu nome e sua cor ficam guardados para jogar de qualquer aparelho. Logo vêm o ranking da semana e do mês, conquistas e estatísticas das partidas online. Sem conta, você continua jogando normalmente como convidado.</p>
+    <button class="btgoogle" ${dis} onclick="contaGoogle()">${GOOGLE_SVG}Continuar com Google</button>
+    <div class="ou">ou com e-mail</div>
+    <div class="abas"><button class="small${criar?'':' on'}" onclick="contaAba('entrar')">Entrar</button><button class="small${criar?' on':''}" onclick="contaAba('criar')">Criar conta</button></div>
+    <form onsubmit="event.preventDefault();contaEmail()">
+      ${criar?`<label for="ctnome">Nome no jogo</label><input id="ctnome" maxlength="16" autocomplete="nickname" value="${esc(CONTA_UI.nome||myName())}" oninput="CONTA_UI.nome=this.value">`:''}
+      <label for="ctemail">E-mail</label><input id="ctemail" type="email" autocomplete="${criar?'email':'username'}" value="${esc(CONTA_UI.email)}" oninput="CONTA_UI.email=this.value">
+      <label for="ctsenha">Senha${criar?' (pelo menos 6 caracteres)':''}</label><input id="ctsenha" type="password" autocomplete="${criar?'new-password':'current-password'}">
+      <button class="primary" type="submit" ${dis}>${CONTA_UI.ocupado?'Aguarde…':criar?'Criar conta':'Entrar'}</button>
+      ${criar?'':`<button type="button" class="linkbtn" ${dis} onclick="contaEsqueci()">Esqueci minha senha</button>`}
+    </form>${contaMsgs()}`;
+  }
+  const p=CONTA.perfil||{};
+  const cor=CONTA_UI.pcor||p.cor||myColor()||'#ffd23f';
+  const nome=CONTA_UI.pnome!=null?CONTA_UI.pnome:(p.nome||'');
+  const google=u.provedor==='google.com';
+  return `<div class="contatopo"><span class="avatar" style="--c:${cor}"></span><div><b>${esc(p.nome||u.nome||'Jogador')}</b><small>${esc(u.email)} · ${google?'Google':'e-mail e senha'}</small></div></div>
+    ${!google&&!u.verificado?`<div class="contaerro">📩 Confirme seu e-mail: mandamos um link para <b>${esc(u.email)}</b>. Não chegou? Olhe o spam. <button class="linkbtn" ${dis} onclick="contaReenvia()">Mandar de novo</button><button class="linkbtn" ${dis} onclick="contaJaConfirmei()">Já confirmei</button></div>`:''}
+    <form onsubmit="event.preventDefault();contaSalva()" style="margin-top:12px">
+      <label for="ctnome2">Nome no jogo</label><input id="ctnome2" maxlength="16" autocomplete="nickname" value="${esc(nome)}" oninput="CONTA_UI.pnome=this.value">
+      <label>Cor</label><div class="palette">${PALETA.map(([c,n])=>`<button type="button" class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="CONTA_UI.pcor='${c}';contaRender()"></button>`).join('')}</div>
+      <button class="primary" type="submit" ${dis}>Salvar</button>
+    </form>${contaMsgs()}
+    <div class="embreve">📊 Em breve, para quem tem conta: ranking da semana e do mês, conquistas, histórico e estatísticas das partidas online.</div>
+    ${CONTA.admin?`<button style="width:100%" onclick="painelAbre()">🛠 Abrir o painel (bugs e perguntas reportadas)</button>`:''}
+    <div class="contapes"><button ${dis} onclick="contaSair()">Sair da conta</button><button class="perigo" ${dis} onclick="contaApaga()">${CONTA_UI.apagar?'Clique de novo para apagar':'Apagar conta'}</button></div>`;
+}
+function contaRender(){
+  const el=document.getElementById('contacorpo');if(!el)return;
+  const s=document.getElementById('ctsenha'),sv=s?s.value:'';
+  el.innerHTML=contaHtml();
+  const s2=document.getElementById('ctsenha');if(s2&&sv)s2.value=sv;
+  const t=document.getElementById('contatit');if(t)t.textContent=CONTA.user?'👤 Sua conta':'👤 Entrar ou criar conta';
+}
+function contaAbre(){
+  chatFecha&&chatFecha();if(typeof fechaSalas==='function')fechaSalas();bugFecha();painelFecha();if(TAB==='hist')setTab('jogo');
+  Object.assign(CONTA_UI,{erro:'',ok:'',apagar:0,pnome:null,pcor:null});
+  contaRender();document.getElementById('contabox').style.display='flex';
+}
+function contaFecha(){document.getElementById('contabox').style.display='none'}
+function contaAba(a){CONTA_UI.aba=a;CONTA_UI.erro='';CONTA_UI.ok='';contaRender()}
+async function contaFaz(fn){ // trava os botões enquanto espera e mostra o erro em português
+  CONTA_UI.erro='';CONTA_UI.ok='';CONTA_UI.ocupado=true;contaRender();
+  try{await fn()}catch(e){CONTA_UI.esperando=false;CONTA_UI.erro=contaErroTxt(e)}
+  CONTA_UI.ocupado=false;contaRender();
+}
+function contaGoogle(){CONTA_UI.esperando=true;return contaFaz(()=>AUTH.google())}
+function contaEmail(){
+  const criar=CONTA_UI.aba==='criar';
+  const email=((document.getElementById('ctemail')||{}).value||'').trim(),senha=(document.getElementById('ctsenha')||{}).value||'';
+  const nome=criar?((document.getElementById('ctnome')||{}).value||'').trim().slice(0,16):'';
+  CONTA_UI.email=email;
+  const falta=criar&&!nome?'Escolha um nome para o jogo.':!email?'Digite o e-mail.':!senha?'Digite a senha.':criar&&senha.length<6?'A senha precisa ter pelo menos 6 caracteres.':'';
+  if(falta){CONTA_UI.erro=falta;CONTA_UI.ok='';contaRender();return}
+  CONTA_UI.esperando=true;
+  return contaFaz(async()=>{if(criar){setMyName(nome);await AUTH.criar(email,senha,nome)}else await AUTH.entrar(email,senha)});
+}
+function contaEsqueci(){
+  const email=((document.getElementById('ctemail')||{}).value||'').trim();
+  if(!email){CONTA_UI.erro='Digite seu e-mail no campo acima e clique de novo em "Esqueci minha senha".';CONTA_UI.ok='';contaRender();return}
+  CONTA_UI.email=email;
+  return contaFaz(async()=>{await AUTH.esqueci(email);CONTA_UI.ok='Se existir uma conta com esse e-mail, chega um link para criar uma senha nova. Olhe também o spam.'});
+}
+function contaReenvia(){return contaFaz(async()=>{await AUTH.reenviar();CONTA_UI.ok='Mandamos o link de novo para '+CONTA.user.email+'.'})}
+function contaJaConfirmei(){return contaFaz(async()=>{const u=await AUTH.recarrega();if(u){CONTA.user=u;await AUTH.token(true)}if(!(u&&u.verificado))throw new Error('Ainda não aparece como confirmado. Clique no link do e-mail e tente de novo.');CONTA_UI.ok='E-mail confirmado. ✔'})}
+function contaSalva(){
+  const nome=((document.getElementById('ctnome2')||{}).value||'').trim().slice(0,16),cor=CONTA_UI.pcor;
+  if(!nome){CONTA_UI.erro='Escolha um nome para o jogo.';contaRender();return}
+  return contaFaz(async()=>{
+    const d={acao:'perfil',nome};if(cor)d.cor=cor;
+    const j=await contaApi('POST',d);CONTA_UI.pnome=null;CONTA_UI.pcor=null;contaAplica(j.perfil);CONTA_UI.ok='Salvo!';
+    const h=document.getElementById('homeconta');if(h)h.innerHTML=contaLinhaHtml();
+  });
+}
+function contaSair(){return contaFaz(async()=>{await AUTH.sair();painelFecha();toast('Você saiu da conta.')})}
+function contaApaga(){
+  if(!CONTA_UI.apagar){CONTA_UI.apagar=1;contaRender();setTimeout(()=>{if(CONTA_UI.apagar===1){CONTA_UI.apagar=0;contaRender()}},5000);return}
+  return contaFaz(async()=>{
+    const tk=await AUTH.token(true); // pega o token antes: depois de apagar o login, ele ainda prova quem era
+    await AUTH.apagar();            // se o login for antigo, o Firebase pede para entrar de novo e nada é apagado
+    CONTA_UI.apagar=0;painelFecha();
+    try{await contaApi('POST',{acao:'apagar'},tk)}catch(e){console.warn(e)}
+    toast('Sua conta foi apagada.');
+  }).finally(()=>{CONTA_UI.apagar=0;contaRender()});
+}
+// ----- painel do dono: bugs e perguntas reportadas -----
+const BUG_NOME=Object.fromEntries(BUG_TIPOS);
+function quandoTxt(iso){const d=new Date(iso);return isNaN(d)?'':d.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'})}
+function painelAbre(){contaFecha();document.getElementById('painelbox').style.display='flex';painelRender();painelCarrega()}
+function painelFecha(){const b=document.getElementById('painelbox');if(b)b.style.display='none'}
+function painelRender(){const el=document.getElementById('painelcorpo');if(el)el.innerHTML=painelHtml()}
+async function painelCarrega(){PAINEL.erro='';PAINEL.dados=null;painelRender();try{PAINEL.dados=await contaApi('GET',{acao:'painel'})}catch(e){PAINEL.erro=e.message}painelRender()}
+function painelHtml(){
+  const d=PAINEL.dados,abertos=k=>d?d[k].filter(x=>!x.resolvido).length:0;
+  let h=`<div class="pfiltro"><div class="abas" style="margin:0;flex:1 1 260px"><button class="small${PAINEL.aba==='bugs'?' on':''}" onclick="PAINEL.aba='bugs';painelRender()">🐞 Bugs${d?' ('+abertos('bugs')+')':''}</button><button class="small${PAINEL.aba==='reportes'?' on':''}" onclick="PAINEL.aba='reportes';painelRender()">⚑ Perguntas${d?' ('+abertos('reportes')+')':''}</button></div><label><input type="checkbox" ${PAINEL.resolvidos?'checked':''} onchange="PAINEL.resolvidos=this.checked;painelRender()"> Mostrar resolvidos</label></div>`;
+  if(PAINEL.erro)return h+`<div class="contaerro">${esc(PAINEL.erro)}</div>`;
+  if(!d)return h+`<p class="pvazio">Carregando…</p>`;
+  const lista=d[PAINEL.aba].filter(x=>PAINEL.resolvidos||!x.resolvido);
+  if(!lista.length)return h+`<p class="pvazio">${PAINEL.aba==='bugs'?'Nenhum bug em aberto. 🎉':'Nenhuma pergunta reportada em aberto. 🎉'}</p>`;
+  return h+lista.map(x=>PAINEL.aba==='bugs'?bugItemHtml(x):repItemHtml(x)).join('');
+}
+function painelBtn(lista,x){const id=String(x._id||'').replace(/[^-A-Za-z0-9_]/g,'');return `<div class="row"><button class="small" onclick="painelResolve('${lista}','${id}',${!x.resolvido})">${x.resolvido?'↩ Reabrir':'✔ Resolvido'}</button></div>`}
+function bugItemHtml(x){
+  return `<div class="pitem${x.resolvido?' feito':''}"><div class="phead"><b>${esc(BUG_NOME[x.tipo]||x.tipo||'Outra coisa')}</b><span>${esc(x.nome||'sem nome')}</span><span>${quandoTxt(x.quando)}</span><span>versão ${esc(x.versao||'?')}</span></div>
+  <div class="ptexto">${esc(x.texto||'')}</div>${x.info?`<details><summary>Detalhes técnicos</summary><pre>${esc(JSON.stringify(x.info,null,1))}</pre></details>`:''}${painelBtn('bugs',x)}</div>`;
+}
+function repItemHtml(x){
+  const tema=Object.prototype.hasOwnProperty.call(T,x.t)?T[x.t].n:(x.t||'');
+  return `<div class="pitem${x.resolvido?' feito':''}"><div class="phead"><b>${esc(x.motivo||'Reporte')}</b><span>${esc(tema)}</span><span>${quandoTxt(x.quando)}</span>${x.id?`<span>id ${esc(x.id)}</span>`:''}</div>
+  <div class="ptexto pq">${esc(x.q||'')}</div><div class="ptexto">Resposta: ${esc(x.a||'')}</div>
+  ${x.nivelAtual||x.nivelCerto?`<div class="ptexto">Nível: ${esc(x.nivelAtual||'?')} → ${esc(x.nivelCerto||'?')}</div>`:''}${x.nota?`<div class="ptexto">💬 ${esc(x.nota)}</div>`:''}${painelBtn('reportes',x)}</div>`;
+}
+async function painelResolve(lista,id,val){
+  const x=PAINEL.dados&&PAINEL.dados[lista].find(i=>i._id===id);if(!x)return;
+  x.resolvido=val;painelRender();
+  try{await contaApi('POST',{acao:'resolver',lista,id,resolvido:val})}catch(e){x.resolvido=!val;painelRender();toast('Não consegui salvar: '+e.message)}
 }
 // ----- saiu da aba durante a partida online: avisa na volta (e chama atenção no título se for a vez dela) -----
 const ABA_KEY='arrisca-aviso-aba'; // sessionStorage: some ao fechar o site, então o aviso volta no próximo acesso
