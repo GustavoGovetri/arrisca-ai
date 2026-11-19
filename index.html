@@ -214,6 +214,8 @@ button:active:not(:disabled){transform:scale(.94)}
 .histcorpo summary{color:#c3c7d0}
 .lob.novo{animation:novoPop 1.4s ease-out;border-radius:10px}
 @keyframes novoPop{0%{transform:scale(.6);opacity:0;background:#ffb02e55}20%{transform:scale(1.06);opacity:1;box-shadow:0 0 0 3px #ffb02e,0 0 24px 6px #ffb02e88}100%{transform:none;background:transparent;box-shadow:none}}
+.ic{width:17px;height:17px;vertical-align:-3px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+button.small .ic{width:15px;height:15px;margin-right:5px}
 </style>
 </head>
 <body>
@@ -650,7 +652,7 @@ function renderPanel(){
   if(MODE==='online'&&G.phase==='setup'){el.innerHTML=lobbyHtml();return}
   if(G.phase==='setup'){
     const total=Q?ORDER.reduce((s,k)=>s+QN(k),0):0;
-    let h=`<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">Novo jogo</h2><button class="small" onclick="goHome()">← Início</button></div><div class="setup-row"><label style="flex:none">Jogadores:</label><select onchange="G.count=+this.value;G.pickColor=null;render()">${[2,3,4,5,6,7,8,9,10].map(n=>`<option ${n===G.count?'selected':''}>${n}</option>`).join('')}</select><label style="flex:none;margin-left:6px">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>`;
+    let h=`<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">Novo jogo</h2><button class="small" onclick="goHome()">${ICON_CASA}Início</button></div><div class="setup-row"><label style="flex:none">Jogadores:</label><select onchange="G.count=+this.value;G.pickColor=null;render()">${[2,3,4,5,6,7,8,9,10].map(n=>`<option ${n===G.count?'selected':''}>${n}</option>`).join('')}</select><label style="flex:none;margin-left:6px">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>`;
     padPlayers();
     h+='<div class="plist">';
     for(let i=0;i<G.count;i++){
@@ -977,7 +979,7 @@ function plTag(p){if(!online())return '';let s='';if(p.dev===MYDEV)s+=' <span cl
 function editBtn(ed){return can('host')?`<button class="small" onclick="G.editPl=!G.editPl;G.pickColor=null;renderScores()">${ed?'✓ Pronto':'✎ Ordem e cores'}</button>`:''}
 const NOVO_BTN=`<button onclick="if(window.__c){newGame()}else{window.__c=1;this.textContent='Confirmar?';const b=this;setTimeout(()=>{window.__c=0;b.textContent='Novo jogo'},2500)}">Novo jogo</button>`;
 function headBtns(){
-  if(!online())return `<button title="Tela inicial (a partida fica salva)" onclick="goHome()">⌂</button>`+NOVO_BTN;
+  if(!online())return `<button title="Voltar para a tela inicial (a partida fica salva)" onclick="goHome()">${ICON_CASA}Início</button>`+NOVO_BTN;
   let h='';
   if(amHost())h+=`<button class="small${HOSTALL?' on':''}" title="Deixa você jogar por quem estiver sem conexão" onclick="HOSTALL=!HOSTALL;render()">🎮 ${HOSTALL?'Controle total ligado':'Controle total'}</button>`+NOVO_BTN;
   return h+`<button class="small" onclick="leaveRoom()">Sair</button>`;
@@ -995,6 +997,7 @@ function resultBtns(){
   if(!can('next'))h+=`<p class="wait">⏳ ${nm(G.players[G.cur])} ou ${nm(G.players[readerIdx()])} passa a vez.</p>`;
   return h;
 }
+const ICON_CASA='<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.8 12 3.8l8.5 7"/><path d="M5.8 9.4V19a1.2 1.2 0 0 0 1.2 1.2h3.4v-5.4h3.2v5.4H17a1.2 1.2 0 0 0 1.2-1.2V9.4"/></svg>';
 function goHome(){if(online())return leaveRoom();stopTimer();MODE=null;render()}
 function playLocal(){MODE='local';render()}
 
