@@ -8,7 +8,7 @@ const CERTS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken
 const DEV = !!process.env.ARRISCA_DEV_SALAS; // testes locais: aceita os tokens do simulador
 
 // Contas que podem abrir o painel (bugs e perguntas reportadas).
-const ADMINS = new Set([]);
+const ADMINS = new Set(['gQw0L1zbvTNXHzTHNaxoezfCtD72']); // Gustavo
 
 let CERTS = null, CERTS_EXP = 0;
 async function certs() {
