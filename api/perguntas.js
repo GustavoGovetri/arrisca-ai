@@ -178,6 +178,7 @@ function mascara(a) {
 // ---------------------------------------------------------------- rotas
 async function handle(acao, body) {
   const B = await banco();
+  if (acao === 'aquece') return { ok: true, v: B.v }; // só carrega o banco na memória
   if (acao === 'meta') {
     const n = {}, lv = {};
     ORDER.forEach(t => { n[t] = B.temas[t].items.length; lv[t] = B.temas[t].lv });

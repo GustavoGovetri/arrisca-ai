@@ -452,10 +452,10 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--amarelo);outline
 .card{box-shadow:inset 0 0 0 3px #ffcf4a,inset 0 0 0 6px rgba(42,4,16,.55),0 6px 0 var(--k),0 18px 36px rgba(20,0,8,.5)}
 .track .halo{fill:none;stroke:#ffb300;stroke-opacity:.22;stroke-width:2.1;stroke-dasharray:0 2.6;stroke-linecap:round}
 .track .lamp{fill:none;stroke:#fff3c2;stroke-width:1.05;stroke-linecap:round;stroke-dasharray:0 7.8;opacity:.32}
-html[data-luz="0"] .track .l0,html[data-luz="1"] .track .l1,html[data-luz="2"] .track .l2,html:not([data-luz]) .track .lamp{opacity:1}
+.track[data-luz="0"] .l0,.track[data-luz="1"] .l1,.track[data-luz="2"] .l2,.track:not([data-luz]) .lamp{opacity:1}
 .letreiro{display:inline-block;padding:1.3cqw 2.8cqw 1.6cqw;border-radius:3cqw;background:radial-gradient(120% 140% at 50% 0%,#5c0a22,#2a0410);border:.85cqw dotted #fff3c2;
   box-shadow:0 0 0 .55cqw var(--k),0 .9cqw 0 .55cqw var(--k),0 0 3.5cqw rgba(255,190,60,.55),inset 0 0 2.4cqw rgba(0,0,0,.55);}
-html[data-luz="1"] .letreiro{border-color:#ffb300}
+.letreiro[data-luz="1"]{border-color:#ffb300}
 .center .letreiro .logo{font-size:8.4cqw!important;white-space:nowrap}
 .homelogo .letreiro{padding:10px 20px 12px;border-radius:22px;border-width:6px;box-shadow:0 0 0 4px var(--k),0 6px 0 4px var(--k),0 0 26px rgba(255,190,60,.55),inset 0 0 18px rgba(0,0,0,.55)}
 .homelogo .letreiro .logo{font-size:clamp(34px,11vw,52px)!important;white-space:nowrap}
@@ -576,6 +576,39 @@ input.chama{animation:chama .9s}
 .avisonao input{width:auto;margin-top:2px;flex:none;accent-color:#ffc21a;transform:scale(1.2)}
 .avisonao small{display:block;font-size:12.5px;margin-top:2px}
 .avisocard button{width:100%;font-size:18px;padding:12px}
+
+/* ===== mais leve: só animações que a placa de vídeo faz sozinha ===== */
+/* fundo degradê numa camada fixa (rolar a página não redesenha a tela inteira) */
+body{background:#2a020b}
+#fundo{background:radial-gradient(95% 75% at 50% 0%,#e3274f 0%,#a10d33 32%,#5c0519 68%,#2a020b 100%)}
+/* casas em camada própria: a lupa só move e aumenta, sem recalcular a página */
+.sp{transition:transform .22s cubic-bezier(.3,.7,.4,1);will-change:transform;box-shadow:inset 0 -.75cqw 0 rgba(0,0,0,.22),inset 0 .5cqw 0 rgba(255,255,255,.32),0 .6cqw 0 var(--k)}
+/* brilho da última casa: pisca a opacidade de um halo, em vez de redesenhar a sombra a cada quadro */
+.sp.final{animation:none;box-shadow:inset 0 -.75cqw 0 rgba(0,0,0,.15),inset 0 .5cqw 0 rgba(255,255,255,.5),0 .6cqw 0 var(--k)}
+.sp.final::before{content:'';position:absolute;inset:-1.6cqw;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,transparent 52%,rgba(255,210,63,.75) 60%,rgba(255,210,63,0) 72%);animation:fimHalo 2.4s ease-in-out infinite;will-change:opacity}
+@keyframes fimHalo{0%,100%{opacity:.45}50%{opacity:1}}
+/* brilho do botão principal anda com transform (antes mexia no "left", o que recalculava a página) */
+.primary::after,.pilula.amarela::after{left:0;transform:translateX(-200%) skewX(-20deg);animation-name:brilhoBtn2;will-change:transform}
+@keyframes brilhoBtn2{0%,62%{transform:translateX(-200%) skewX(-20deg)}100%{transform:translateX(420%) skewX(-20deg)}}
+.dobro.on,.dobro.on:hover:not(:disabled){animation:none}
+/* sombras borradas grandes custam caro para desenhar: ficam menores */
+.card{box-shadow:inset 0 0 0 3px #ffcf4a,inset 0 0 0 6px rgba(42,4,16,.55),0 6px 0 var(--k),0 12px 22px rgba(20,0,8,.35)}
+.chatbox{box-shadow:0 6px 0 var(--k),0 14px 30px rgba(0,0,0,.45)}
+
+.suspeita{margin:10px 0;padding:9px 12px;border-radius:14px;background:#3a2a00;color:#ffe9a8;border:3px solid var(--k);box-shadow:0 3px 0 var(--k);font-size:14.5px;line-height:1.35}
+
+/* ===== efeitos leves (automático no Firefox; botão ✨/🍃 troca) ===== */
+html.leve #fundo .holofote{animation:none;will-change:auto}
+html.leve #fundo .holofote.a{transform:rotate(-12deg)}
+html.leve #fundo .holofote.b{transform:rotate(12deg)}
+html.leve #fundo .brilho{display:none}
+html.leve #fundo .bambinela{filter:none}
+html.leve .ring::after{animation:none;will-change:auto}
+html.leve .sp{will-change:auto}
+html.leve .logo .lt,html.leve .avatar.grande,html.leve .avatar::before,html.leve .pw::before,html.leve .avisoico,html.leve .sp.final::before{animation:none}
+html.leve .primary::after,html.leve .pilula.amarela::after{display:none}
+html.leve .card,html.leve .hbtns .pilula{animation:none}
 </style>
 </head>
 <body>
@@ -583,7 +616,7 @@ input.chama{animation:chama .9s}
 <div class="wrap">
   <div class="ringwrap"><div class="ring" id="ring"></div></div>
   <div>
-    <div class="toolbar"><button id="bugbtn" class="tab snd" title="Reportar um problema no site" onclick="bugAbre()">🐞</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
+    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Efeitos visuais" onclick="trocaEfeitos()"></button><button id="bugbtn" class="tab snd" title="Reportar um problema no site" onclick="bugAbre()">🐞</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
     <div id="view-jogo">
     <div class="card" id="panel"></div>
     <div class="card" id="scores" style="display:none"></div>
@@ -625,6 +658,9 @@ input.chama{animation:chama .9s}
 <div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
 <div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b>💬 Chat da sala</b><button class="small" onclick="chatFecha()">✕</button></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
 <script>
+const EFX_KEY='arrisca-efeitos';
+function efeitosLeves(){let s=null;try{s=localStorage.getItem(EFX_KEY)}catch(e){}if(s)return s==='leve';return /firefox|fxios/i.test(navigator.userAgent)}
+document.documentElement.classList.toggle('leve',efeitosLeves());
 const ERROS=[];
 addEventListener('error',e=>{ERROS.push({m:String(e.message||'erro').slice(0,300),f:String(e.filename||'').split('/').pop()+':'+(e.lineno||0)+':'+(e.colno||0),t:Date.now()});if(ERROS.length>12)ERROS.shift()});
 addEventListener('unhandledrejection',e=>{const r=e.reason;ERROS.push({m:String((r&&r.message)||r||'promise').slice(0,300),t:Date.now()});if(ERROS.length>12)ERROS.shift()});
@@ -646,8 +682,9 @@ const LAMPADAS=[45.7,36.3].map(r=>`<circle class="halo" cx="50" cy="50" r="${r}"
 const LOGO_HTML='<div class="letreiro"><div class="logo" aria-label="Arrisca Aí">'+[...'ARRISCA AÍ'].map((ch,i)=>ch===' '?'<span class="lt esp"></span>':`<span class="lt" style="--i:${i}">${ch}</span>`).join('')+'</div></div>';
 (function luzes(){ // lâmpadas do letreiro acendendo em sequência (3 trocas por segundo, sem animação contínua)
   if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  let n=0;setInterval(()=>{if(!document.hidden)document.documentElement.dataset.luz=String(n++%3)},340);
+  let n=0;setInterval(()=>{if(document.hidden)return;const v=String(n++%3);document.querySelectorAll('svg.track,.letreiro').forEach(e=>{e.dataset.luz=v})},340);
 })();
+setTimeout(()=>{fetch('/api/perguntas?acao=aquece',{cache:'no-store'}).catch(()=>{})},1200);
 (function montaFundo(){ // palco: cortinas, bambinela, holofotes passando e brilhos
   const f=document.getElementById('fundo');if(!f)return;
   const R=Math.random;
@@ -786,6 +823,7 @@ const STOPK=new Set(['sim','nao','verdadeiro','falso','nenhum','nenhuma','todos'
 const KCACHE=new Map();
 // ---------- perguntas vêm do servidor, uma por vez ----------
 async function api(acao,body){
+  API_N++;
   const r=await fetch('/api/perguntas?acao='+acao,body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{});
   let j=null;try{j=await r.json()}catch(e){}
   if(!r.ok)throw new Error((j&&j.erro)||('Erro '+r.status));
@@ -837,7 +875,7 @@ function resetTheme(k){
 let TAB='jogo';
 // ---------- desfazer ----------
 const DRAWLOG=[];let UNDO=[];
-const SNAP_KEYS=['players','cur','round','phase','theme','q','qd','qid','hint','timeUp','lvNote','seen','token','lastTok','chosen','revealed','forcedNow','resetNote','themeOptions','themeLabel','msg','resp','tEnd','tk','sortTema','dobro','rasteira','qt'];
+const SNAP_KEYS=['players','cur','round','phase','theme','q','qd','qid','hint','timeUp','lvNote','seen','token','lastTok','chosen','revealed','forcedNow','resetNote','themeOptions','themeLabel','msg','resp','tEnd','tk','sortTema','dobro','rasteira','qt','aba'];
 function snapshot(label){
   const s={label,draws:DRAWLOG.length,state:{}};
   SNAP_KEYS.forEach(k=>s.state[k]=G[k]===undefined?undefined:JSON.parse(JSON.stringify(G[k])));
@@ -1039,7 +1077,7 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){document.body.classList.toggle('inicio',!MODE);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame()}
+function render(){document.body.classList.toggle('inicio',!MODE);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
 
 function renderPanel(){
   const el=document.getElementById('panel');
@@ -1096,6 +1134,7 @@ function renderPanel(){
   h+=`${online()?'':`<p class="muted" style="margin-top:10px">📖 Quem lê: <b style="color:${reader.color}">${esc(reader.name)}</b></p>`}<div class="qtext">${esc(G.q[0])}</div>`;
     if(G.phase==='question'&&online())h+=timerOnlineHtml();
     else if(G.phase==='question'&&can('reader'))h+=`<div class="timerbox"><button onclick="startTimer()">⏱ ${G.timerLeft!=null?'Reiniciar timer':'Timer de 10 s'}</button><div id="timer" class="timer${G.timerLeft===0?' done':G.timerLeft!=null&&G.timerLeft<=3?' low':''}" style="${G.timerLeft==null?'display:none':''}">${G.timerLeft===0?'⏰ 0':G.timerLeft??''}</div><span id="timermsg" class="muted">${G.timerLeft===0?'Tempo esgotado!':''}</span></div>`;
+    if(online()&&((G.phase==='question'&&!G.resp)||G.phase==='result'))h+=abaTxt(G.phase==='question');
   }else{
     h+=`<div class="qtext" style="color:#5d6475">🔒 Pergunta escondida até a aposta</div>`;
   }
@@ -1354,7 +1393,7 @@ function daRasteira(k){
 function startTurn(){
   stopTimer();
   const p=G.players[G.cur];
-  G.token=null;G.lastTok=null;G.chosen=null;G.revealed=false;G.forcedNow=false;G.msg='';G.theme=null;G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;G.dobro=false;G.rasteira=null;
+  G.token=null;G.lastTok=null;G.chosen=null;G.revealed=false;G.forcedNow=false;G.msg='';G.theme=null;G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;G.dobro=false;G.rasteira=null;G.aba=null;
   if(p.forced){G.forcedNow=true;pickTheme(p.forced);return}
   const s=board[p.pos];
   if(s.type==='start'){G.themeOptions=activeThemes();G.themeLabel='Você está na casa <b>INÍCIO</b>: escolha o tema da sua pergunta.'}
@@ -1378,14 +1417,38 @@ async function approveReset(){
   }else{USED[t]=[];usedSet[t]=new Set()}
   EXIDS=null;persist();G.resetNote=`As perguntas de ${T[t].n} foram liberadas de novo.`;pickTheme(t,true)}
 function otherTheme(){const ops=activeThemes().filter(k=>k!==G.exTheme&&!themeDone(k));pickTheme(ops[rndInt(ops.length)])}
-let SORTEANDO=false;
+let SORTEANDO=false,PRE={},API_N=0;
+function chavePre(t,cur,rodada,pos){
+  if(cur==null){cur=G.cur;rodada=G.round;pos=(G.players&&G.players[G.cur]&&G.players[G.cur].pos)||0}
+  const pd=pedidoSorteio(t);return [t,pd.nivel,pd.junta,pd.sala||'',rodada,cur,pos].join('|');
+}
+function preBusca(t,k){if(PRE[k])return;const o=PRE[k]={r:null};o.p=api('sortear',pedidoSorteio(t)).then(r=>(o.r=r)).catch(()=>{delete PRE[k];return null})}
+function preProximo(){ // na tela de resultado já busca a pergunta de quem vem depois (se a casa dele tiver 1 ou 2 temas)
+  if(G.phase!=='result'||!G.players||(online()&&myIdx()<0))return;
+  const n=G.players.length,nx=(G.cur+1)%n,rod=nx===0?G.round+1:G.round,q=G.players[nx];if(!q)return;
+  let ops;
+  if(q.forced)ops=[q.forced];
+  else{const s=board[q.pos];if(!s||s.type==='start'||s.type==='final')return;ops=s.themes}
+  ops.filter(t=>T[t]&&!themeDone(t)).slice(0,2).forEach(t=>preBusca(t,chavePre(t,nx,rod,q.pos)));
+}
+function preSorteia(){
+  if(G.phase!=='theme'||SORTEANDO||!G.players||!canTheme())return;
+  const ops=(G.themeOptions||[]).filter(t=>T[t]&&!themeDone(t));
+  if(!ops.length||ops.length>2)return; // casa INÍCIO e pergunta final: muitos temas, não vale buscar antes
+  ops.forEach(t=>preBusca(t,chavePre(t)));
+}
 async function pickTheme(t,keepNote){
   if(themeDone(t)){G.exTheme=t;G.phase='exhausted';render();return}
   if(SORTEANDO)return;
   if(!keepNote)G.resetNote='';
   SORTEANDO=true;G.phase='sorteio';G.sortTema=t;forcePanel();render();
   let r;
-  try{r=await api('sortear',pedidoSorteio(t))}
+  try{
+    const pre=keepNote?null:PRE[chavePre(t)];PRE={};
+    r=pre?await pre.p:null;
+    if(r&&!r.esgotado&&usedSet[r.t||t]&&usedSet[r.t||t].has(r.id))r=null; // já saiu por outro caminho
+    if(!r)r=await api('sortear',pedidoSorteio(t));
+  }
   catch(e){SORTEANDO=false;toast('Não consegui sortear a pergunta: '+e.message);G.phase='theme';G.themeOptions=[t];G.themeLabel='Não consegui sortear a pergunta. Toque no tema para tentar de novo.';forcePanel();render();return}
   SORTEANDO=false;
   if(r.esgotado){EXIDS={t,ids:r.ids||{}};G.exTheme=t;G.phase='exhausted';render();return}
@@ -1393,7 +1456,7 @@ async function pickTheme(t,keepNote){
   G.theme=t;G.qt=src;
   USED[src].push(r.id);usedSet[src].add(r.id);DRAWLOG.push([src,r.id]);
   if(!Array.isArray(G.seen))G.seen=[];G.seen.push([src,r.id]);persist();
-  G.qd=r.d;G.qid=r.id;G.tk=r.tk;G.dobro=false;G.lvNote=r.lvNote||'';G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;RASCUNHO='';G.chosen=null;G.revealed=false;
+  G.qd=r.d;G.qid=r.id;G.tk=r.tk;G.dobro=false;G.aba=null;G.lvNote=r.lvNote||'';G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;RASCUNHO='';G.chosen=null;G.revealed=false;
   G.q=src==='V'?[r.q,r.opts,null,r.b,r.d]:[r.q,null,r.b,r.d];
   G.phase='question';iniciaTempo();render()}
 
@@ -1695,11 +1758,33 @@ function abaAviso(){
   const box=document.getElementById('avisoaba');if(!box)return;
   const vez=minhaVez(),voto=meuVoto();
   document.getElementById('avisotxt').innerHTML=vez
-    ?'<b>É a sua vez!</b> Quando você vai para outra aba, o tempo para responder continua correndo e, se acabar, conta como erro.'
+    ?'<b>É a sua vez!</b> Quando você vai para outra aba, o tempo para responder continua correndo e, se acabar, conta como erro. Todo mundo na sala vê que você saiu.'
     :voto?'<b>Tem uma resposta esperando o seu voto.</b> Quando você vai para outra aba, a partida segue e a votação pode fechar sem você.'
     :'Quando você vai para outra aba, a partida continua: pode chegar a sua vez, o tempo de resposta corre e as votações fecham sem você. No celular, a conexão também pode cair com o site em segundo plano.';
   document.getElementById('avisonao').checked=false;
   box.style.display='flex';SFX.pop&&SFX.pop();
+}
+function janelaResposta(){ // a pergunta está na tela de quem responde e ainda não respondeu
+  const p=G.players&&G.players[G.cur];
+  return online()&&p&&myIdx()===G.cur&&G.phase==='question'&&(G.token||p.pos===FINAL)&&!G.resp&&G.chosen===null&&!G.revealed;
+}
+function marcaSaida(sai){
+  if(!janelaResposta())return;
+  const a=Object.assign({n:0,ms:0,desde:null,colou:false},G.aba||{});
+  if(sai){if(a.desde)return;a.n++;a.desde=Date.now()}
+  else{if(!a.desde)return;a.ms+=Date.now()-a.desde;a.desde=null}
+  G.aba=a;render();
+}
+function marcaColou(){ // espera o texto colado entrar no campo antes de redesenhar
+  setTimeout(()=>{if(!janelaResposta()||(G.aba&&G.aba.colou))return;const i=document.getElementById('resp');if(i)RASCUNHO=i.value;G.aba=Object.assign({n:0,ms:0,desde:null,colou:false},G.aba||{},{colou:true});render()},0);
+}
+function abaTxt(curto){ // texto do aviso que todos veem
+  const a=G.aba;if(!a||!(a.n||a.colou))return '';
+  const p=G.players[G.cur],seg=Math.round((a.ms+(a.desde?Date.now()-a.desde:0))/1000);
+  const partes=[];
+  if(a.n)partes.push(a.desde?`está fora da aba agora (${a.n===1?'saiu 1 vez':'saiu '+a.n+' vezes'})`:`saiu da aba ${a.n===1?'1 vez':a.n+' vezes'} (${seg} s fora)`);
+  if(a.colou)partes.push('colou um texto na resposta');
+  return `<div class="suspeita">👀 <b style="color:${p.color}">${esc(p.name)}</b> ${partes.join(' e ')}${curto?'':' durante a vez de responder.'}</div>`;
 }
 function abaFecha(){
   if(document.getElementById('avisonao').checked){try{sessionStorage.setItem(ABA_KEY,'1')}catch(e){}}
@@ -1712,11 +1797,18 @@ function abaTitulo(){
   if(!ABA_PISCA){let n=0;ABA_PISCA=setInterval(()=>{if(!document.hidden){abaTitulo();return}const m=minhaVez()?'⏰ Sua vez! · Arrisca Aí':meuVoto()?'🗳️ Vote! · Arrisca Aí':'';if(!m){abaTitulo();return}document.title=(n++%2)?TITULO:m},1000);document.title=msg}
 }
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){ABA_SAIU=emPartida()?Date.now():null;abaTitulo();return}
-  abaTitulo();
+  if(document.hidden){ABA_SAIU=emPartida()?Date.now():null;marcaSaida(true);abaTitulo();return}
+  marcaSaida(false);abaTitulo();
   const saiu=ABA_SAIU;ABA_SAIU=null;
   if(saiu&&Date.now()-saiu>1000&&emPartida()&&!abaDispensada())abaAviso();
 });
+function pintaEfx(){const b=document.getElementById('efxbtn');if(!b)return;const l=document.documentElement.classList.contains('leve');b.textContent=l?'🍃':'✨';b.title=l?'Efeitos leves (toque para ligar todos os efeitos)':'Todos os efeitos (toque para deixar mais leve)'}
+function trocaEfeitos(){
+  const l=!document.documentElement.classList.contains('leve');
+  document.documentElement.classList.toggle('leve',l);try{localStorage.setItem(EFX_KEY,l?'leve':'cheio')}catch(e){}
+  pintaEfx();toast(l?'🍃 Efeitos leves: fundo parado e menos animação. Bom para o Firefox e celulares mais simples.':'✨ Todos os efeitos ligados.');
+}
+pintaEfx();
 function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
 
 // ----- sincronização da partida -----
@@ -1949,11 +2041,11 @@ function respBox(){const p=G.players[G.cur];return `<div class="resp"><div class
 function respHtml(){
   const p=G.players[G.cur],eu=myIdx();
   if(!G.resp){
-    if(can('cur'))return `<div class="respbox"><input id="resp" maxlength="120" value="${esc(RASCUNHO)}" placeholder="Digite sua resposta" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" oninput="RASCUNHO=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();enviarResposta()}"><button class="primary" onclick="enviarResposta()">Enviar</button></div><div class="row" style="margin-top:8px"><button class="small bad" onclick="giveUp()">✘ Não sei</button></div>`;
+    if(can('cur'))return `<div class="respbox"><input id="resp" maxlength="120" value="${esc(RASCUNHO)}" onpaste="marcaColou()" placeholder="Digite sua resposta" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" oninput="RASCUNHO=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();enviarResposta()}"><button class="primary" onclick="enviarResposta()">Enviar</button></div><div class="row" style="margin-top:8px"><button class="small bad" onclick="giveUp()">✘ Não sei</button></div>`;
     return `<p class="wait">✍️ ${nm(p)} está digitando a resposta…</p>`;
   }
   const c=contagem(),k=respKey(),mv=VOTES[MYDEV],meu=mv&&mv.k===k?mv.v:null;
-  let h=respBox()+`<div class="answer"><div class="muted">Resposta oficial</div>${esc(respostaTxt()??'carregando…')}</div>`;
+  let h=respBox()+abaTxt(false)+`<div class="answer"><div class="muted">Resposta oficial</div>${esc(respostaTxt()??'carregando…')}</div>`;
   if(eu>=0&&eu!==G.cur)h+=`<p class="muted">${meu===null?'Vale a resposta de '+nm(p)+'?':'Seu voto (dá para mudar até fechar):'}</p><div class="row votos"><button class="ok${meu===true?' on':''}" onclick="votar(true)">✔ Vale</button><button class="bad${meu===false?' on':''}" onclick="votar(false)">✘ Não vale</button></div>`;
   else if(eu===G.cur)h+=`<p class="wait">🗳️ A turma está decidindo se a sua resposta vale…</p>`;
   h+=`<p class="muted">Votos: ✔ ${c.sim} · ✘ ${c.nao} de ${c.n}${c.falta.length?' · falta: '+c.falta.map(x=>esc(x.name)).join(', '):''}</p>`;
@@ -2059,7 +2151,7 @@ function aplicaFoco(alvo){ // alvo = índice da casa, ou null
   if(alvo!=null&&(alvo<0||alvo>=SQ.length))alvo=null;
   FOCO=alvo;
   const M=N+1,step=360/M,ring=document.getElementById('ring');
-  const S=ring&&ring.getBoundingClientRect().width<560?2.4:2;
+  const LARG=ring?ring.getBoundingClientRect().width:0,S=LARG&&LARG<560?2.4:2;
   const w=[];for(let j=0;j<M;j++)w.push(alvo!=null&&j===alvo+1?S:1);
   const W=w.reduce((a,b)=>a+b,0),cum=[];let c=0;for(let j=0;j<M;j++){cum.push(c+w[j]/2);c+=w[j]}
   const jf=alvo==null?0:alvo+1,rot=jf*step-cum[jf]/W*360;
@@ -2067,8 +2159,8 @@ function aplicaFoco(alvo){ // alvo = índice da casa, ou null
     const j=i+1,s=w[j],a=(cum[j]/W*360+rot-90)*Math.PI/180;
     q.dx=alvo==null?q.x:50+41*Math.cos(a);q.dy=alvo==null?q.y:50+41*Math.sin(a);q.ds=s;
     const el=q.el;if(!el)return;
-    el.style.left=q.dx+'%';el.style.top=q.dy+'%';
-    el.style.transform=s>1?`translate(-50%,-50%) scale(${s})`:'';
+    const ox=(q.dx-q.x)*LARG/100,oy=(q.dy-q.y)*LARG/100,mexe=Math.abs(ox)>.05||Math.abs(oy)>.05;
+    el.style.transform=s>1||mexe?`translate(calc(-50% + ${ox.toFixed(1)}px),calc(-50% + ${oy.toFixed(1)}px))${s>1?` scale(${s})`:el.classList.contains('target')?' scale(1.2)':''}`:'';
     el.style.zIndex=s>1?'20':'';
     el.classList.toggle('foco',s>1);
   });
@@ -2213,19 +2305,22 @@ const CONF=(()=>{
     if(!cv){cv=document.createElement('canvas');cv.id='confetti';document.body.appendChild(cv);cx=cv.getContext('2d');addEventListener('resize',tam)}
     tam();
   }
-  function tam(){if(!cv)return;const d=Math.min(2,window.devicePixelRatio||1);cv.width=innerWidth*d;cv.height=innerHeight*d;cx.setTransform(d,0,0,d,0,0)}
+  function tam(){if(!cv)return;const d=Math.min(2,window.devicePixelRatio||1);DPR=d;cv.width=innerWidth*d;cv.height=innerHeight*d;cx.setTransform(d,0,0,d,0,0)}
+  let DPR=1;
   function loop(){
-    cx.clearRect(0,0,innerWidth,innerHeight);
+    cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,innerWidth,innerHeight);
     parts=parts.filter(p=>{
       p.vy+=.32;p.vx*=.985;p.vy*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;p.t++;
-      cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.scale(1,Math.cos(p.t*.18+p.r));cx.globalAlpha=Math.max(0,1-p.t/p.vida);cx.fillStyle=p.c;
+      const c=Math.cos(p.r),s=Math.sin(p.r),sy=Math.cos(p.t*.18+p.r);
+      cx.setTransform(DPR*c,DPR*s,-DPR*s*sy,DPR*c*sy,DPR*p.x,DPR*p.y);cx.globalAlpha=Math.max(0,1-p.t/p.vida);cx.fillStyle=p.c;
       if(p.o)cx.beginPath(),cx.arc(0,0,p.w/2.4,0,6.3),cx.fill();else cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
-      cx.restore();return p.t<p.vida&&p.y<innerHeight+30;
+      return p.t<p.vida&&p.y<innerHeight+30;
     });
-    if(parts.length)raf=requestAnimationFrame(loop);else{raf=0;cx.clearRect(0,0,innerWidth,innerHeight)}
+    cx.globalAlpha=1;
+    if(parts.length)raf=requestAnimationFrame(loop);else{raf=0;cx.setTransform(DPR,0,0,DPR,0,0);cx.clearRect(0,0,innerWidth,innerHeight)}
   }
   return {burst(n,x,y,cores,forca){
-    if(REDUZ)return;prep();forca=forca||1;
+    if(REDUZ)return;prep();forca=forca||1;if(innerWidth<700)n=Math.round(n*.6);n=Math.min(n,Math.max(0,220-parts.length));
     for(let i=0;i<n;i++){const ang=-Math.PI/2+(Math.random()-.5)*Math.PI*1.1,v=(6+Math.random()*9)*forca;
       parts.push({x,y,vx:Math.cos(ang)*v,vy:Math.sin(ang)*v,r:Math.random()*6.3,vr:(Math.random()-.5)*.35,w:7+Math.random()*7,h:4+Math.random()*5,c:cores[i%cores.length],t:0,vida:80+Math.random()*50,o:Math.random()<.25})}
     if(!raf)raf=requestAnimationFrame(loop);
@@ -2257,7 +2352,7 @@ let PREV=null;
 function viewState(){
   const p=G.players&&G.players[G.cur];
   return {mode:MODE,phase:G.phase,cur:G.cur,tok:G.token||null,qid:G.qid||null,rev:!!G.revealed,ch:G.chosen,hint:!!G.hint,msg:G.msg||'',
-    vis:!!(p&&G.q&&(p.pos===FINAL||G.token)),pl:G.players?G.players.length:0,resp:G.resp?G.resp.k:null,dob:!!G.dobro,ras:G.rasteira??null};
+    vis:!!(p&&G.q&&(p.pos===FINAL||G.token)),pl:G.players?G.players.length:0,resp:G.resp?G.resp.k:null,dob:!!G.dobro,ras:G.rasteira??null,abaN:G.aba?G.aba.n:0,colou:!!(G.aba&&G.aba.colou)};
 }
 function fx(){
   const s=viewState(),a=PREV;PREV=s;
@@ -2279,6 +2374,7 @@ function fx(){
   }
   if(s.rev&&!a.rev&&s.phase==='question'){SFX.flip();const an=panel.querySelector('.answer');if(an)an.classList.add('reveal')}
   if(s.hint&&!a.hint)SFX.magic();
+  if(online()&&myIdx()!==G.cur&&s.qid===a.qid&&G.players&&((s.abaN>a.abaN)||(s.colou&&!a.colou))){toast(s.colou&&!a.colou?`👀 ${G.players[G.cur].name} colou um texto na resposta`:`👀 ${G.players[G.cur].name} saiu da aba!`);SFX.pop&&SFX.pop()}
   if(s.dob&&!a.dob&&s.phase==='question'&&s.qid===a.qid){SFX.dobro();vib(30)}
   if(typeof s.ras==='number'&&a.ras==='pendente'){SFX.rasteira();vib(80);floatAt(s.ras,'🦶 -1','#c77dff')}
   if(s.resp&&s.resp!==a.resp&&s.phase==='question'){SFX.flip();const r=panel.querySelector('.resp');if(r)r.classList.add('reveal');if(myIdx()>=0&&myIdx()!==G.cur)vib(40)}
