@@ -232,6 +232,14 @@ div.dobro{padding:10px 14px;border-radius:10px}
 .rasteira{margin:10px 0;padding:10px 12px;border-radius:10px;background:#2a1f33;border:1px dashed #c77dff}
 .estrelas{font-size:13px;color:#ffd23f;margin-left:4px}
 .rei{text-align:center;font-size:17px;margin:6px 0 10px}
+.reprow{margin-top:12px}
+.fimbox .win{margin:4px 0 6px}
+.fimbox .msg{margin:0 0 12px}
+.fimbox .rei{margin:0 0 16px}
+.fimbox .answer{margin:0}
+.fimacoes{display:flex;flex-direction:column;gap:12px;margin-top:20px;padding-top:18px;border-top:2px dashed rgba(255,255,255,.18)}
+.fimacoes button{width:100%;padding:12px 16px}
+.fimacoes .wait{margin:0;text-align:center}
 .junta{background:#1e2a22;color:#cfe9d6;font-size:13px;line-height:1.45;margin:-4px 0 12px}
 .veio{font-size:12px;color:#9aa0ad;margin-left:2px}
 /* ===================== visual de palco de auditório: cortina, holofotes e letreiro de lâmpadas ===================== */
@@ -1143,7 +1151,8 @@ function renderPanel(){
     return;
   }
   if(G.phase==='won'){
-    el.innerHTML=`<div class="win">🏆 ${esc(p.name)} venceu!</div><p class="msg" style="text-align:center">Chegou à última casa e acertou a pergunta final.</p>${reiHtml()}<div class="answer"><div class="muted">${esc(G.q[0])}</div>${esc(answerText())}</div>${reportHtml()}${wonBtns()}<div class="row" style="justify-content:center;margin-top:10px">${undoBtn()}</div>`;
+    const ub=undoBtn();
+    el.innerHTML=`<div class="fimbox"><div class="win">🏆 ${esc(p.name)} venceu!</div><p class="msg" style="text-align:center">Chegou à última casa e acertou a pergunta final.</p>${reiHtml()}<div class="answer"><div class="muted">${esc(G.q[0])}</div>${esc(answerText())}</div>${reportHtml()}<div class="fimacoes">${wonBtns()}${ub}</div></div>`;
     return;
   }
   const isFinal=p.pos===FINAL, isV=G.theme==='V';
@@ -1305,7 +1314,7 @@ function motivoMudou(){const sel=document.querySelector('input[name="motivo"]:ch
 function reportHtml(){
   if(!G.qid)return '';
   if(isReported())return `<p class="muted" style="margin-top:8px">⚑ Pergunta reportada. Obrigado!</p>`;
-  if(!G.reportOpen)return `<div style="margin-top:8px"><button class="small" onclick="G.reportOpen=true;render()">⚑ Reportar pergunta</button></div>`;
+  if(!G.reportOpen)return `<div class="reprow"><button class="small" onclick="G.reportOpen=true;render()">⚑ Reportar pergunta</button></div>`;
   const atual=nivelAtual();
   return `<div class="report"><b>O que tem de errado?</b><div class="motivos">${MOTIVOS.map((m,i)=>`<label><input type="radio" name="motivo" value="${i}" ${i===0?'checked':''} onchange="motivoMudou()"> ${m}</label>`).join('')}</div><div id="repnivel" style="display:none;margin-top:6px"><b>Qual seria o nível certo?</b>${atual&&LEVELS[atual]?` <span class="muted">(hoje está como ${LEVELS[atual]})</span>`:''}<div class="motivos niveis">${[1,2,3,4].map(n=>`<label><input type="radio" name="nivelcerto" value="${n}" ${n===atual?'disabled':''}> ${LEVELS[n]}</label>`).join('')}</div></div><textarea id="repnota" maxlength="400" placeholder="Comentário (opcional): por exemplo, qual seria a resposta certa"></textarea><div class="row" style="margin-top:6px"><button class="small primary" onclick="sendReport()">Enviar</button><button class="small" onclick="G.reportOpen=false;render()">Cancelar</button></div></div>`;
 }
@@ -1560,7 +1569,7 @@ function headBtns(){
   return h+`<button class="small" onclick="leaveRoom()">Sair</button>`;
 }
 function wonBtns(){
-  if(can('host'))return `<div class="row" style="justify-content:center"><button class="primary" onclick="rematch()">Jogar de novo (mesmos jogadores)</button><button onclick="newGame()">Mudar jogadores</button></div>`;
+  if(can('host'))return `<button class="primary" onclick="rematch()">Jogar de novo (mesmos jogadores)</button><button onclick="newGame()">Mudar jogadores</button>`;
   return `<p class="wait" style="text-align:center">Quem criou a sala decide se vocês jogam de novo.</p>`;
 }
 function resultBtns(){
