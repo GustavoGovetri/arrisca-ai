@@ -1424,7 +1424,7 @@ function focoAgenda(alvo){FOCO_ALVO=alvo;if(FOCO_RAF)return;FOCO_RAF=requestAnim
 
 // ----- painel para ouvir os sons (abra o site com ?sons) -----
 function painelSons(){
-  const L=[['Toque em botão','tap'],['Apostar ficha','chip'],['Pergunta aparece','whoosh'],['Mostrar resposta','flip'],['Escolher tema','pop'],['Peão andando','passos'],['Acertou','correct'],['Errou','wrong'],['Timer começa','go'],['Timer (segundos)','tick'],['Timer (3 últimos)','hurry'],['Tempo esgotado','timeup'],['Vez de outro','turn'],['Sua vez (online)','myturn'],['Dica','magic'],['Alguém entrou na sala','join'],['Mensagem no chat — opção 1','msg(\'chat1\')'],['Mensagem no chat — opção 2','msg(\'chat2\')'],['Mensagem no chat — opção 3','msg(\'chat3\')'],['Mensagem no chat — opção 4','msg(\'chat4\')'],['Mensagem no chat — opção 5','msg(\'chat5\')'],['Voto','vote'],['Começar partida','start'],['Chegou na última casa','final'],['Vitória','win']];
+  const L=[['Toque em botão','tap'],['Apostar ficha','chip'],['Pergunta aparece','whoosh'],['Mostrar resposta','flip'],['Escolher tema','pop'],['Peão andando','passos'],['Acertou','correct'],['Errou','wrong'],['Timer começa','go'],['Timer (segundos)','tick'],['Timer (3 últimos)','hurry'],['Tempo esgotado','timeup'],['Vez de outro','turn'],['Sua vez (online)','myturn'],['Dica','magic'],['Alguém entrou na sala','join'],['Mensagem no chat','msg'],['Voto','vote'],['Começar partida','start'],['Chegou na última casa','final'],['Vitória','win']];
   const d=document.createElement('div');d.className='chatbox histbox';d.style.zIndex='50';
   d.innerHTML='<div class="chathead"><b>🔊 Sons do jogo</b><button class="small" onclick="this.closest(\'.chatbox\').remove()">✕</button></div><div class="histcorpo"><p class="muted" style="margin-top:0">Toque para ouvir cada som.</p><div style="display:grid;gap:8px">'+L.map(([t,f])=>`<button onclick="${f==='passos'?'[1,2,3,4,5].forEach(i=>setTimeout(()=>SFX.step(i),i*230))':'SFX.'+(f.includes('(')?f:f+'()')}">▶ ${t}</button>`).join('')+'</div></div>';
   document.body.appendChild(d);
@@ -1457,10 +1457,9 @@ const SFX=(()=>{
   }
   const arp=(fs,dt,d,o)=>fs.forEach((f,i)=>tone(f,i*dt,d,o));
   // ---- sons gravados (batucada brasileira, Freesound CC0; veja sons/CREDITOS.md) ----
-  const NOMES=['toque','ficha1','ficha2','passo','ganza','triangulo','agogo_agudo','agogo_grave','pandeiro','pandeiro_curto','cuica','cuica_curta','clave','apito','batucada','tantan','surdo','chat1','chat2','chat3','chat4','chat5'];
+  const NOMES=['toque','ficha1','ficha2','passo','ganza','triangulo','agogo_agudo','agogo_grave','pandeiro','pandeiro_curto','cuica','clave','apito','batucada','tantan','surdo','chat'];
   // volume de cada um (os arquivos têm intensidades diferentes)
-  const VOL={toque:.22,ficha1:.9,ficha2:.9,passo:.8,ganza:.75,triangulo:.8,agogo_agudo:.75,agogo_grave:.75,pandeiro:.8,pandeiro_curto:.8,cuica:.42,cuica_curta:.4,clave:.7,apito:.32,batucada:.75,tantan:.5,surdo:.6,chat1:.85,chat2:.4,chat3:.55,chat4:.5,chat5:.42};
-  let CHAT_SOM='chat1';
+  const VOL={toque:.22,ficha1:.9,ficha2:.9,passo:.8,ganza:.75,triangulo:.8,agogo_agudo:.75,agogo_grave:.75,pandeiro:.8,pandeiro_curto:.8,cuica:.42,clave:.7,apito:.32,batucada:.75,tantan:.5,surdo:.6,chat:.5};
   const BUF={};let carregando=false;
   function carrega(){
     if(carregando)return;const a=ctx();if(!a)return;carregando=true;
@@ -1509,7 +1508,7 @@ const SFX=(()=>{
       som('apito',{t:.2,dur:.13,vol:.9});som('apito',{t:.4,dur:.38,vol:.9,rate:1.04});
       som('tantan',{t:.82,vol:.9});som('pandeiro',{t:.82});som('agogo_grave',{t:1.0});som('agogo_agudo',{t:1.12});som('agogo_agudo',{t:1.24});
     },
-    msg(n){som(n||CHAT_SOM)||(tone(880,0,.07,{vol:.12}),tone(1320,.06,.1,{vol:.1}))},
+    msg(){som('chat')||(tone(880,0,.07,{vol:.12}),tone(1320,.06,.1,{vol:.1}))},
     vote(){som('ficha2',{vol:.7})||(tone(520,0,.06,{type:'triangle',vol:.12}),tone(780,.05,.08,{type:'triangle',vol:.1}))},
     start(){if(!som('tantan'))return(noise(0,.45,{vol:.18,f:300,f2:2500}),arp([392,523,659,784],.07,.3,{type:'triangle',vol:.15}));som('ganza',{t:.05,vol:.7})},
     final(){som('triangulo',{vol:.9})?som('agogo_agudo',{t:.05}):arp([659,784,988,1319],.06,.25,{vol:.14})},
