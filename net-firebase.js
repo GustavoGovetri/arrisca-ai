@@ -65,7 +65,7 @@ async function carregaLogin(fbApp){
       async sair(){await a.signOut(auth)},
       async apagar(){if(auth.currentUser)await auth.currentUser.delete()}
     };
-  }catch(e){console.warn('Login indisponível:',e)}
+  }catch(e){console.warn('Login indisponível:',e);window.AUTH_ERRO=String((e&&(e.code||e.message))||e).slice(0,160)}
   window.AUTH_DONE=true;
   window.dispatchEvent(new Event('auth-ready'));
 }

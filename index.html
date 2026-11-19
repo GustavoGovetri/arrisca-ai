@@ -1885,7 +1885,7 @@ function localAuth(){
 function contaInicia(){
   if(AUTH)return;
   AUTH=URLP.get('net')==='local'?localAuth():(window.AUTH_IMPL||null);
-  if(!AUTH){CONTA.pronto=!!window.AUTH_DONE;contaPinta();return}
+  if(!AUTH){CONTA.pronto=!!window.AUTH_DONE;contaPinta();if(window.AUTH_ERRO)fetch('/api/bugs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({tipo:'travou',texto:'Login não carregou: '+window.AUTH_ERRO,nome:myName()||'',info:bugInfo()})}).catch(()=>{});return}
   AUTH.onChange(async u=>{
     const antes=CONTA.user&&CONTA.user.uid;
     CONTA.user=u;CONTA.admin=false;if(!u||u.uid!==antes)CONTA.perfil=null;
@@ -1917,19 +1917,19 @@ function contaSalvaDepois(){ // mudou nome ou cor na tela inicial: guarda na con
   },1200);
 }
 function contaLinhaHtml(){
-  if(!AUTH||!CONTA.pronto)return '';
   if(CONTA.user)return `<div class="contalinha"><span class="ok">✔ Conectado${CONTA.perfil?' como <b>'+esc(CONTA.perfil.nome)+'</b>':''}</span><button class="small" onclick="contaAbre()">Minha conta</button></div>`;
   return `<div class="contalinha"><button class="small" onclick="contaAbre()">👤 Entrar ou criar conta</button></div>`;
 }
 function contaPinta(){
   const b=document.getElementById('contabtn');
-  if(b){b.classList.toggle('on',!!CONTA.user);b.title=CONTA.user?'Sua conta':'Entrar ou criar conta';b.style.display=AUTH?'':'none'}
+  if(b){b.classList.toggle('on',!!CONTA.user);b.title=CONTA.user?'Sua conta':'Entrar ou criar conta'}
   const h=document.getElementById('homeconta');if(h)h.innerHTML=contaLinhaHtml();
   if(document.getElementById('contabox').style.display!=='none')contaRender();
 }
 function contaMsgs(){return (CONTA_UI.erro?`<div class="contaerro">${esc(CONTA_UI.erro)}</div>`:'')+(CONTA_UI.ok?`<div class="contaok">${esc(CONTA_UI.ok)}</div>`:'')}
 function contaHtml(){
-  if(!AUTH)return `<p class="containtro">O login não está disponível agora. Tente de novo daqui a pouco.</p>`;
+  if(!AUTH&&!CONTA.pronto)return `<p class="containtro">Carregando o login…</p>`;
+  if(!AUTH)return `<p class="containtro">O login não carregou neste navegador. Recarregue a página e tente de novo.</p>${window.AUTH_ERRO?`<div class="contaerro">Detalhe: ${esc(window.AUTH_ERRO)}</div>`:''}<button class="primary" style="width:100%;margin-top:12px" onclick="location.reload()">Recarregar a página</button>`;
   const dis=CONTA_UI.ocupado?'disabled':'';
   const u=CONTA.user;
   if(!u){
@@ -2346,7 +2346,9 @@ function localNet(){
 function netReady(){
   if(NETREADY)return;NETREADY=true;
   NET=URLP.get('net')==='local'?localNet():(window.NET_IMPL||null);
-  if(NET&&NET.onConnected)NET.onConnected(ok=>{const mudou=ok!==CONNECTED;CONNECTED=ok;if(ok&&ROOM)NET.setMe(ROOM,MYDEV,{on:true}).catch(()=>{});if(mudou&&!ok)toast('Sem conexão com a internet…');if(mudou)render()});
+  // o Firebase diz "desconectado" logo ao abrir, antes de ligar: só avisa se continuar sem conexão por uns segundos
+  let semRede=null,jaConectou=false;
+  if(NET&&NET.onConnected)NET.onConnected(ok=>{const mudou=ok!==CONNECTED;CONNECTED=ok;if(ok)jaConectou=true;if(ok&&ROOM)NET.setMe(ROOM,MYDEV,{on:true}).catch(()=>{});clearTimeout(semRede);if(!ok)semRede=setTimeout(()=>{if(!CONNECTED)toast('Sem conexão com a internet…')},jaConectou?3000:8000);if(mudou)render()});
   reenviaFila();
   render();
   tryAutoJoin();
