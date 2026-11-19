@@ -9,7 +9,9 @@ if(cfg&&cfg.databaseURL&&!sim){
     const d=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-database.js`);
     const db=d.getDatabase(app.initializeApp(cfg));
     const R=p=>d.ref(db,p);
+    let OFF=0;d.onValue(R('.info/serverTimeOffset'),x=>{OFF=Number(x.val())||0}); // diferença entre o relógio do aparelho e o do servidor
     window.NET_IMPL={
+      agora(){return Date.now()+OFF},
       async exists(code){return (await d.get(R('salas/'+code+'/meta'))).exists()},
       async create(code,meta){await d.set(R('salas/'+code+'/meta'),meta)},
       watch(code,h){

@@ -1790,6 +1790,7 @@ function abaAviso(){
   document.getElementById('avisonao').checked=false;
   box.style.display='flex';SFX.pop&&SFX.pop();
 }
+function agora(){return NET&&NET.agora?NET.agora():Date.now()} // hora do servidor: igual em todos os aparelhos
 function janelaResposta(){ // a pergunta está na tela de quem responde e ainda não respondeu
   const p=G.players&&G.players[G.cur];
   return online()&&p&&myIdx()===G.cur&&G.phase==='question'&&(G.token||p.pos===FINAL)&&!G.resp&&G.chosen===null&&!G.revealed;
@@ -1797,8 +1798,8 @@ function janelaResposta(){ // a pergunta está na tela de quem responde e ainda 
 function marcaSaida(sai){
   if(!janelaResposta())return;
   const a=Object.assign({n:0,ms:0,desde:null,colou:false},G.aba||{});
-  if(sai){if(a.desde)return;a.n++;a.desde=Date.now()}
-  else{if(!a.desde)return;a.ms+=Date.now()-a.desde;a.desde=null}
+  if(sai){if(a.desde)return;a.n++;a.desde=agora()}
+  else{if(!a.desde)return;a.ms+=agora()-a.desde;a.desde=null}
   G.aba=a;render();
 }
 function marcaColou(){ // espera o texto colado entrar no campo antes de redesenhar
@@ -1806,7 +1807,7 @@ function marcaColou(){ // espera o texto colado entrar no campo antes de redesen
 }
 function abaTxt(curto){ // texto do aviso que todos veem
   const a=G.aba;if(!a||!(a.n||a.colou))return '';
-  const p=G.players[G.cur],seg=Math.round((a.ms+(a.desde?Date.now()-a.desde:0))/1000);
+  const p=G.players[G.cur],seg=Math.round((a.ms+(a.desde?agora()-a.desde:0))/1000);
   const partes=[];
   if(a.n)partes.push(a.desde?`está fora da aba agora (${a.n===1?'saiu 1 vez':'saiu '+a.n+' vezes'})`:`saiu da aba ${a.n===1?'1 vez':a.n+' vezes'} (${seg} s fora)`);
   if(a.colou)partes.push('colou um texto na resposta');
@@ -2054,6 +2055,7 @@ function localNet(){
     exists:async c=>!!rd('salas/'+c+'/meta'),
     create:async(c,m)=>wr('salas/'+c+'/meta',m),
     watch(c,h){const u=[sub('salas/'+c+'/meta',h.onMeta),sub('salas/'+c+'/jogadores',v=>h.onLobby(v||{})),sub('salas/'+c+'/estado',h.onState),sub('salas/'+c+'/votos',v=>h.onVotes&&h.onVotes(v||{})),sub('salas/'+c+'/chat',v=>h.onChat&&h.onChat(v||[]))];return ()=>u.forEach(f=>f())},
+    agora:()=>Math.round(performance.timeOrigin+performance.now()), // simula a hora do servidor
     vote:async(c,d,o)=>{const k='salas/'+c+'/votos';const all=rd(k)||{};all[d]=o;wr(k,all)},
     chat:async(c,m)=>{const k='salas/'+c+'/chat';const a=rd(k)||[];const ts=Math.round(performance.timeOrigin+performance.now()); /* simula a hora do servidor */a.push(Object.assign({id:ts.toString(36)+Math.random().toString(36).slice(2,6)},m,{ts}));wr(k,a.slice(-60))},
     setMe:async(c,d,o)=>{const k='salas/'+c+'/jogadores';const all=rd(k)||{};all[d]=Object.assign(all[d]||{},o);wr(k,all)},
@@ -2080,7 +2082,7 @@ const DUR_RESP=30; // sala online: tempo para responder, contado desde que a per
 function iniciaTempo(){ // começa sozinho quando a pergunta aparece (depois da aposta, ou direto na pergunta final)
   if(!online()||G.phase!=='question'||G.tEnd||G.resp||G.chosen!==null||G.revealed)return;
   const p=G.players&&G.players[G.cur];if(!p)return;
-  if(G.token||p.pos===FINAL)G.tEnd=Date.now()+DUR_RESP*1000;
+  if(G.token||p.pos===FINAL)G.tEnd=agora()+DUR_RESP*1000;
 }
 function apostar(v){G.token=v;iniciaTempo();render()}
 let VOTES={},RASCUNHO='';
@@ -2103,7 +2105,7 @@ function pedirDesfazer(){
   if(!UNDO.length||G.desfazer)return;
   if(!votantesDesfazer(MYDEV).length){undo();return} // sozinho na sala: desfaz direto
   const me=G.players&&G.players[myIdx()];
-  G.desfazer={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),dev:MYDEV,nome:(me&&me.name)||myName()||'Alguém',label:UNDO[UNDO.length-1].label||'última jogada',ate:Date.now()+DUR_DESFAZER*1000};
+  G.desfazer={id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),dev:MYDEV,nome:(me&&me.name)||myName()||'Alguém',label:UNDO[UNDO.length-1].label||'última jogada',ate:agora()+DUR_DESFAZER*1000};
   SFX.whoosh&&SFX.whoosh();render();
 }
 function votoDesfazer(v){
@@ -2121,17 +2123,17 @@ function contaDesfazer(){
 }
 function confereDesfazer(){ // quem pediu (que tem a jogada guardada) aplica ou cancela; quem criou a sala limpa pedido esquecido
   const dz=G.desfazer;if(!dz||!online())return;
-  const c=contaDesfazer(),agora=Date.now();
+  const c=contaDesfazer(),ag=agora();
   if(dz.dev===MYDEV){
     if(c.sim>c.n/2){G.desfazer=null;toast('↩ A turma aprovou: jogada desfeita.');undo();return}
-    if(c.nao>=c.n/2||agora>dz.ate){G.desfazer=null;toast(c.nao>=c.n/2?'A turma não aprovou desfazer a jogada.':'O tempo para votar acabou: a jogada continua valendo.');render();return}
-  }else if(amHost()&&(agora>dz.ate+8000||!LOBBY[dz.dev]||LOBBY[dz.dev].on===false)){G.desfazer=null;render()}
+    if(c.nao>=c.n/2||ag>dz.ate){G.desfazer=null;toast(c.nao>=c.n/2?'A turma não aprovou desfazer a jogada.':'O tempo para votar acabou: a jogada continua valendo.');render();return}
+  }else if(amHost()&&(ag>dz.ate+8000||!LOBBY[dz.dev]||LOBBY[dz.dev].on===false)){G.desfazer=null;render()}
 }
-setInterval(()=>{if(G.desfazer)confereDesfazer();const el=document.getElementById('dztempo');if(el&&G.desfazer)el.textContent=Math.max(0,Math.ceil((G.desfazer.ate-Date.now())/1000))+' s'},1000);
+setInterval(()=>{if(G.desfazer)confereDesfazer();const el=document.getElementById('dztempo');if(el&&G.desfazer)el.textContent=Math.max(0,Math.ceil((G.desfazer.ate-agora())/1000))+' s'},1000);
 function desfazerHtml(){
   const dz=G.desfazer;if(!dz||!online())return '';
   const c=contaDesfazer(),meu=VOTES[MYDEV+'_u'],mv=meu&&meu.k==='u:'+dz.id?meu.v:null;
-  let h=`<div class="dzbox"><div class="dztit">↩ <b>${esc(dz.nome)}</b> quer desfazer: <b>${esc(dz.label)}</b> <span class="muted" id="dztempo">${Math.max(0,Math.ceil((dz.ate-Date.now())/1000))} s</span></div>`;
+  let h=`<div class="dzbox"><div class="dztit">↩ <b>${esc(dz.nome)}</b> quer desfazer: <b>${esc(dz.label)}</b> <span class="muted" id="dztempo">${Math.max(0,Math.ceil((dz.ate-agora())/1000))} s</span></div>`;
   if(dz.dev===MYDEV)h+=`<p class="muted">Esperando a turma votar… precisa da maioria.</p><div class="row"><button class="small" onclick="G.desfazer=null;render()">Cancelar pedido</button></div>`;
   else if(myIdx()>=0)h+=`<div class="row votos"><button class="ok${mv===true?' on':''}" onclick="votoDesfazer(true)">✔ Pode desfazer</button><button class="bad${mv===false?' on':''}" onclick="votoDesfazer(false)">✘ Deixa como está</button></div>`;
   h+=`<p class="muted">Votos: ✔ ${c.sim} · ✘ ${c.nao} de ${c.n}${c.falta.length?' · falta: '+c.falta.map(p=>esc(p.name)).join(', '):''}</p></div>`;
@@ -2203,11 +2205,11 @@ function respHtml(){
 }
 // ----- timer da sala (o mesmo para todos) -----
 let TICK=null,TLAST=null;
-function restante(){return G.tEnd?Math.max(0,Math.ceil((G.tEnd-Date.now())/1000)):null}
+function restante(){return G.tEnd?Math.max(0,Math.min(DUR_RESP,Math.ceil((G.tEnd-agora())/1000))):null}
 function timerAtivo(){return online()&&G.phase==='question'&&G.tEnd&&!G.resp&&G.chosen===null}
 function timerOnlineHtml(){
   if(G.resp||G.chosen!==null||!G.tEnd)return '';
-  const r=restante(),pct=Math.max(0,Math.min(100,(G.tEnd-Date.now())/(DUR_RESP*10)));
+  const r=restante(),pct=Math.max(0,Math.min(100,(G.tEnd-agora())/(DUR_RESP*10)));
   return `<div class="timerbox tempo"><div id="timer" class="timer${r===0?' done':r<=5?' low':''}">${r||'⏰ 0'}</div><div class="tempoinfo"><span class="muted" id="timertxt">${r?(can('cur')?'segundos para você responder':'segundos para responder'):'Tempo esgotado!'}</span><div class="tempobar"><i id="tempobarra" class="${r<=5?'low':r<=10?'meio':''}" style="width:${pct}%"></i></div></div></div>`;
 }
 function onlineTimer(){
@@ -2219,7 +2221,7 @@ function pintaTimer(){
   if(!timerAtivo()){if(TICK){clearInterval(TICK);TICK=null}return}
   const r=restante(),el=document.getElementById('timer');
   if(el){el.textContent=r||'⏰ 0';el.className='timer'+(r===0?' done':r<=5?' low':'')}
-  const bar=document.getElementById('tempobarra');if(bar){bar.style.width=Math.max(0,Math.min(100,(G.tEnd-Date.now())/(DUR_RESP*10)))+'%';bar.className=r<=5?'low':r<=10?'meio':''}
+  const bar=document.getElementById('tempobarra');if(bar){bar.style.width=Math.max(0,Math.min(100,(G.tEnd-agora())/(DUR_RESP*10)))+'%';bar.className=r<=5?'low':r<=10?'meio':''}
   if(r===0){const tx=document.getElementById('timertxt');if(tx)tx.textContent='Tempo esgotado!'}
   if(r===TLAST)return;
   const primeiro=TLAST===null;TLAST=r;
