@@ -561,6 +561,21 @@ input.chama{animation:chama .9s}
 .tempobar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#5ee88c,#22b558);transition:width .2s linear,background .3s}
 .tempobar i.meio{background:linear-gradient(90deg,#ffe36e,#ffc21a)}
 .tempobar i.low{background:linear-gradient(90deg,#ff8085,#e8404a)}
+
+/* aviso de saída da aba */
+.avisofundo{position:fixed;inset:0;z-index:40;background:rgba(20,0,8,.62);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .2s ease-out}
+@keyframes fadeIn{from{opacity:0}}
+.avisocard{width:min(420px,100%);text-align:center;padding:22px 20px 18px;border-radius:24px;border:3px solid var(--k);
+  background:linear-gradient(180deg,var(--painel1),var(--painel2));box-shadow:inset 0 0 0 3px #ffcf4a,inset 0 0 0 6px rgba(42,4,16,.55),0 6px 0 var(--k),0 20px 50px rgba(0,0,0,.6);
+  animation:cardIn .45s cubic-bezier(.2,.9,.3,1.35) both}
+.avisoico{font-size:52px;line-height:1;animation:boia 2.4s ease-in-out infinite}
+.avisocard h3{margin:8px 0 8px;font-family:'Lilita One',sans-serif;font-weight:400;font-size:26px;color:var(--amarelo);text-shadow:var(--txt-contorno)}
+.avisocard p{margin:0 0 10px;font-size:16px;line-height:1.45}
+.avisodica{font-size:13.5px}
+.avisonao{display:flex;gap:8px;align-items:flex-start;text-align:left;font-size:14px;margin:12px 0 14px;cursor:pointer;line-height:1.35}
+.avisonao input{width:auto;margin-top:2px;flex:none;accent-color:#ffc21a;transform:scale(1.2)}
+.avisonao small{display:block;font-size:12.5px;margin-top:2px}
+.avisocard button{width:100%;font-size:18px;padding:12px}
 </style>
 </head>
 <body>
@@ -590,6 +605,7 @@ input.chama{animation:chama .9s}
         <li><b>Sala online:</b> quem cria a sala manda o link ou o código; cada um entra pelo próprio celular com nome e cor. Quem criou escolhe temas, tabuleiro e fichas e começa a partida. Na sua vez, você aposta e <b>digita a resposta</b>. Os outros veem o que você escreveu e a resposta oficial e votam se vale: ganha a maioria; no empate, decide o próximo da roda. Se você escrever igual à resposta oficial, vale direto. O timer da sala dura 20 segundos (10 na múltipla escolha) e aparece para todos; quando acaba, o que estiver escrito é enviado. Tem também um chat (💬) para conversar.</li>
         <li><b>Salas abertas:</b> quem cria a sala pode deixá-la <b>aberta a todos</b>. Aí ela aparece em <b>Salas</b> para qualquer pessoa entrar enquanto a partida não começa. O botão <b>Jogar</b> entra na sala aberta com mais gente; se não houver nenhuma, abre uma nova.</li>
         <li><b>Modos de jogo:</b> 🎲 Tradicional (sem bônus); ⭐ Bônus (difícil +1 casa, impossível +2, errar impossível não tira a ficha, ⭐ por impossível acertada); 🔥 Arriscado (Bônus + arriscar o dobro na difícil e na impossível); 😈 Sem dó (Arriscado + acertar impossível devolve uma ajuda e dá uma rasteira em alguém).</li>
+        <li>Na sala online, se você for para outra aba durante a partida, aparece um aviso na volta (dá para desligar até fechar o site) e o título da aba pisca quando é a sua vez ou o seu voto.</li>
         <li>Achou um problema no site (travou, tela estranha, sala online)? Use o botão <b>🐞</b> no alto da tela para avisar.</li>
         <li>Achou uma pergunta errada ou confusa? Use <b>Reportar pergunta</b> depois da resposta: ela fica guardada para correção.</li>
       </ul></details>
@@ -600,6 +616,11 @@ input.chama{animation:chama .9s}
 <div id="toast"></div>
 <div id="chatprev" class="chatprev" style="display:none" onclick="chatAbre()"></div>
 <div id="salasbox" class="chatbox histbox salasbox" style="display:none"><div class="chathead"><b>🌍 Salas abertas</b><div class="row"><button class="small" onclick="carregaSalas()">↻ Atualizar</button><button class="small" onclick="fechaSalas()">✕</button></div></div><div id="salascorpo" class="histcorpo"></div><div class="salaspe"><button class="primary" onclick="fechaSalas();createRoom(true)">＋ Criar sala aberta</button></div></div>
+<div id="avisoaba" class="avisofundo" style="display:none" onclick="if(event.target===this)abaFecha()"><div class="avisocard" role="dialog" aria-modal="true" aria-labelledby="avisotit">
+  <div class="avisoico">👀</div><h3 id="avisotit">Ei, você saiu da aba!</h3><p id="avisotxt"></p>
+  <p class="muted avisodica">Dica: deixe o Arrisca Aí aberto na tela durante a partida.</p>
+  <label class="avisonao"><input type="checkbox" id="avisonao"><span>Não mostrar de novo<small class="muted">Volta a aparecer quando você abrir o site de novo.</small></span></label>
+  <button class="primary" onclick="abaFecha()">Entendi</button></div></div>
 <div id="bugbox" class="chatbox histbox bugbox" style="display:none"><div class="chathead"><b>🐞 Reportar um problema</b><button class="small" onclick="bugFecha()">✕</button></div><div id="bugcorpo" class="histcorpo"></div></div>
 <div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
 <div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b>💬 Chat da sala</b><button class="small" onclick="chatFecha()">✕</button></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
@@ -1018,7 +1039,7 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){document.body.classList.toggle('inicio',!MODE);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia()}else saveGame()}
+function render(){document.body.classList.toggle('inicio',!MODE);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame()}
 
 function renderPanel(){
   const el=document.getElementById('panel');
@@ -1662,6 +1683,40 @@ async function bugEnvia(){
     BUG={tipo:'',texto:'',tecnico:true,enviando:false};bugFecha();toast('Valeu! O problema foi enviado. 🐞');
   }catch(e){BUG.enviando=false;bugRender();toast('Não consegui enviar: '+e.message)}
 }
+// ----- saiu da aba durante a partida online: avisa na volta (e chama atenção no título se for a vez dela) -----
+const ABA_KEY='arrisca-aviso-aba'; // sessionStorage: some ao fechar o site, então o aviso volta no próximo acesso
+let ABA_SAIU=null,ABA_PISCA=null;
+const TITULO=document.title;
+function abaDispensada(){try{return sessionStorage.getItem(ABA_KEY)==='1'}catch(e){return false}}
+function minhaVez(){return online()&&G.players&&myIdx()===G.cur&&['theme','question','sorteio'].includes(G.phase)&&!G.resp&&G.chosen===null}
+function meuVoto(){const k=respKey();return online()&&G.phase==='question'&&k&&myIdx()!==G.cur&&myIdx()>=0&&!(VOTES[MYDEV]&&VOTES[MYDEV].k===k)}
+function emPartida(){return online()&&G.players&&G.phase!=='setup'&&G.phase!=='won'}
+function abaAviso(){
+  const box=document.getElementById('avisoaba');if(!box)return;
+  const vez=minhaVez(),voto=meuVoto();
+  document.getElementById('avisotxt').innerHTML=vez
+    ?'<b>É a sua vez!</b> Quando você vai para outra aba, o tempo para responder continua correndo e, se acabar, conta como erro.'
+    :voto?'<b>Tem uma resposta esperando o seu voto.</b> Quando você vai para outra aba, a partida segue e a votação pode fechar sem você.'
+    :'Quando você vai para outra aba, a partida continua: pode chegar a sua vez, o tempo de resposta corre e as votações fecham sem você. No celular, a conexão também pode cair com o site em segundo plano.';
+  document.getElementById('avisonao').checked=false;
+  box.style.display='flex';SFX.pop&&SFX.pop();
+}
+function abaFecha(){
+  if(document.getElementById('avisonao').checked){try{sessionStorage.setItem(ABA_KEY,'1')}catch(e){}}
+  document.getElementById('avisoaba').style.display='none';
+}
+function abaTitulo(){
+  if(!document.hidden){if(ABA_PISCA){clearInterval(ABA_PISCA);ABA_PISCA=null}document.title=TITULO;return}
+  const msg=minhaVez()?'⏰ Sua vez! · Arrisca Aí':meuVoto()?'🗳️ Vote! · Arrisca Aí':'';
+  if(!msg){if(ABA_PISCA){clearInterval(ABA_PISCA);ABA_PISCA=null}document.title=TITULO;return}
+  if(!ABA_PISCA){let n=0;ABA_PISCA=setInterval(()=>{if(!document.hidden){abaTitulo();return}const m=minhaVez()?'⏰ Sua vez! · Arrisca Aí':meuVoto()?'🗳️ Vote! · Arrisca Aí':'';if(!m){abaTitulo();return}document.title=(n++%2)?TITULO:m},1000);document.title=msg}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){ABA_SAIU=emPartida()?Date.now():null;abaTitulo();return}
+  abaTitulo();
+  const saiu=ABA_SAIU;ABA_SAIU=null;
+  if(saiu&&Date.now()-saiu>1000&&emPartida()&&!abaDispensada())abaAviso();
+});
 function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
 
 // ----- sincronização da partida -----
