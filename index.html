@@ -1985,6 +1985,7 @@ function contaInicia(){
   if(AUTH)return;
   AUTH=URLP.get('net')==='local'?localAuth():(window.AUTH_IMPL||null);
   if(!AUTH){CONTA.pronto=!!window.AUTH_DONE;contaPinta();if(window.AUTH_ERRO)fetch('/api/bugs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({tipo:'travou',texto:'Login não carregou: '+window.AUTH_ERRO,nome:myName()||'',info:bugInfo()})}).catch(()=>{});return}
+  if(AUTH.resultadoRedirect)AUTH.resultadoRedirect().then(e=>{if(e&&e.code&&!/cancel|closed/.test(e.code)){CONTA_UI.erro=contaErroTxt(e);contaAbre()}}); // voltou da página do Google
   AUTH.onChange(async u=>{
     const antes=CONTA.user&&CONTA.user.uid;
     CONTA.user=u;CONTA.admin=false;if(!u||u.uid!==antes){CONTA.perfil=null;CONTA.dados=null;CONTA.resumo=null;CONTA_HIST.ok=false}

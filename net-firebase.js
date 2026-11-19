@@ -54,7 +54,16 @@ async function carregaLogin(fbApp){
       provedor:((u.providerData||[]).find(x=>x&&x.providerId==='google.com')?'google.com':'password')}:null;
     window.AUTH_IMPL={
       onChange(cb){return a.onAuthStateChanged(auth,u=>cb(quem(u)))},
-      async google(){const p=new a.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});await a.signInWithPopup(auth,p)},
+      async google(){
+        const p=new a.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
+        // no celular, ir para a página do Google e voltar funciona melhor que pop-up (só no endereço oficial, onde o login é do próprio site)
+        const proprio=fbApp.options.authDomain===location.hostname;
+        const celular=/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+        if(proprio&&celular){await a.signInWithRedirect(auth,p);return}
+        try{await a.signInWithPopup(auth,p)}
+        catch(e){if(proprio&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')){await a.signInWithRedirect(auth,p);return}throw e}
+      },
+      async resultadoRedirect(){try{await a.getRedirectResult(auth);return null}catch(e){return e}},
       async entrar(email,senha){await a.signInWithEmailAndPassword(auth,email,senha)},
       async criar(email,senha,nome){
         const c=await a.createUserWithEmailAndPassword(auth,email,senha);
