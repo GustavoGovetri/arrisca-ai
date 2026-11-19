@@ -22,6 +22,8 @@ Na sala online:
 
 O jogo tem animações e sons de batucada (cuíca, agogô, pandeiro, apito; créditos em `sons/CREDITOS.md`). O botão 🔊 liga e desliga o som, e abrindo o site com `?sons` aparece um painel para ouvir todos.
 
+A tela inicial tem o botão **Jogar** (entra numa sala aberta), **Criar sala**, **Salas** (lista das salas abertas a todos) e o jogo num aparelho só. A lista é mantida pela função `api/salas.js`, que confere cada sala no Firebase antes de mostrar.
+
 As fontes são a Fredoka e a Lilita One, ambas com licença SIL Open Font License (os arquivos e as licenças ficam em `fonts/`).
 
 Se alguém fechar o navegador, é só abrir o link de novo que volta para a mesma partida.

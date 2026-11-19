@@ -8,7 +8,6 @@
 //   POST /api/perguntas?acao=dica       dica (primeira letra e tamanho, ou uma alternativa errada)
 const crypto = require('crypto');
 
-const DB = process.env.FIREBASE_DB_URL || 'https://arrisca-ai-default-rtdb.firebaseio.com';
 const ORDER = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V'];
 const LEVELS = { 1: 'fácil', 2: 'médio', 3: 'difícil', 4: 'impossível' };
 // Partida com os 6 temas clássicos: as perguntas dos outros 5 temas entram neles, por assunto.
@@ -23,41 +22,9 @@ const ROTA = {
 const destino = (t, b) => (ROTA[t] && ROTA[t][b]) || ROTA_PADRAO[t];
 const TEMA_N = { M: 'Mundo', H: 'História', AL: 'Artes e Literatura', MU: 'Música', CS: 'Cinema e Séries', S: 'Sociedade', CT: 'Ciência', TI: 'Tecnologia e Internet', ES: 'Esporte', GG: 'Games e Geek', V: 'Variedades' };
 
-// ---------------------------------------------------------------- credencial e token do Google
+const { cred, dbGet } = require('./_fb');
 const b64u = b => Buffer.from(b).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
-let CRED = null, TOKEN = null, TOKEN_EXP = 0;
-function cred() {
-  if (!CRED) {
-    const s = process.env.FIREBASE_SERVICE_ACCOUNT;
-    if (!s) throw Object.assign(new Error('Falta configurar FIREBASE_SERVICE_ACCOUNT na Vercel.'), { status: 503 });
-    CRED = JSON.parse(s);
-  }
-  return CRED;
-}
-async function token() {
-  if (TOKEN && Date.now() < TOKEN_EXP - 120000) return TOKEN;
-  const c = cred(), now = Math.floor(Date.now() / 1000);
-  const head = b64u(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
-  const body = b64u(JSON.stringify({
-    iss: c.client_email, aud: 'https://oauth2.googleapis.com/token', iat: now, exp: now + 3600,
-    scope: 'https://www.googleapis.com/auth/firebase.database https://www.googleapis.com/auth/userinfo.email'
-  }));
-  const sig = crypto.createSign('RSA-SHA256').update(head + '.' + body).sign(c.private_key);
-  const r = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
-    body: 'grant_type=' + encodeURIComponent('urn:ietf:params:oauth:grant-type:jwt-bearer') + '&assertion=' + head + '.' + body + '.' + b64u(sig)
-  });
-  const j = await r.json();
-  if (!j.access_token) throw new Error('Não consegui autenticar no Firebase.');
-  TOKEN = j.access_token; TOKEN_EXP = Date.now() + (j.expires_in || 3600) * 1000;
-  return TOKEN;
-}
-async function dbGet(path, admin = true) {
-  const url = DB + '/' + path + '.json' + (admin ? '?access_token=' + encodeURIComponent(await token()) : '');
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('Firebase respondeu ' + r.status);
-  return r.json();
-}
+
 function chaveTk() { // chave para assinar os tokens de pergunta (derivada da credencial)
   if (process.env.ARRISCA_DEV_KEY) return process.env.ARRISCA_DEV_KEY;
   return crypto.createHash('sha256').update(cred().private_key + '|arrisca-tk').digest('hex');

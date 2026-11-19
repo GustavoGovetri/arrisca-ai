@@ -465,6 +465,84 @@ html[data-luz="1"] .letreiro{border-color:#ffb300}
 .ring svg.track,.letreiro{will-change:transform}
 .center .sub{margin-top:2.2cqw}
 .homesub{margin-top:12px}
+
+/* ---------- tela inicial ---------- */
+body.inicio .wrap{grid-template-columns:minmax(0,1fr);max-width:980px}
+body.inicio .wrap>.ringwrap{display:none}
+body.inicio .homelogo{display:block;margin:4px 0 22px}
+body.inicio #panel{padding:22px}
+.homegrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+@media(max-width:760px){.homegrid{grid-template-columns:minmax(0,1fr)}}
+.hbox{min-width:0}
+.como,.trilho{min-width:0}
+.hbox{background:rgba(42,4,16,.45);border:3px solid var(--k);border-radius:20px;padding:16px;box-shadow:inset 0 3px 0 rgba(0,0,0,.25)}
+.hbox h3{margin:0 0 14px;text-align:center;font-family:'Lilita One',sans-serif;font-weight:400;font-size:24px;letter-spacing:.6px;text-transform:uppercase;color:var(--amarelo);text-shadow:var(--txt-contorno)}
+.perfil{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.perfil input{flex:1;min-width:0;font-size:18px;padding:12px 14px}
+input.chama{animation:chama .9s}
+@keyframes chama{20%,60%{transform:translateX(-6px);outline:3px solid #ff5d5d}40%,80%{transform:translateX(6px)}}
+.avatar{position:relative;display:inline-block;flex:none;width:30px;height:30px;padding:0;border-radius:50%;
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.55),rgba(255,255,255,0) 40%),var(--c);border:3px solid #fff;box-shadow:0 0 0 3px var(--k),0 4px 0 3px var(--k)}
+.avatar::before{content:'';position:absolute;left:16%;right:16%;top:26%;height:34%;
+  background:radial-gradient(circle at 28% 55%,var(--k) 0 16%,#fff 17% 34%,transparent 35%),radial-gradient(circle at 72% 55%,var(--k) 0 16%,#fff 17% 34%,transparent 35%);animation:pisca2 4.5s infinite}
+.avatar::after{content:'';position:absolute;left:36%;right:36%;top:66%;height:12%;border-radius:0 0 50% 50%/0 0 100% 100%;background:var(--k);opacity:.75}
+.avatar.grande{width:76px;height:76px;border-width:4px;cursor:pointer;animation:boia 3s ease-in-out infinite}
+.avatar.grande:hover:not(:disabled){background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.55),rgba(255,255,255,0) 40%),var(--c);transform:translateY(-2px) rotate(-6deg)}
+.avatar.grande i{position:absolute;right:-6px;bottom:-4px;width:26px;height:26px;border-radius:50%;background:#fff7f0;color:var(--k);border:3px solid var(--k);font-style:normal;font-size:13px;line-height:20px;text-align:center}
+.avatar.mini{width:26px;height:26px;border-width:2.5px;box-shadow:0 0 0 2.5px var(--k)}
+@keyframes boia{50%{transform:translateY(-4px)}}
+.homepal{margin:0 0 12px}
+.hbtns{display:grid;gap:10px;margin-bottom:12px}
+.pilula{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:8px 14px 8px 8px;border-radius:40px;background:linear-gradient(180deg,#c92550,#9e1236)}
+.pilula:hover:not(:disabled){background:linear-gradient(180deg,#d83560,#ad1940)}
+.pilula .ico{flex:none;width:42px;height:42px;border-radius:50%;background:rgba(42,4,16,.55);border:3px solid var(--k);display:flex;align-items:center;justify-content:center}
+.pilula .ico svg{width:24px;height:24px;fill:#fff;stroke:#fff}
+.pilula b{display:block;font-family:'Lilita One',sans-serif;font-weight:400;font-size:21px;letter-spacing:.5px;text-transform:uppercase;line-height:1.05}
+.pilula small{display:block;font-size:13px;font-weight:500;opacity:.9}
+.pilula.amarela{background:linear-gradient(180deg,#ffe36e,#ffc21a);color:#2a1600}
+.pilula.amarela:hover:not(:disabled){background:linear-gradient(180deg,#ffeb8f,#ffcd38)}
+.pilula.amarela .ico{background:#2a1600}.pilula.amarela .ico svg{fill:#ffd23f;stroke:#ffd23f}
+.pilula.laranja{background:linear-gradient(180deg,#ffa24d,#f2720c);color:#2a1000}
+.pilula.laranja:hover:not(:disabled){background:linear-gradient(180deg,#ffb36a,#ff8020)}
+.pilula.laranja .ico{background:#2a1000}.pilula.laranja .ico svg{fill:#ffa24d;stroke:#ffa24d}
+.pilula.roxa{background:linear-gradient(180deg,#8b5cf6,#6d3fd8)}
+.pilula.roxa:hover:not(:disabled){background:linear-gradient(180deg,#9b70ff,#7a4ae6)}
+.hbtns .pilula{animation:btnIn .5s cubic-bezier(.2,.9,.3,1.4) both}
+.hbtns .pilula:nth-child(2){animation-delay:.07s}.hbtns .pilula:nth-child(3){animation-delay:.14s}.hbtns .pilula:nth-child(4){animation-delay:.21s}
+.pilula.amarela{position:relative;overflow:hidden}
+.pilula.amarela::after{content:'';position:absolute;top:-10%;bottom:-10%;width:30%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.65),transparent);transform:skewX(-20deg);animation:brilhoBtn 3.4s ease-in-out infinite;pointer-events:none}
+/* como jogar: passos para o lado */
+.como{overflow:hidden;border-radius:16px;background:rgba(0,0,0,.18);border:3px solid var(--k);touch-action:pan-y;user-select:none;-webkit-user-select:none}
+.trilho{display:flex;transition:transform .45s cubic-bezier(.3,.8,.3,1.1)}
+.slide{flex:0 0 100%;padding:18px 18px 16px;text-align:center;min-height:228px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px}
+.slide b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:22px;letter-spacing:.4px;color:#fff;text-shadow:0 2px 0 var(--k)}
+.slide p{margin:0;font-size:15.5px;line-height:1.4;color:#ffe9ee;max-width:330px}
+.comoico{width:84px;height:84px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:42px;background:radial-gradient(circle at 35% 30%,#c92550,#5c0a22);border:3px solid var(--k);box-shadow:0 0 0 4px #ffcf4a,0 5px 0 4px var(--k);margin-bottom:8px}
+.mini-fichas{display:flex;gap:10px;height:84px;align-items:center;margin-bottom:8px}
+.tok.mini{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;border-radius:50%}
+.comonav{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px}
+.comonav .seta{width:38px;height:38px;padding:0;border-radius:50%;font-size:24px;line-height:1;font-weight:700}
+.pontos{display:flex;gap:7px}
+.ponto{width:13px;height:13px;padding:0;border-radius:50%;border:2.5px solid var(--k);background:rgba(255,255,255,.35);box-shadow:none}
+.ponto.on{background:var(--amarelo);transform:scale(1.25)}
+.ponto:hover:not(:disabled){background:#fff;transform:scale(1.15)}
+/* lista de salas */
+.salasbox{display:none;flex-direction:column}
+.salasbox .chathead .row{gap:6px}
+.salarow{display:flex;align-items:center;gap:10px;padding:10px;margin-bottom:8px;border-radius:14px;background:var(--ladrilho);border:3px solid var(--k);box-shadow:0 3px 0 var(--k);animation:pin .3s ease-out both}
+.salainfo{flex:1;min-width:0}
+.salainfo b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.salainfo .muted{font-size:12.5px}
+.salan{font-family:'Lilita One',sans-serif;font-size:15px;color:var(--suave);white-space:nowrap}
+.salan b{font-weight:400;font-size:20px;color:#fff}
+.salavazia{text-align:center;padding:24px 10px}
+.salavazia b{display:block;font-size:17px;margin:6px 0}
+.salaicone{font-size:46px}
+.salaspe{padding:10px 12px;border-top:2px solid rgba(42,4,16,.5)}
+.salaspe button{width:100%}
+.visib{display:flex;gap:6px;margin:6px 0 2px}
+.visib button{flex:1;padding:9px 8px;font-size:14px;opacity:.65}
+.visib button.on{opacity:1;background:linear-gradient(180deg,#ffe36e,#ffc21a);color:#2a1600}
 </style>
 </head>
 <body>
@@ -492,6 +570,7 @@ html[data-luz="1"] .letreiro{border-color:#ffb300}
         <li>Depois que a pergunta aparece, dá para ligar o timer de 10 segundos. Quando o tempo acaba, a pergunta termina: nas de múltipla escolha conta como erro; nas outras, a resposta aparece e quem lê decide se deu tempo.</li>
         <li>Ajudas: cada jogador pode usar, uma vez por partida, o <b>Pular</b> (troca a pergunta por outra do mesmo tema) e a <b>Dica</b> (mostra a primeira letra e o tamanho da resposta; na múltipla escolha, elimina uma alternativa errada).</li>
         <li><b>Sala online:</b> quem cria a sala manda o link ou o código; cada um entra pelo próprio celular com nome e cor. Quem criou escolhe temas, tabuleiro e fichas e começa a partida. Na sua vez, você aposta e <b>digita a resposta</b>. Os outros veem o que você escreveu e a resposta oficial e votam se vale: ganha a maioria; no empate, decide o próximo da roda. Se você escrever igual à resposta oficial, vale direto. O timer da sala dura 20 segundos (10 na múltipla escolha) e aparece para todos; quando acaba, o que estiver escrito é enviado. Tem também um chat (💬) para conversar.</li>
+        <li><b>Salas abertas:</b> quem cria a sala pode deixá-la <b>aberta a todos</b>. Aí ela aparece em <b>Salas</b> para qualquer pessoa entrar enquanto a partida não começa. O botão <b>Jogar</b> entra na sala aberta com mais gente; se não houver nenhuma, abre uma nova.</li>
         <li><b>Modos de jogo:</b> 🎲 Tradicional (sem bônus); ⭐ Bônus (difícil +1 casa, impossível +2, errar impossível não tira a ficha, ⭐ por impossível acertada); 🔥 Arriscado (Bônus + arriscar o dobro na difícil e na impossível); 😈 Sem dó (Arriscado + acertar impossível devolve uma ajuda e dá uma rasteira em alguém).</li>
         <li>Achou uma pergunta errada ou confusa? Use <b>Reportar pergunta</b> depois da resposta: ela fica guardada para correção.</li>
       </ul></details>
@@ -501,6 +580,7 @@ html[data-luz="1"] .letreiro{border-color:#ffb300}
 </div>
 <div id="toast"></div>
 <div id="chatprev" class="chatprev" style="display:none" onclick="chatAbre()"></div>
+<div id="salasbox" class="chatbox histbox salasbox" style="display:none"><div class="chathead"><b>🌍 Salas abertas</b><div class="row"><button class="small" onclick="carregaSalas()">↻ Atualizar</button><button class="small" onclick="fechaSalas()">✕</button></div></div><div id="salascorpo" class="histcorpo"></div><div class="salaspe"><button class="primary" onclick="fechaSalas();createRoom(true)">＋ Criar sala aberta</button></div></div>
 <div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
 <div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b>💬 Chat da sala</b><button class="small" onclick="chatFecha()">✕</button></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
 <script>
@@ -667,6 +747,12 @@ async function api(acao,body){
   if(!r.ok)throw new Error((j&&j.erro)||('Erro '+r.status));
   return j;
 }
+async function apiSalas(acao,body){
+  const r=await fetch('/api/salas?acao='+acao,body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{cache:'no-store'});
+  let j=null;try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error((j&&j.erro)||('Erro '+r.status));
+  return j;
+}
 const ANS={};let BUSCA={};
 // textos das perguntas que já saíram neste aparelho (para o histórico 📜)
 const VIS_KEY='arrisca-vistas-v1';let VISTAS={};
@@ -796,7 +882,7 @@ function renderHist(){
   </details>`;
 }
 
-let G={phase:'setup',count:4,fichas:5,names:['Jogador 1','Jogador 2','Jogador 3','Jogador 4','Jogador 5','Jogador 6','Jogador 7','Jogador 8','Jogador 9','Jogador 10'],colors:[...PCOLORS],selThemes:[...ORDER],size:'normal',level:'misto',seen:[],modo:'bonus'};
+let G={phase:'setup',count:4,fichas:5,names:['Jogador 1','Jogador 2','Jogador 3','Jogador 4','Jogador 5','Jogador 6','Jogador 7','Jogador 8','Jogador 9','Jogador 10'],colors:[...PCOLORS],selThemes:[...ORDER],size:'normal',level:'misto',seen:[],modo:'bonus',publica:false};
 
 function spStyle(s){
   if(s.type!=='normal')return '';
@@ -909,7 +995,7 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){document.body.classList.toggle('inicio',!MODE);syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online')netPush();else saveGame()}
+function render(){document.body.classList.toggle('inicio',!MODE);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia()}else saveGame()}
 
 function renderPanel(){
   const el=document.getElementById('panel');
@@ -1360,25 +1446,81 @@ function goHome(){if(online())return leaveRoom();stopTimer();MODE=null;render()}
 function playLocal(){MODE='local';render()}
 
 // ----- tela inicial -----
-function homeHtml(){
-  const ok=!!NET;
-  return `<div class="homelogo">${LOGO_HTML}<div class="homesub">jogo de perguntas</div></div><h2>Como vocês vão jogar?</h2>
-  <button class="big primary" onclick="playLocal()">📱 Todo mundo neste aparelho<small>O celular passa de mão em mão.</small></button>
-  <button class="big" ${ok?'':'disabled'} onclick="createRoom()">🌐 Criar sala online<small>Cada um joga no próprio celular.</small></button>
-  <div class="joinrow"><input id="joincode" maxlength="6" placeholder="Código da sala" autocapitalize="characters" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')joinFromInput()"><button ${ok?'':'disabled'} onclick="joinFromInput()">Entrar</button></div>
-  ${ok?'':`<p class="muted">${NETREADY?'O modo online ainda não está disponível neste site.':'Conectando o modo online…'}</p>`}`;
+// ---------- tela inicial ----------
+const ICONES={
+  jogar:'<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg>',
+  criar:'<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-width="3.4" stroke-linecap="round" fill="none"/></svg>',
+  salas:'<svg viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9" stroke-width="3" stroke-linecap="round" fill="none"/></svg>',
+  local:'<svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2.5" fill="none" stroke-width="2.6"/><circle cx="12" cy="17.5" r="1.3"/></svg>'
+};
+const COMO=[
+  {i:'🎡',t:'Monte a roda',d:'Escolham os temas, o tamanho do tabuleiro e o modo de jogo. Cada jogador começa com fichas de 1 a 5.'},
+  {i:'fichas',t:'Aposte uma ficha',d:'Na sua vez, escolha uma ficha antes de ver a pergunta. O número dela é quanto você anda se acertar.'},
+  {i:'❓',t:'Responda',d:'A pergunta é do tema da sua casa. Online, você digita a resposta e o pessoal vota se vale.'},
+  {i:'✔️',t:'Acertou ou errou?',d:'Acertou, anda as casas da ficha. Errou, perde a ficha e responde o mesmo tema na próxima vez.'},
+  {i:'⭐',t:'Arrisque nas difíceis',d:'Nos modos com bônus, difícil e impossível valem casas a mais, estrelas e até rasteira.'},
+  {i:'🏆',t:'Chegue ao fim',d:'Na última casa, os outros escolhem o tema da pergunta final. Acertou, ganhou!'}
+];
+let COMO_I=0,COMO_T=null,COMO_TOQUE=null;
+function comoSlide(s){
+  const ico=s.i==='fichas'?`<div class="mini-fichas">${[1,2,3].map((n,k)=>`<span class="tok mini${k===2?' sel':''}" style="background:${['#3da5ff','#55e08a','#ff4d6d'][k]}">${n}</span>`).join('')}</div>`:`<div class="comoico">${s.i}</div>`;
+  return `<div class="slide">${ico}<b>${s.t}</b><p>${s.d}</p></div>`;
 }
-function joinFromInput(){const v=((document.getElementById('joincode')||{}).value||'').trim();if(v.length<4){toast('Digite o código da sala');return}enterRoom(v,false)}
+function comoHtml(){
+  return `<div class="como" onpointerdown="comoToque(event)" onpointerup="comoSolta(event)"><div class="trilho" id="comotrilho" style="transform:translateX(-${COMO_I*100}%)">${COMO.map(comoSlide).join('')}</div></div>
+  <div class="comonav"><button class="small seta" onclick="comoVai(COMO_I-1,true)" aria-label="Anterior">‹</button><div class="pontos">${COMO.map((_,k)=>`<button class="ponto${k===COMO_I?' on':''}" onclick="comoVai(${k},true)" aria-label="Passo ${k+1}"></button>`).join('')}</div><button class="small seta" onclick="comoVai(COMO_I+1,true)" aria-label="Próximo">›</button></div>`;
+}
+function comoVai(k,manual){
+  COMO_I=(k+COMO.length)%COMO.length;
+  const t=document.getElementById('comotrilho');if(t)t.style.transform=`translateX(-${COMO_I*100}%)`;
+  document.querySelectorAll('.comonav .ponto').forEach((p,j)=>p.classList.toggle('on',j===COMO_I));
+  if(manual){comoPara();COMO_T=setTimeout(()=>{COMO_T=null;comoAnda()},12000)}
+}
+function comoAnda(){if(COMO_T)return;COMO_T=setInterval(()=>{if(!document.hidden&&!MODE)comoVai(COMO_I+1)},6000)}
+function comoPara(){clearInterval(COMO_T);clearTimeout(COMO_T);COMO_T=null}
+function comoToque(e){COMO_TOQUE=e.clientX}
+function comoSolta(e){if(COMO_TOQUE==null)return;const dx=e.clientX-COMO_TOQUE;COMO_TOQUE=null;if(Math.abs(dx)>40)comoVai(COMO_I+(dx<0?1:-1),true)}
+function avatarHtml(cor,cls){return `<span class="avatar ${cls||''}" style="--c:${cor||'#ffd23f'}"></span>`}
+let HOME_COR=false;
+function homeCor(c){try{localStorage.setItem('arrisca-cor',c)}catch(e){}HOME_COR=false;render()}
+function homeHtml(){
+  const ok=!!NET,cor=myColor()||'#ffd23f';
+  return `<div class="homelogo">${LOGO_HTML}<div class="homesub">jogo de perguntas</div></div>
+  <div class="homegrid">
+    <section class="hbox">
+      <h3>Jogue agora</h3>
+      <div class="perfil">
+        <button class="avatar grande" style="--c:${cor}" title="Trocar a cor" onclick="HOME_COR=!HOME_COR;render()"><i>✎</i></button>
+        <input id="homenome" value="${esc(myName())}" maxlength="16" placeholder="Seu nome" autocomplete="nickname" oninput="setMyName(this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+      </div>
+      ${HOME_COR?`<div class="palette homepal">${PALETA.map(([c,n])=>`<button class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="homeCor('${c}')"></button>`).join('')}</div>`:''}
+      <div class="hbtns">
+        <button class="pilula amarela" ${ok?'':'disabled'} onclick="jogarRapido()"><span class="ico">${ICONES.jogar}</span><span><b>Jogar</b><small>Entra numa sala aberta</small></span></button>
+        <button class="pilula laranja" ${ok?'':'disabled'} onclick="createRoom(false)"><span class="ico">${ICONES.criar}</span><span><b>Criar sala</b><small>Chame a turma pelo link</small></span></button>
+        <button class="pilula roxa" ${ok?'':'disabled'} onclick="abreSalas()"><span class="ico">${ICONES.salas}</span><span><b>Salas</b><small>Veja as salas abertas</small></span></button>
+        <button class="pilula" onclick="playLocal()"><span class="ico">${ICONES.local}</span><span><b>Neste aparelho</b><small>O celular passa de mão em mão</small></span></button>
+      </div>
+      <div class="joinrow"><input id="joincode" maxlength="6" placeholder="Código da sala" autocapitalize="characters" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')joinFromInput()"><button ${ok?'':'disabled'} onclick="joinFromInput()">Entrar</button></div>
+      ${ok?'':`<p class="muted">${NETREADY?'O modo online não está disponível agora.':'Conectando o modo online…'}</p>`}
+    </section>
+    <section class="hbox">
+      <h3>Como jogar</h3>
+      ${comoHtml()}
+    </section>
+  </div>`;
+}
+function joinFromInput(){if(!precisaNome())return;const v=((document.getElementById('joincode')||{}).value||'').trim();if(v.length<4){toast('Digite o código da sala');return}enterRoom(v,false)}
 function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=A[rndInt(A.length)];return s}
-async function createRoom(){
+async function createRoom(publica){
   if(!NET)return;
+  if(!precisaNome())return;
   try{let code,tries=0;do{code=newCode();tries++}while(tries<8&&await NET.exists(code));
     CREATING=true;
     await NET.create(code,{host:MYDEV,criada:Date.now()});
-    await enterRoom(code,true);
+    await enterRoom(code,true,!!publica);
   }catch(e){console.error(e);CREATING=false;toast('Não consegui criar a sala. Tente de novo.')}
 }
-async function enterRoom(code,created){
+async function enterRoom(code,created,publica){
   code=String(code).toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(!NET){PENDING_ROOM=code;return}
   try{
@@ -1386,7 +1528,7 @@ async function enterRoom(code,created){
     if(UNWATCH){UNWATCH();UNWATCH=null}
     stopTimer();
     MODE='online';ROOM=code;RV=0;LASTSYNC='';UNDO=[];HOST=created?MYDEV:null;LOBBY={};LOBBY_N=0;LOBBY_VISTOS=null;HOSTALL=false;
-    G=JSON.parse(G_DEFAULT);G.ordem=created?[MYDEV]:[];
+    G=JSON.parse(G_DEFAULT);G.ordem=created?[MYDEV]:[];G.publica=!!(created&&publica);ANUNCIO.foi=false;ANUNCIO.k='';SALAS_ABERTO=false;
     try{history.replaceState(null,'','?sala='+code+(URLP.get('net')?'&net='+URLP.get('net'):''))}catch(e){}
     if(created){const j=syncJson();await NET.tx(code,0,{v:1,g:j,por:MYDEV,ts:Date.now()});RV=Math.max(RV,1);LASTSYNC=j;CREATING=false}
     VOTES={};chatZera();
@@ -1397,17 +1539,79 @@ async function enterRoom(code,created){
 }
 function leaveRoom(){
   if(UNWATCH){UNWATCH();UNWATCH=null}
-  if(NET&&ROOM&&G.phase==='setup')NET.removePlayer(ROOM,MYDEV).catch(()=>{});
+  const saiu=ROOM,anunciada=ANUNCIO.foi;
+  if(NET&&ROOM&&G.phase==='setup')NET.removePlayer(ROOM,MYDEV).then(()=>{if(anunciada)apiSalas('anunciar',{sala:saiu,dev:URLP.get('net')==='local'?{}:undefined}).catch(()=>{})}).catch(()=>{});
+  ANUNCIO.foi=false;
   stopTimer();MODE=null;ROOM=null;HOST=null;LOBBY={};RV=0;LASTSYNC='';UNDO=[];HOSTALL=false;VOTES={};chatZera();
   G=JSON.parse(G_DEFAULT);
   try{const r=JSON.parse(localStorage.getItem(GAME_KEY)||'null');if(r&&r.json)applyGame(r)}catch(e){}
   try{history.replaceState(null,'',location.pathname+(URLP.get('net')?'?net='+URLP.get('net'):''))}catch(e){}
   render();
 }
+// ----- sala aberta a todos: o aparelho de quem criou avisa o servidor, que confere a sala e põe na lista -----
+const ANUNCIO={k:'',t:0,foi:false,timer:null};
+function devSala(){ // só no simulador local (?net=local), em que o servidor não enxerga a sala
+  if(URLP.get('net')!=='local')return undefined;
+  return {meta:{host:HOST},g:{publica:!!G.publica,phase:G.phase,selThemes:G.selThemes,modo:G.modo,level:G.level},jog:LOBBY};
+}
+function anuncia(){
+  if(!online()||!amHost()||!ROOM)return;
+  if(!G.publica&&!ANUNCIO.foi)return; // nunca esteve na lista: nada a fazer
+  const on=Object.keys(LOBBY).filter(d=>LOBBY[d]&&LOBBY[d].on!==false).length;
+  const k=JSON.stringify([ROOM,!!G.publica,G.phase==='setup',on,G.modo,(G.selThemes||[]).join(),G.level,(LOBBY[MYDEV]||{}).nome,(LOBBY[MYDEV]||{}).cor]);
+  if(k===ANUNCIO.k&&Date.now()-ANUNCIO.t<60000)return;
+  ANUNCIO.k=k;ANUNCIO.t=Date.now();if(G.publica)ANUNCIO.foi=true;
+  const sala=ROOM;clearTimeout(ANUNCIO.timer);
+  ANUNCIO.timer=setTimeout(()=>{if(ROOM===sala)apiSalas('anunciar',{sala,dev:devSala()}).catch(()=>{ANUNCIO.k=''})},1200);
+}
+setInterval(anuncia,20000);
+function precisaNome(){
+  const n=myName().trim();if(n)return true;
+  toast('Escolha seu nome primeiro');
+  const el=document.getElementById('homenome');if(el){el.focus();el.classList.add('chama');setTimeout(()=>el.classList.remove('chama'),900)}
+  return false;
+}
+let SALAS=null,SALAS_ABERTO=false,SALAS_TIMER=null,SALAS_ERRO='';
+async function carregaSalas(){
+  try{const r=await apiSalas('lista');SALAS=r.salas||[];SALAS_ERRO=''}catch(e){SALAS_ERRO=e.message;if(!SALAS)SALAS=[]}
+  if(SALAS_ABERTO)renderSalas();
+  return SALAS;
+}
+function abreSalas(){
+  SALAS_ABERTO=true;SALAS=null;renderSalas();document.getElementById('salasbox').style.display='flex';SFX.whoosh&&SFX.whoosh();
+  carregaSalas();clearInterval(SALAS_TIMER);SALAS_TIMER=setInterval(()=>{if(SALAS_ABERTO&&!document.hidden)carregaSalas()},5000);
+}
+function fechaSalas(){SALAS_ABERTO=false;clearInterval(SALAS_TIMER);const b=document.getElementById('salasbox');if(b)b.style.display='none'}
+function infoSala(s){
+  const m=MODOS[s.modo]||MODOS.classico;
+  const temas=s.classico?'6 temas clássicos':s.temas===ORDER.length?'Todos os temas':s.temas+' temas';
+  const nivel={misto:'Todos os níveis','1':'Fácil','2':'Médio','3':'Difícil','4':'Impossível'}[s.nivel]||'';
+  return `${m.e} ${m.n} · ${temas} · ${nivel}`;
+}
+function renderSalas(){
+  const el=document.getElementById('salascorpo');if(!el)return;
+  let h='';
+  if(SALAS===null)h='<p class="muted salavazia"><span class="dots">Procurando salas</span></p>';
+  else if(!SALAS.length)h=`<div class="salavazia"><div class="salaicone">🎭</div><b>Nenhuma sala aberta agora.</b><p class="muted">Crie uma sala aberta e espere a turma chegar, ou chame alguém pelo link.</p><button class="primary" onclick="fechaSalas();createRoom(true)">Criar sala aberta</button></div>`;
+  else h=SALAS.map(s=>`<div class="salarow"><span class="avatar mini" style="--c:${s.cor}"></span><div class="salainfo"><b>Sala de ${esc(s.dono)}</b><div class="muted">${infoSala(s)}</div></div><div class="salan"><b>${s.n}</b>/${s.max}</div><button class="small primary" onclick="entraSala('${s.sala}')">Entrar</button></div>`).join('');
+  if(SALAS_ERRO)h+=`<p class="muted" style="margin-top:10px">Não consegui atualizar a lista agora (${esc(SALAS_ERRO)}).</p>`;
+  el.innerHTML=h;
+}
+function entraSala(code){if(!precisaNome())return;fechaSalas();enterRoom(code,false)}
+async function jogarRapido(){
+  if(!NET){toast('O modo online não está disponível agora.');return}
+  if(!precisaNome())return;
+  toast('Procurando uma sala aberta…');
+  const lista=await carregaSalas();
+  const livre=(lista||[]).filter(s=>s.n<s.max)[0];
+  if(livre){enterRoom(livre.sala,false);return}
+  await createRoom(true);
+  if(online())toast('Nenhuma sala aberta agora: abrimos uma para você. É só esperar a turma chegar!');
+}
 function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
 
 // ----- sincronização da partida -----
-const SYNC_KEYS=[...SNAP_KEYS,'exTheme','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo'];
+const SYNC_KEYS=[...SNAP_KEYS,'exTheme','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica'];
 function syncJson(){const o={};SYNC_KEYS.forEach(k=>{if(G[k]!==undefined)o[k]=G[k]});return JSON.stringify(o)}
 let PUSHING=false,PUSH_AGAIN=false,SENT=null;
 async function netPush(){
@@ -1473,6 +1677,7 @@ function lobbyHtml(){
   const me=LOBBY[MYDEV]||{};
   const usadas=ord.filter(d=>d!==MYDEV).map(d=>LOBBY[d].cor).filter(Boolean);
   let h=`<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Sala <span class="code">${ROOM}</span></h2><button class="small" onclick="leaveRoom()">Sair</button></div>
+  ${amHost()?`<div class="visib"><button class="${G.publica?'':'on'}" onclick="G.publica=false;render()">🔒 Só com código</button><button class="${G.publica?'on':''}" onclick="G.publica=true;render()">🌍 Aberta a todos</button></div><p class="muted">${G.publica?'A sala aparece em <b>Salas</b> para qualquer pessoa entrar enquanto vocês esperam. Quando a partida começa, ela sai da lista.':'Só entra quem tiver o link ou o código.'}</p>`:(G.publica?'<p class="muted">🌍 Sala aberta a todos.</p>':'')}
   <p class="muted">Mande o link ou o código para quem vai jogar. Cada um entra pelo próprio celular.</p>
   <div class="row"><button class="small primary" onclick="shareRoom()">📤 Compartilhar</button><button class="small" onclick="copyText('${link}')">📋 Copiar link</button></div>
   <h2 style="margin-top:16px">Você</h2>
