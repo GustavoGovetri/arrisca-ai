@@ -35,29 +35,35 @@ function normaliza(s) {
 const soma = a => a.reduce((x, y) => x + y, 0);
 const temasCom = s => Object.values(s.tema).filter(x => x.a > 0).length;
 
+// Conquistas em 6 níveis: bronze, prata, ouro, platina, diamante e grão-mestre
+const NIVEIS_CONQ = ['Bronze', 'Prata', 'Ouro', 'Platina', 'Diamante', 'Grão-mestre'];
+const minTemas = s => Math.min(...Object.keys(TEMAS).map(k => (s.tema[k] && s.tema[k].a) || 0));
 const CONQ = [
-  { id: 'primeiro', e: '🎯', n: 'Primeiro acerto', d: 'Acerte sua primeira pergunta numa partida online.', alvo: 1, v: s => soma(s.a) },
-  { id: 'dez', e: '🔟', n: 'Dez na conta', d: 'Acerte 10 perguntas.', alvo: 10, v: s => soma(s.a) },
-  { id: 'cem', e: '💯', n: 'Centenário', d: 'Acerte 100 perguntas.', alvo: 100, v: s => soma(s.a) },
-  { id: 'quinhentos', e: '🧠', n: 'Enciclopédia ambulante', d: 'Acerte 500 perguntas.', alvo: 500, v: s => soma(s.a) },
-  { id: 'dificil', e: '💪', n: 'Difícil é comigo', d: 'Acerte 25 perguntas difíceis.', alvo: 25, v: s => s.a[3] },
-  { id: 'imp1', e: '😈', n: 'Impossível? Nada!', d: 'Acerte uma pergunta impossível.', alvo: 1, v: s => s.a[4] },
-  { id: 'imp10', e: '👑', n: 'Rei do Impossível', d: 'Acerte 10 perguntas impossíveis.', alvo: 10, v: s => s.a[4] },
-  { id: 'seq5', e: '🔥', n: 'Pegando fogo', d: 'Acerte 5 perguntas seguidas.', alvo: 5, v: s => s.maxSeq },
-  { id: 'seq10', e: '⚡', n: 'Imparável', d: 'Acerte 10 perguntas seguidas.', alvo: 10, v: s => s.maxSeq },
-  { id: 'vit1', e: '🏆', n: 'Primeira vitória', d: 'Vença uma partida online.', alvo: 1, v: s => s.v },
-  { id: 'vit10', e: '🥇', n: 'Campeão', d: 'Vença 10 partidas online.', alvo: 10, v: s => s.v },
-  { id: 'part10', e: '🎟️', n: 'Figurinha carimbada', d: 'Jogue 10 partidas online.', alvo: 10, v: s => s.np },
-  { id: 'part50', e: '🎪', n: 'Dono do palco', d: 'Jogue 50 partidas online.', alvo: 50, v: s => s.np },
-  { id: 'ecletico', e: '🌈', n: 'Eclético', d: 'Acerte pelo menos uma pergunta de cada um dos 11 temas.', alvo: 11, v: temasCom },
-  ...Object.entries(TEMAS).map(([k, [nome, e]]) => ({ id: 'mestre-' + k, e, n: 'Mestre em ' + nome, d: 'Acerte 25 perguntas de ' + nome + '.', alvo: 25, v: s => (s.tema[k] && s.tema[k].a) || 0, tema: k }))
+  { id: 'acertos', e: '🎯', n: 'Acertador', d: 'Acertos em partidas online', alvos: [1, 25, 100, 300, 750, 2000], v: s => soma(s.a) },
+  { id: 'pontos', e: '⭐', n: 'Pontuador', d: 'Pontos somados', alvos: [50, 250, 1000, 3000, 8000, 20000], v: s => s.p },
+  { id: 'dificeis', e: '💪', n: 'Difícil é comigo', d: 'Perguntas difíceis acertadas', alvos: [5, 25, 75, 200, 500, 1200], v: s => s.a[3] },
+  { id: 'impossiveis', e: '😈', n: 'Rei do Impossível', d: 'Perguntas impossíveis acertadas', alvos: [1, 10, 30, 80, 200, 500], v: s => s.a[4] },
+  { id: 'sequencia', e: '🔥', n: 'Pegando fogo', d: 'Acertos seguidos (seu recorde)', alvos: [3, 5, 8, 12, 18, 25], v: s => s.maxSeq },
+  { id: 'vitorias', e: '🏆', n: 'Campeão', d: 'Partidas online vencidas', alvos: [1, 5, 15, 40, 100, 250], v: s => s.v },
+  { id: 'partidas', e: '🎟️', n: 'Figurinha carimbada', d: 'Partidas online jogadas', alvos: [1, 10, 30, 75, 200, 500], v: s => s.np },
+  { id: 'ecletico', e: '🌈', n: 'Eclético', d: 'Acertos em cada um dos 11 temas (conta o tema com menos)', alvos: [1, 5, 15, 40, 100, 250], v: minTemas },
+  ...Object.entries(TEMAS).map(([k, [nome, e]]) => ({ id: 'tema-' + k, e, n: 'Mestre em ' + nome, d: 'Acertos em ' + nome, alvos: [5, 25, 75, 200, 500, 1000], v: s => (s.tema[k] && s.tema[k].a) || 0, tema: k }))
 ];
 
 function conquistasLista(s, tem) {
   s = normaliza(s); tem = tem || {};
-  return CONQ.map(c => ({ id: c.id, e: c.e, n: c.n, d: c.d, alvo: c.alvo, prog: Math.min(c.alvo, c.v(s)), quando: tem[c.id] || null, tema: c.tema || null }));
+  return CONQ.map(c => {
+    const prog = c.v(s), nivel = c.alvos.filter(a => prog >= a).length;
+    return { id: c.id, e: c.e, n: c.n, d: c.d, alvos: c.alvos, prog, nivel, quando: c.alvos.map((_, t) => tem[c.id + '-' + (t + 1)] || null), tema: c.tema || null };
+  });
 }
-function novas(s, tem) { tem = tem || {}; return CONQ.filter(c => !tem[c.id] && c.v(s) >= c.alvo) }
+// níveis alcançados agora que ainda não estavam guardados
+function novas(s, tem) {
+  tem = tem || {};
+  const out = [];
+  CONQ.forEach(c => { const v = c.v(s); c.alvos.forEach((a, t) => { const id = c.id + '-' + (t + 1); if (v >= a && !tem[id]) out.push({ id, e: c.e, n: c.n + ' · ' + NIVEIS_CONQ[t], nivel: t + 1 }) }) });
+  return out;
+}
 
 // aplica uma resposta nas estatísticas; devolve os pontos ganhos
 function aplica(s, { ok, nivel, tema, fim, agora = Date.now() }) {
@@ -77,4 +83,4 @@ function aplica(s, { ok, nivel, tema, fim, agora = Date.now() }) {
   return pts;
 }
 
-module.exports = { PONTOS, VITORIA, TEMAS, CONQ, periodo, normaliza, conquistasLista, novas, aplica, soma };
+module.exports = { PONTOS, VITORIA, TEMAS, CONQ, NIVEIS_CONQ, periodo, normaliza, conquistasLista, novas, aplica, soma };

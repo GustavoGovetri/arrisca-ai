@@ -614,22 +614,32 @@ input.chama{animation:chama .9s}
 .ctnt{font-weight:800;font-size:14px;margin-bottom:6px;display:flex;justify-content:space-between;gap:8px}
 .ctnt small{font-weight:600;opacity:.85}
 .ctnv{display:grid;grid-template-columns:78px 1fr 52px;align-items:center;gap:8px;font-size:13px;margin:4px 0}
-.ctnv i,.conq i{display:block;height:10px;border-radius:6px;background:rgba(0,0,0,.35);overflow:hidden}
-.ctnv em,.conq i em{display:block;height:100%;border-radius:6px}
+.ctnv i{display:block;height:10px;border-radius:6px;background:rgba(0,0,0,.35);overflow:hidden}
+.ctnv em{display:block;height:100%;border-radius:6px}
 .ctnv small{text-align:right;opacity:.9}
 .ctdica{font-size:14px;line-height:1.45;margin:10px 0 0;opacity:.95}
 .ctsub{margin:18px 0 8px;font-family:'Lilita One',sans-serif;font-weight:400;font-size:18px;color:var(--amarelo);text-shadow:var(--txt-contorno);text-align:center}
 .ctpainel{width:100%;margin-top:14px}
 .conqs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
-.conq{background:rgba(0,0,0,.22);border-radius:14px;padding:10px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
-.conq .cqe{font-size:28px;filter:grayscale(1) opacity(.45)}
-.conq.ok{background:linear-gradient(180deg,rgba(255,210,63,.22),rgba(0,0,0,.2));box-shadow:inset 0 0 0 2px rgba(255,210,63,.6)}
-.conq.ok .cqe{filter:none}
-.conq b{font-size:13.5px;line-height:1.2}
-.conq small{font-size:11.5px;opacity:.8;line-height:1.25}
-.conq i{width:100%;height:7px;margin-top:4px}
-.conq i em{background:var(--amarelo)}
-.cqdata{font-style:normal;font-size:11px;opacity:.85}
+.conq{background:rgba(0,0,0,.22);border-radius:14px;padding:10px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
+.conq .cqe{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;background:rgba(0,0,0,.3);border:3px solid rgba(255,255,255,.15);filter:grayscale(1) opacity(.5)}
+.conq.ok .cqe{filter:none;border-color:var(--m);box-shadow:0 0 0 2px var(--k),0 0 14px color-mix(in srgb,var(--m) 60%,transparent);background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--m) 55%,#fff),color-mix(in srgb,var(--m) 70%,#2a0410))}
+.conq.ok{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--m) 70%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--m) 22%,transparent),rgba(0,0,0,.2))}
+.conq.gm .cqe{background:conic-gradient(#ff3fb4,#a64dff,#40c4ff,#00d65c,#ffd000,#ff3fb4);animation:gira 6s linear infinite}
+@keyframes gira{to{filter:hue-rotate(360deg)}}
+.conq b{font-size:13.5px;line-height:1.2;margin-top:2px}
+.cqniv{font-style:normal;font-weight:800;font-size:12px;letter-spacing:.3px;color:var(--m,#c9b);text-transform:uppercase}
+.conq:not(.ok) .cqniv{color:rgba(255,255,255,.55)}
+.cqpts{display:flex;gap:4px;margin:2px 0}
+.cqpts i{width:10px;height:10px;border-radius:50%;background:rgba(0,0,0,.4);border:1.5px solid rgba(255,255,255,.18)}
+.cqpts i.on{background:var(--m);border-color:var(--k)}
+.conq small{font-size:11.5px;opacity:.85;line-height:1.25}
+.conq .cqd{opacity:.65;font-size:11px}
+.cqbar{display:block;width:100%;height:7px;border-radius:6px;background:rgba(0,0,0,.35);overflow:hidden;margin-top:3px}
+.cqbar em{display:block;height:100%;border-radius:6px;background:var(--amarelo)}
+.cqlegenda{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 10px;margin:4px 0 2px;font-size:11.5px;opacity:.9}
+.cqleg{display:inline-flex;align-items:center;gap:4px}
+.cqleg i{width:10px;height:10px;border-radius:50%;background:var(--m);border:1.5px solid var(--k)}
 .hist{display:flex;flex-direction:column;gap:8px}
 .hitem{background:rgba(0,0,0,.22);border-radius:14px;padding:9px 12px}
 .hitem.venceu{box-shadow:inset 0 0 0 2px rgba(255,210,63,.6)}
@@ -2077,11 +2087,19 @@ function statsHtml(d){
   if(fav&&fav[1].a&&T[fav[0]])h+=`<p class="ctdica">Seu tema mais forte: <b style="color:${T[fav[0]].c}">${T[fav[0]].n}</b> (${fav[1].a} acerto${fav[1].a>1?'s':''}).</p>`;
   return h;
 }
+const NIV_CONQ=[['Bronze','#cd7f32'],['Prata','#c9d1d9'],['Ouro','#ffd000'],['Platina','#7fe7ff'],['Diamante','#4d8dff'],['Grão-mestre','#ff3fb4']];
 function conquistasHtml(d){
   if(!d)return `<p class="pvazio">Carregando…</p>`;
-  const l=d.conquistas||[],feitas=l.filter(c=>c.quando).length;
-  return `<p class="ctdica" style="text-align:center"><b>${feitas}</b> de ${l.length} conquistas</p><div class="conqs">${l.map(c=>{const ok=!!c.quando,pc=Math.round(100*c.prog/c.alvo);
-    return `<div class="conq${ok?' ok':''}" title="${esc(c.d)}"><span class="cqe">${c.e}</span><b>${esc(c.n)}</b><small>${esc(c.d)}</small>${ok?`<em class="cqdata">✔ ${quandoTxt(c.quando).split(',')[0]}</em>`:`<i><em style="width:${pc}%"></em></i><em class="cqdata">${c.prog} de ${c.alvo}</em>`}</div>`}).join('')}</div>`;
+  const l=d.conquistas||[],total=l.length*6,feitas=l.reduce((x,c)=>x+(c.nivel||0),0);
+  const legenda=NIV_CONQ.map(([n,c],i)=>`<span class="cqleg" style="--m:${c}"><i></i>${n}</span>`).join('');
+  return `<p class="ctdica" style="text-align:center"><b>${feitas}</b> de ${total} medalhas</p><div class="cqlegenda">${legenda}</div><div class="conqs">${l.map(c=>{
+    const nv=c.nivel||0,prox=nv<6?c.alvos[nv]:null,ant=nv?c.alvos[nv-1]:0,pc=prox?Math.max(0,Math.min(100,Math.round(100*(c.prog-ant)/(prox-ant)))):100;
+    const cor=nv?NIV_CONQ[nv-1][1]:null;
+    return `<div class="conq${nv?' ok':''}${nv===6?' gm':''}" style="${cor?'--m:'+cor:''}" title="${esc(c.d)}">
+      <span class="cqe">${c.e}</span><b>${esc(c.n)}</b><em class="cqniv">${nv?NIV_CONQ[nv-1][0]:'Sem medalha'}</em>
+      <span class="cqpts">${NIV_CONQ.map(([n,cc],t)=>`<i class="${t<nv?'on':''}" style="--m:${cc}" title="${n}: ${c.alvos[t]}"></i>`).join('')}</span>
+      ${prox?`<i class="cqbar"><em style="width:${pc}%"></em></i><small>${Number(c.prog).toLocaleString('pt-BR')} de ${prox.toLocaleString('pt-BR')} para <b>${NIV_CONQ[nv][0]}</b></small>`:`<small>👑 Nível máximo!</small>`}
+      <small class="cqd">${esc(c.d)}</small></div>`}).join('')}</div>`;
 }
 function historicoHtml(d){
   if(!d)return `<p class="pvazio">Carregando…</p>`;
@@ -2141,7 +2159,8 @@ function contaRegistra(){
       if(!j||j.ja)return;
       if(CONTA.resumo){CONTA.resumo.semana=j.semana;CONTA.resumo.total=j.total}
       if(j.pts)toast(`🏆 +${j.pts} ponto${j.pts>1?'s':''} no ranking${j.fim?' (com a vitória!)':''}`);
-      (j.novas||[]).forEach((c,i)=>setTimeout(()=>{toast(`🏅 Conquista: ${c.e} ${c.n}`);SFX.correct&&SFX.correct()},2200*(i+1)));
+      const maior={};(j.novas||[]).forEach(c=>{const k=String(c.id).replace(/-\d+$/,'');if(!maior[k]||c.nivel>maior[k].nivel)maior[k]=c});
+      Object.values(maior).forEach((c,i)=>setTimeout(()=>{toast(`🏅 Medalha nova: ${c.e} ${c.n}`);SFX.correct&&SFX.correct()},2200*(i+1)));
     }).catch(e=>console.warn('conta:',e.message));
 }
 function contaAba(a){CONTA_UI.aba=a;CONTA_UI.erro='';CONTA_UI.ok='';contaRender()}
@@ -2286,6 +2305,38 @@ function mudouFoco(){
 document.addEventListener('visibilitychange',()=>{clearTimeout(FOCO_T);mudouFoco()});
 window.addEventListener('blur',()=>{clearTimeout(FOCO_T);FOCO_T=setTimeout(mudouFoco,250)}); // espera um pouco: trocas de foco rápidas não contam
 window.addEventListener('focus',()=>{clearTimeout(FOCO_T);mudouFoco()});
+// ----- atualização automática: quando sai versão nova do site, recarrega sozinho num momento seguro -----
+let VERSAO=null,VERSAO_NOVA=null;
+async function confereVersao(){
+  if(VERSAO_NOVA)return;
+  try{
+    const r=await fetch('/api/versao',{cache:'no-store'});if(!r.ok)return;
+    const j=await r.json();if(!j||!j.v)return;
+    if(!VERSAO){VERSAO=j.v;return}
+    if(j.v!==VERSAO){VERSAO_NOVA=j.v;atualizaQuandoDer()}
+  }catch(e){}
+}
+function momentoSeguro(){ // não recarrega no meio da resposta, da votação ou de um texto sendo digitado
+  if(typeof janelaResposta==='function'&&janelaResposta())return false;
+  if(typeof meuVoto==='function'&&meuVoto())return false;
+  const a=document.activeElement;
+  if(a&&(a.tagName==='INPUT'||a.tagName==='TEXTAREA')&&a.type!=='checkbox'&&String(a.value||'').trim()&&a.id!=='homenome'&&a.id!=='meunome')return false;
+  if(typeof BUG!=='undefined'&&BUG.texto&&document.getElementById('bugbox').style.display!=='none')return false;
+  if(typeof CONTA_UI!=='undefined'&&CONTA_UI.ocupado)return false;
+  return true;
+}
+function atualizaQuandoDer(){
+  const inicio=Date.now();let avisou=false;
+  const tenta=()=>{
+    if(momentoSeguro()||Date.now()-inicio>10*60e3){toast('✨ Atualizando para a versão nova do Arrisca Aí…');setTimeout(()=>location.reload(),1800);return}
+    if(!avisou){avisou=true;toast('✨ Saiu uma versão nova do Arrisca Aí. Ela entra sozinha assim que der uma pausa no jogo.')}
+    setTimeout(tenta,2000);
+  };
+  tenta();
+}
+setTimeout(confereVersao,1500);setInterval(confereVersao,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)confereVersao()});
+window.addEventListener('focus',()=>confereVersao());
 function pintaEfx(){const b=document.getElementById('efxbtn');if(!b)return;const l=document.documentElement.classList.contains('leve');b.textContent=l?'🍃':'✨';b.title=l?'Efeitos leves (toque para ligar todos os efeitos)':'Todos os efeitos (toque para deixar mais leve)'}
 function trocaEfeitos(){
   const l=!document.documentElement.classList.contains('leve');

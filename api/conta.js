@@ -112,7 +112,7 @@ async function resposta(u, body) {
   if (s.mes.p > 0) { mapa['ranking/mes/' + per.mes + '/' + u.uid] = { p: s.mes.p, n: nome, c: cor }; mapa[base + '/rk/mes_' + per.mes] = true }
   ganhou.forEach(c => { mapa[base + '/conquistas/' + c.id] = quando });
   await gravaVarios(mapa);
-  return { pts, nivel, fim, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n })) };
+  return { pts, nivel, fim, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n, nivel: c.nivel })) };
 }
 
 async function apagar(u) {
