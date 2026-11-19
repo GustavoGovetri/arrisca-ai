@@ -631,6 +631,7 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
 .cm .ch{display:block;text-align:right;font-size:11px;opacity:.65;margin-top:2px;font-weight:500}
 .cm.emo .ch{font-size:10.5px;text-align:left}
 .cm.me.emo .ch{text-align:right}
+.fora{font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:middle;font-weight:700;background:#ffcf4a;color:#2a1600;border:2px solid var(--k)}
 </style>
 </head>
 <body>
@@ -661,6 +662,7 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
         <li><b>Salas abertas:</b> quem cria a sala pode deixá-la <b>aberta a todos</b>. Aí ela aparece em <b>Salas</b> para qualquer pessoa entrar enquanto a partida não começa. O botão <b>Jogar</b> entra na sala aberta com mais gente; se não houver nenhuma, abre uma nova.</li>
         <li><b>Modos de jogo:</b> 🎲 Tradicional (sem bônus); ⭐ Bônus (difícil +1 casa, impossível +2, errar impossível não tira a ficha, ⭐ por impossível acertada); 🔥 Arriscado (Bônus + arriscar o dobro na difícil e na impossível); 😈 Sem dó (Arriscado + acertar impossível devolve uma ajuda e dá uma rasteira em alguém).</li>
         <li><b>Desfazer na sala online:</b> quem pede para desfazer uma jogada precisa da aprovação da maioria dos outros jogadores (30 segundos para votar). Enquanto votam, ninguém passa a vez.</li>
+        <li>Na sala online, durante a partida, todos são avisados quando alguém sai da aba, e o placar mostra 👀 ao lado do nome.</li>
         <li>Na sala online, se você for para outra aba durante a partida, aparece um aviso na volta (dá para desligar até fechar o site) e o título da aba pisca quando é a sua vez ou o seu voto.</li>
         <li>Achou um problema no site (travou, tela estranha, sala online)? Use o botão <b>🐞</b> no alto da tela para avisar.</li>
         <li>Achou uma pergunta errada ou confusa? Use <b>Reportar pergunta</b> depois da resposta: ela fica guardada para correção.</li>
@@ -1510,7 +1512,7 @@ function resolve(ok,snapped,pre){
   }else if(salva){
     p.forced=null;
     if(dobro){const de=p.pos;p.pos=Math.max(0,p.pos-tok);msg=`✘ Errou a impossível. ${name} não perde a ficha, mas arriscou o dobro e volta ${de-p.pos} casa${de-p.pos===1?'':'s'}.`}
-    else msg=`✘ Errou, mas era <b>impossível</b>: ${name} não perde a ficha nem precisa repetir o tema.`;
+    else msg=`🛡️ Errou, mas era <b>impossível</b>: pela regra do Bônus, ${name} não perde a ficha nem precisa repetir o tema.`;
   }else{
     p.forced=G.theme;
     let volta=0;if(dobro){const de=p.pos;p.pos=Math.max(0,p.pos-tok);volta=de-p.pos}
@@ -1548,7 +1550,7 @@ function nm(p){return p?`<b style="color:${p.color}">${esc(p.name)}</b>`:'algué
 function turnTitle(p){return online()&&myIdx()===G.cur?`Sua vez, <span style="color:${p.color}">${esc(p.name)}</span>!`:`Vez de <span style="color:${p.color}">${esc(p.name)}</span>`}
 function waitHtml(role,acao){const p=role==='reader'?G.players[readerIdx()]:G.players[G.cur];return `<p class="wait">⏳ Aguardando ${nm(p)} ${acao}…</p>`}
 function waitThemeHtml(){const p=G.players[G.cur];return p.pos===FINAL?`<p class="wait">⏳ Os outros jogadores escolhem o tema da pergunta final de ${nm(p)}.</p>`:waitHtml('cur','escolher o tema')}
-function plTag(p){if(!online())return '';let s='';if(p.dev===MYDEV)s+=' <span class="you">você</span>';const l=LOBBY[p.dev];if(!l||l.on===false)s+=' <span class="off" title="Sem conexão">offline</span>';return s}
+function plTag(p){if(!online())return '';let s='';if(p.dev===MYDEV)s+=' <span class="you">você</span>';const l=LOBBY[p.dev];if(!l||l.on===false)s+=' <span class="off" title="Sem conexão">offline</span>';else if(l.fora)s+=' <span class="fora" title="Está em outra aba">👀 fora da aba</span>';return s}
 function editBtn(ed){return can('host')?`<button class="small" onclick="G.editPl=!G.editPl;G.pickColor=null;renderScores()">${ed?'✓ Pronto':'✎ Ordem e cores'}</button>`:''}
 const NOVO_BTN=`<button onclick="if(window.__c){newGame()}else{window.__c=1;this.textContent='Confirmar?';const b=this;setTimeout(()=>{window.__c=0;b.textContent='Novo jogo'},2500)}">Novo jogo</button>`;
 function headBtns(){
@@ -1664,7 +1666,7 @@ async function enterRoom(code,created,publica){
     if(created){const j=syncJson();await NET.tx(code,0,{v:1,g:j,por:MYDEV,ts:Date.now()});RV=Math.max(RV,1);LASTSYNC=j;CREATING=false}
     VOTES={};chatZera();
     UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido});
-    await NET.setMe(code,MYDEV,{nome:myName(),cor:myColor(),on:true,ts:Date.now()});
+    await NET.setMe(code,MYDEV,{nome:myName(),cor:myColor(),on:true,fora:false,ts:Date.now()});
     render();
   }catch(e){console.error(e);CREATING=false;toast('Sem conexão com a sala. Tente de novo.')}
 }
@@ -1820,9 +1822,10 @@ function abaTitulo(){
   if(!msg){if(ABA_PISCA){clearInterval(ABA_PISCA);ABA_PISCA=null}document.title=TITULO;return}
   if(!ABA_PISCA){let n=0;ABA_PISCA=setInterval(()=>{if(!document.hidden){abaTitulo();return}const m=minhaVez()?'⏰ Sua vez! · Arrisca Aí':meuVoto()?'🗳️ Vote! · Arrisca Aí':'';if(!m){abaTitulo();return}document.title=(n++%2)?TITULO:m},1000);document.title=msg}
 }
+function avisaAba(fora){if(NET&&ROOM&&online()&&(emPartida()||!fora))NET.setMe(ROOM,MYDEV,{fora}).catch(()=>{})}
 document.addEventListener('visibilitychange',()=>{
-  if(document.hidden){ABA_SAIU=emPartida()?Date.now():null;marcaSaida(true);abaTitulo();return}
-  marcaSaida(false);abaTitulo();
+  if(document.hidden){ABA_SAIU=emPartida()?Date.now():null;avisaAba(true);marcaSaida(true);abaTitulo();return}
+  avisaAba(false);marcaSaida(false);abaTitulo();
   const saiu=ABA_SAIU;ABA_SAIU=null;
   if(saiu&&Date.now()-saiu>1000&&emPartida()&&!abaDispensada())abaAviso();
 });
@@ -1921,7 +1924,7 @@ function limpaEstado(o){
 }
 function limpaLobby(l){ // nomes e cores de quem está na sala
   const out={};if(!l||typeof l!=='object')return out;
-  Object.keys(l).slice(0,40).forEach(d=>{if(!sId(d))return;const x=l[d]||{};out[d]={nome:sStr(x.nome,16),cor:COR_OK.test(String(x.cor||''))?x.cor:'',on:x.on!==false,ts:Number(x.ts)||0}});
+  Object.keys(l).slice(0,40).forEach(d=>{if(!sId(d))return;const x=l[d]||{};out[d]={nome:sStr(x.nome,16),cor:COR_OK.test(String(x.cor||''))?x.cor:'',on:x.on!==false,ts:Number(x.ts)||0,fora:!!x.fora}});
   return out;
 }
 function applyRemote(d){
@@ -1949,7 +1952,11 @@ function marcaVistas(){ // as perguntas que saem na sala também ficam marcadas 
   if(mudou)persist();
 }
 let LOBBY_N=0,LOBBY_VISTOS=null;const NOVOS={};
+let FORA_ANT={};
 function lobbyChanged(){
+  // alguém saiu ou voltou para a aba durante a partida: todo mundo fica sabendo
+  if(emPartida())Object.entries(LOBBY).forEach(([d,l])=>{if(d===MYDEV)return;const p=(G.players||[]).find(x=>x.dev===d),n=(p&&p.name)||(l.nome||'').trim()||'Alguém';if(l.fora&&!FORA_ANT[d]){toast('👀 '+n+' saiu da aba');SFX.pop&&SFX.pop()}else if(!l.fora&&FORA_ANT[d]&&l.on!==false)toast('↩ '+n+' voltou para o jogo')});
+  FORA_ANT={};Object.entries(LOBBY).forEach(([d,l])=>{if(l.fora)FORA_ANT[d]=true});
   // alguém novo na sala: chamada de apito, aviso e a linha da pessoa piscando
   if(LOBBY_VISTOS){
     const novos=Object.keys(LOBBY).filter(d=>!LOBBY_VISTOS.has(d)&&d!==MYDEV);
