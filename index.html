@@ -183,13 +183,14 @@ const T={
   MU:{n:'Música',d:'artistas, bandas, álbuns e instrumentos',c:'#db2777'},
   CS:{n:'Cinema e Séries',d:'filmes, atores, séries e novelas',c:'#0e7490'},
   S:{n:'Sociedade',d:'comida e bebida, moda, empresas e costumes',c:'#ea580c'},
-  CT:{n:'Ciência',d:'animais, natureza, corpo humano, química, física e astronomia',c:'#65a30d'},
+  CT:{n:'Ciência',s:'C',d:'animais, natureza, corpo humano, química, física e astronomia',c:'#65a30d'},
   TI:{n:'Tecnologia e Internet',d:'computação, redes, programação e internet',c:'#4f46e5'},
   ES:{n:'Esporte',d:'futebol, Olimpíadas, atletas e regras',c:'#dc2626'},
   GG:{n:'Games e Geek',d:'videogames, animes, quadrinhos e jogos de mesa',c:'#b8860b'},
   V:{n:'Variedades',d:'múltipla escolha: língua, raciocínio e curiosidades',c:'#6b7280'}
 };
 const ORDER=Object.keys(T);
+function sg(k){return T[k].s||k}
 const CLASSIC=['M','AL','S','CT','ES','V'];
 const LEGACY={AE:'AL',EL:'ES',BR:'M'};
 const LEVELS={1:'Fácil',2:'Médio',3:'Difícil',4:'Impossível'};
@@ -489,7 +490,7 @@ function renderHist(){
   let tot=0,totU=0;
   const linhas=ORDER.map(k=>{const n=Q[k].length,u=countUsed(k);tot+=n;totU+=u;
     const conf=G.confirmReset===k;
-    return `<div class="hrow"><span class="badge" style="background:${T[k].c}">${k}</span><div class="hinfo"><div class="hname">${T[k].n}</div><div class="muted">${u.toLocaleString('pt-BR')} já saíram · ${(n-u).toLocaleString('pt-BR')} disponíveis</div><div class="bar"><i style="width:${(u/n*100).toFixed(1)}%;background:${T[k].c}"></i></div></div><button class="small${conf?' bad':''}" ${u?'':'disabled'} onclick="resetTheme('${k}')">${conf?'Confirmar?':'Liberar'}</button></div>`}).join('');
+    return `<div class="hrow"><span class="badge" style="background:${T[k].c}">${sg(k)}</span><div class="hinfo"><div class="hname">${T[k].n}</div><div class="muted">${u.toLocaleString('pt-BR')} já saíram · ${(n-u).toLocaleString('pt-BR')} disponíveis</div><div class="bar"><i style="width:${(u/n*100).toFixed(1)}%;background:${T[k].c}"></i></div></div><button class="small${conf?' bad':''}" ${u?'':'disabled'} onclick="resetTheme('${k}')">${conf?'Confirmar?':'Liberar'}</button></div>`}).join('');
   const listas=ORDER.filter(k=>countUsed(k)).map(k=>{
     const ids=USED[k].filter(id=>IDX[k].has(id)).reverse();
     const itens=ids.slice(0,300).map(id=>{const q=Q[k][IDX[k].get(id)];return `<li>${esc(q[0])} <span class="muted">— ${esc(k==='V'?q[1][q[2]]:q[1])}</span></li>`}).join('');
@@ -544,7 +545,7 @@ function renderBoard(){
     c+=`<div class="turninfo">${info}</div>`;
   }else if(!Q){c+='<div class="turninfo" style="margin-top:3cqw">Carregando perguntas…</div>'}
   const legT=G.phase==='setup'?G.selThemes:activeThemes();
-  c+='<div class="leg">'+legT.map(k=>`<span><i style="background:${T[k].c}"></i><b>${k}</b> ${T[k].n}</span>`).join('')+'</div></div>';
+  c+='<div class="leg">'+legT.map(k=>`<span><i style="background:${T[k].c}"></i><b>${sg(k)}</b> ${T[k].n}</span>`).join('')+'</div></div>';
   document.getElementById('ring').innerHTML=h+c;
 }
 function renderScores(){
@@ -574,7 +575,7 @@ function renderPanel(){
     h+='</div>';
     if(G.pickColor!=null&&G.pickColor<G.count)h+=`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.names[G.pickColor]||'Jogador '+(G.pickColor+1))}</b>:</span>${paletaHtml(G.colors[G.pickColor],`setupColor(${G.pickColor},'#C')`,G.colors.slice(0,G.count))}</div>`;
     h+=`<div class="row" style="margin:-2px 0 10px"><button class="small" onclick="shuffleSetup()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem; quem está em 1º começa. Toque na bolinha para trocar a cor.</span></div>`;
-    h+=`<h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);const n=Q&&Q[k]?Q[k].length:0;const u=Q?countUsed(k):0;return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${k}</b> ${T[k].n}<small>${Q?(n-u).toLocaleString('pt-BR')+' perguntas':''}</small></button>`}).join('')}</div>
+    h+=`<h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);const n=Q&&Q[k]?Q[k].length:0;const u=Q?countUsed(k):0;return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${Q?(n-u).toLocaleString('pt-BR')+' perguntas':''}</small></button>`}).join('')}</div>
     <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>
     <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
     <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}${Q&&v!=='misto'?' · '+lvCount(+v).toLocaleString('pt-BR')+' perguntas':''}</option>`).join('')}</select></div>
@@ -592,7 +593,7 @@ function renderPanel(){
     return;
   }
   if(G.phase==='theme'){
-    el.innerHTML=head+`<p class="msg">${G.themeLabel}</p><div class="opts">${G.themeOptions.map(k=>`<button style="background:${T[k].c}" ${canTheme()?'':'disabled'} onclick="pickTheme('${k}')"><b>${k}</b> · ${T[k].n}</button>`).join('')}</div>${canTheme()?'':waitThemeHtml()}`;
+    el.innerHTML=head+`<p class="msg">${G.themeLabel}</p><div class="opts">${G.themeOptions.map(k=>`<button style="background:${T[k].c}" ${canTheme()?'':'disabled'} onclick="pickTheme('${k}')"><b>${sg(k)}</b> · ${T[k].n}</button>`).join('')}</div>${canTheme()?'':waitThemeHtml()}`;
     return;
   }
   if(G.phase==='won'){
@@ -1011,7 +1012,7 @@ function lobbyHtml(){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
     h+=`<div class="row" style="margin:6px 0 4px"><button class="small" onclick="shuffleLobby()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem. Quem está em 1º começa.</span></div>
     <div class="setup-row"><label style="flex:none">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
-    <h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${k}</b> ${T[k].n}<small>${Q&&Q[k]?Q[k].length.toLocaleString('pt-BR')+' perguntas':''}</small></button>`}).join('')}</div>
+    <h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].d)}"><span class="tdot"></span><b>${sg(k)}</b> ${T[k].n}<small>${Q&&Q[k]?Q[k].length.toLocaleString('pt-BR')+' perguntas':''}</small></button>`}).join('')}</div>
     <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>
     <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;G.previewBoard=null;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
     <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}</option>`).join('')}</select></div>
