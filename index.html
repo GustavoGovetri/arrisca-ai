@@ -847,6 +847,15 @@ button.pronto small{display:block;font-family:inherit;font-size:12px;opacity:.85
 html.parado *,html.parado *::before,html.parado *::after{animation-play-state:paused!important}
 html.parado #fundo .holofote,html.parado #fundo .ficha,html.parado #fundo .raios{will-change:auto}
 
+/* ===== reportar problema: botão separado, no canto esquerdo ===== */
+.bugflut{position:absolute;z-index:5;top:calc(18px * var(--z,1));left:calc(18px * var(--z,1));height:calc(46px * var(--z,1));min-width:calc(46px * var(--z,1));padding:0;display:inline-flex;align-items:center;gap:0;border-radius:999px;
+  background:linear-gradient(180deg,#ffe36e,#ffc21a);color:#2a0410;border:3px solid var(--k);box-shadow:0 4px 0 var(--k);cursor:pointer;overflow:hidden;transition:transform .12s}
+.bugflut span{width:calc(40px * var(--z,1));flex:none;text-align:center;font-family:'Lilita One',sans-serif;font-size:calc(26px * var(--z,1));line-height:1}
+.bugflut em{font-style:normal;font-weight:800;font-size:calc(14px * var(--z,1));white-space:nowrap;max-width:0;opacity:0;transition:max-width .25s,opacity .2s,padding .25s}
+.bugflut:hover em,.bugflut:focus-visible em{max-width:200px;opacity:1;padding-right:calc(14px * var(--z,1))}
+#bugbtn.bugflut:hover,#bugbtn.bugflut:focus-visible{background:linear-gradient(180deg,#fff08a,#ffd000);color:#2a0410;filter:none}
+.bugflut:active{transform:translateY(2px);box-shadow:0 2px 0 var(--k)}
+@media(max-width:520px){.bugflut{top:12px;left:8px;height:38px;min-width:38px;border-width:2px;box-shadow:0 3px 0 var(--k)}.bugflut span{width:34px;font-size:22px}.bugflut:hover em{max-width:0;opacity:0;padding:0}}
 /* ===== celular: menos margem em volta e cartões de conta/ranking que cabem ===== */
 .hcard{overflow:hidden}
 @media(max-width:520px){
@@ -868,10 +877,11 @@ html.parado #fundo .holofote,html.parado #fundo .ficha,html.parado #fundo .raios
 </head>
 <body>
 <div id="fundo" aria-hidden="true"></div>
+<button id="bugbtn" class="bugflut" title="Reportar um problema no site" aria-label="Reportar um problema no site" onclick="bugAbre()"><span>!</span><em>Reportar problema</em></button>
 <div class="wrap">
   <div class="ringwrap"><div class="ring" id="ring"></div></div>
   <div>
-    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Efeitos visuais" onclick="trocaEfeitos()"></button><button id="rankbtn" class="tab snd" title="Ranking da semana e do mês" onclick="rankingAbre()">🏆</button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" onclick="contaAbre()">👤</button><button id="bugbtn" class="tab snd" title="Reportar um problema no site" onclick="bugAbre()">🐞</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Sons e avisos" onclick="somAbre()">🔊</button></div>
+    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Efeitos visuais" onclick="trocaEfeitos()"></button><button id="rankbtn" class="tab snd" title="Ranking da semana e do mês" onclick="rankingAbre()">🏆</button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" onclick="contaAbre()">👤</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Sons e avisos" onclick="somAbre()">🔊</button></div>
     <div id="view-jogo">
     <div class="card" id="panel"></div>
     <div class="card" id="scores" style="display:none"></div>
