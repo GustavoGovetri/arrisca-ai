@@ -277,5 +277,5 @@ module.exports._pergTk = async tk => {
   if (i === undefined) return null;
   const q = T.items[i];
   return { qid: x.i, t: x.t, m: x.m, s: x.s || null, e: +x.e || 0, nivel: Math.min(4, Math.max(1, +qDiff(x.t, q) || 2)),
-    q: textoQ(q[0]), a: resposta(x.t, q), opts: x.t === 'V' ? q[1].slice() : null };
+    q: textoQ(q[0]), a: resposta(x.t, q), opts: x.t === 'V' ? q[1].slice() : null, mapa: formaDe(q) ? B.mapa[formaDe(q)] || null : null };
 };

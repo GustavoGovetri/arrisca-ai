@@ -19,6 +19,7 @@ if(cfg&&cfg.databaseURL&&!sim){
       watch(code,h){
         const u=[d.onValue(R('salas/'+code+'/meta'),s=>h.onMeta(s.val())),
                  d.onValue(R('salas/'+code+'/titulos'),s=>h.onTitulos&&h.onTitulos(s.val()||{})),
+                 d.onValue(R('salas/'+code+'/respostas'),s=>h.onRespostas&&h.onRespostas(s.val()||{})),
                  d.onValue(R('salas/'+code+'/jogadores'),s=>h.onLobby(s.val()||{})),
                  d.onValue(R('salas/'+code+'/estado'),s=>h.onState(s.val())),
                  d.onValue(R('salas/'+code+'/votos'),s=>h.onVotes&&h.onVotes(s.val()||{})),

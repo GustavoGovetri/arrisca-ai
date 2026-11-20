@@ -109,6 +109,7 @@ async function titulo(body) {
   await ST.grava('PUT', 'salas/' + code + '/titulos/' + q.dev, t);
   return { titulo: t };
 }
+const liberou = g => !!(g && g.qid && g.tk && (g.resp || (g.chosen !== null && g.chosen !== undefined) || g.phase === 'result' || g.phase === 'won'));
 let PERG = null;
 function perg() { if (!PERG) PERG = require('./perguntas.js')._pergTk; return PERG }
 async function jogada(body) {
@@ -140,8 +141,18 @@ async function jogada(body) {
   const nh = (h.length ? h : [{ v: base, c: prevN }]).concat([{ v, c: juiz.nucleo(next) }]).slice(-25);
   const mapa = { ['srv/hist/' + code]: nh };
   if (r.resp) mapa['srv/resp/' + code + '/' + r.resp.qid] = Object.assign({}, r.resp, { jogo: next.jogo || null, w: agora });
+  // a jogada que mostra a resposta (respondeu, escolheu, "não sei", tempo esgotado) já leva a resposta oficial:
+  // quem jogou recebe aqui e os outros pela sala, sem precisar pedir de novo
+  let resposta = null;
+  if (liberou(next)) {
+    const info = await perg()(next.tk).catch(() => null);
+    if (info && info.qid === next.qid && info.s === code) {
+      resposta = { a: info.a, m: info.mapa || null };
+      mapa['salas/' + code + '/respostas/' + next.qid] = Object.assign({ w: agora }, resposta);
+    }
+  }
   await ST.gravaVarios(mapa);
-  return { v };
+  return resposta ? { v, qid: next.qid, resposta } : { v };
 }
 async function votar(body) {
   const code = codigo(body.sala), q = quem(body);

@@ -1125,6 +1125,16 @@ function buscaResposta(){
   BUSCA[id]=api('resposta',{id,t,tk:G.tk}).then(r=>{if(r.m)MAPAS[id]=r.m;ANS[id]=r.a;guardaVista(t,id,q0,r.a);return r.a}).finally(()=>{delete BUSCA[id]});
   return BUSCA[id];
 }
+// na sala, a resposta oficial chega junto com a jogada que a revela (o servidor grava em salas/<código>/respostas)
+function recebeRespostas(o){
+  let mudou=false;
+  Object.entries(o||{}).forEach(([id,r])=>{
+    if(!r||typeof r.a!=='string'||!/^[a-z0-9]{1,16}$/.test(id)||ANS[id]!=null)return;
+    ANS[id]=r.a;if(Array.isArray(r.m)&&r.m.length===2)MAPAS[id]=r.m.map(Number);
+    if(id===G.qid){guardaVista(G.qt||G.theme,id,G.q&&G.q[0],r.a);mudou=true}
+  });
+  if(mudou){forcePanel();render()}
+}
 function precisaResposta(){ // a resposta já pode aparecer nesta tela?
   if(!G.q||!G.qid||ANS[G.qid]!=null)return false;
   if(G.phase==='result'||G.phase==='won')return true;
@@ -1133,8 +1143,19 @@ function precisaResposta(){ // a resposta já pode aparecer nesta tela?
   return !!G.revealed;
 }
 let AVISO_ERRO=0;
+let RESP_T=null,RESP_N=0,RESP_ID=null;
 function garanteResposta(){
   if(!precisaResposta()||BUSCA[G.qid])return;
+  if(online()){ // normalmente a resposta já veio com a jogada; se não veio, espera a jogada chegar no servidor e pede
+    if(RESP_ID!==G.qid){RESP_ID=G.qid;RESP_N=0}
+    if(RESP_T)return;
+    RESP_T=setTimeout(()=>{RESP_T=null;if(!precisaResposta())return;
+      esperaPush().then(buscaResposta).then(()=>{forcePanel();render()}).catch(e=>{
+        RESP_N++;if(RESP_N>=4&&Date.now()-AVISO_ERRO>8000){AVISO_ERRO=Date.now();toast('Não consegui buscar a resposta: '+e.message)}
+        setTimeout(()=>{if(precisaResposta())garanteResposta()},Math.min(4000,600*RESP_N));
+      })},RESP_N?0:700);
+    return;
+  }
   buscaResposta().then(()=>{forcePanel();render()}).catch(e=>{if(Date.now()-AVISO_ERRO>5000){AVISO_ERRO=Date.now();toast('Não consegui buscar a resposta: '+e.message)}setTimeout(()=>{if(precisaResposta())garanteResposta()},3000)});
 }
 function esperaPush(){ // na sala, espera a jogada chegar no servidor antes de pedir a resposta
@@ -1936,7 +1957,7 @@ async function enterRoom(code,created,publica){
     if(created){const j=syncJson();await servidorSala('criar',{sala:code,g:j});if(NET.espelha){NET.espelha('salas/'+code+'/meta',{host:MYDEV,criada:Date.now()});NET.espelha('salas/'+code+'/estado',{v:1,g:j,por:MYDEV,ts:Date.now()})}RV=Math.max(RV,1);LASTSYNC=j;CREATING=false}
     else await servidorSala('entrar',{sala:code});
     VOTES={};chatZera();
-    UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido,onTitulos:t=>{TITULOS=limpaTitulos(t);render()}});
+    UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido,onTitulos:t=>{TITULOS=limpaTitulos(t);render()},onRespostas:recebeRespostas});
     await NET.setMe(code,MYDEV,{nome:myName(),cor:myColor(),on:true,fora:false,pronto:false,ts:Date.now()});
     SALA_USADAS={};mandaUsadasSala().then(carregaUsadasSala);
     tituloSala();
@@ -2568,6 +2589,7 @@ async function netPush(){
     const r=await servidorSala('jogada',{sala,base,g:j});
     const v=r.v||base+1;
     if(NET.espelha)NET.espelha('salas/'+sala+'/estado',{v,g:j,por:MYDEV,ts:Date.now()});
+    if(r.resposta&&r.qid){recebeRespostas({[r.qid]:r.resposta});if(NET.espelhaResposta)NET.espelhaResposta(sala,r.qid,r.resposta)}
     if(RV<v)RV=v;LASTSYNC=j;RECUSAS=0;
   }catch(e){
     if(e.status===409||e.status===403)jogadaRecusada(e);
@@ -2805,7 +2827,7 @@ function localNet(){
   return {
     exists:async c=>!!rd('salas/'+c+'/meta'),
     create:async(c,m)=>wr('salas/'+c+'/meta',m),
-    watch(c,h){const u=[sub('salas/'+c+'/titulos',v=>h.onTitulos&&h.onTitulos(v||{})),sub('salas/'+c+'/meta',h.onMeta),sub('salas/'+c+'/jogadores',v=>h.onLobby(v||{})),sub('salas/'+c+'/estado',h.onState),sub('salas/'+c+'/votos',v=>h.onVotes&&h.onVotes(v||{})),sub('salas/'+c+'/chat',v=>h.onChat&&h.onChat(v||[]))];return ()=>u.forEach(f=>f())},
+    watch(c,h){const u=[sub('salas/'+c+'/respostas',v=>h.onRespostas&&h.onRespostas(v||{})),sub('salas/'+c+'/titulos',v=>h.onTitulos&&h.onTitulos(v||{})),sub('salas/'+c+'/meta',h.onMeta),sub('salas/'+c+'/jogadores',v=>h.onLobby(v||{})),sub('salas/'+c+'/estado',h.onState),sub('salas/'+c+'/votos',v=>h.onVotes&&h.onVotes(v||{})),sub('salas/'+c+'/chat',v=>h.onChat&&h.onChat(v||[]))];return ()=>u.forEach(f=>f())},
     agora:()=>Math.round(performance.timeOrigin+performance.now()), // simula a hora do servidor
     vote:async(c,d,o)=>{const k='salas/'+c+'/votos';const all=rd(k)||{};all[d]=o;wr(k,all)},
     chat:async(c,m)=>{const k='salas/'+c+'/chat';const a=rd(k)||[];const ts=Math.round(performance.timeOrigin+performance.now()); /* simula a hora do servidor */a.push(Object.assign({id:ts.toString(36)+Math.random().toString(36).slice(2,6)},m,{ts}));wr(k,a.slice(-60))},
@@ -2815,6 +2837,7 @@ function localNet(){
     getUsadas:async c=>rd('salas/'+c+'/usadas')||{},
     espelha:(k,v)=>wr(k,v), // o servidor de testes guarda a sala na memória; aqui só repassa para as outras abas
     espelhaVoto:(c,d,o)=>{const k='salas/'+c+'/votos';const all=rd(k)||{};all[d]=o;wr(k,all)},
+    espelhaResposta:(c,q,r)=>{const k='salas/'+c+'/respostas';const all=rd(k)||{};all[q]=r;wr(k,all)},
     espelhaTitulo:(c,d,t)=>{const k='salas/'+c+'/titulos';const all=rd(k)||{};if(t)all[d]=t;else delete all[d];wr(k,all)},
     report:async r=>{const all=rd('reportes')||{};all['r'+Date.now()+Math.random().toString(36).slice(2,6)]=r;wr('reportes',all)}
   };
