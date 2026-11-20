@@ -55,7 +55,7 @@ async function carregaLogin(fbApp){
     const quem=u=>u&&!u.isAnonymous?{uid:u.uid,email:u.email||'',nome:u.displayName||'',verificado:!!u.emailVerified,
       provedor:((u.providerData||[]).find(x=>x&&x.providerId==='google.com')?'google.com':'password')}:null;
     window.AUTH_IMPL={
-      onChange(cb){return a.onAuthStateChanged(auth,u=>cb(quem(u)))},
+      onChange(cb){window.addEventListener('auth-recheca',()=>cb(quem(auth.currentUser)));return a.onAuthStateChanged(auth,u=>{if(window.AUTH_CHECANDO)return;cb(quem(u))})},
       async google(){
         const p=new a.GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
         // no celular, ir para a página do Google e voltar funciona melhor que pop-up (só no endereço oficial, onde o login é do próprio site)
@@ -66,11 +66,29 @@ async function carregaLogin(fbApp){
         catch(e){if(proprio&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')){await a.signInWithRedirect(auth,p);return}throw e}
       },
       async resultadoRedirect(){try{await a.getRedirectResult(auth);return null}catch(e){return e}},
-      async entrar(email,senha){await a.signInWithEmailAndPassword(auth,email,senha)},
+      // conta de e-mail e senha só entra depois de confirmar o e-mail (o link chega na hora em que a conta é criada)
+      async entrar(email,senha){
+        window.AUTH_CHECANDO=true;
+        try{
+          const c=await a.signInWithEmailAndPassword(auth,email,senha);
+          if(!c.user.emailVerified){try{await c.user.reload()}catch(e){}}
+          if(!auth.currentUser||!auth.currentUser.emailVerified){await a.signOut(auth);throw Object.assign(new Error('auth/email-nao-confirmado'),{code:'auth/email-nao-confirmado'})}
+        }finally{window.AUTH_CHECANDO=false}
+        window.dispatchEvent(new Event('auth-recheca'));
+      },
       async criar(email,senha,nome){
-        const c=await a.createUserWithEmailAndPassword(auth,email,senha);
-        if(nome){try{await a.updateProfile(c.user,{displayName:nome})}catch(e){}}
-        try{await a.sendEmailVerification(c.user)}catch(e){}
+        window.AUTH_CHECANDO=true;
+        try{
+          const c=await a.createUserWithEmailAndPassword(auth,email,senha);
+          if(nome){try{await a.updateProfile(c.user,{displayName:nome})}catch(e){}}
+          try{await a.sendEmailVerification(c.user)}catch(e){}
+          await a.signOut(auth);
+        }finally{window.AUTH_CHECANDO=false}
+      },
+      async reenviarCom(email,senha){ // manda o link de novo (precisa entrar rapidinho para isso) e sai
+        window.AUTH_CHECANDO=true;
+        try{const c=await a.signInWithEmailAndPassword(auth,email,senha);if(!c.user.emailVerified)await a.sendEmailVerification(c.user);await a.signOut(auth)}
+        finally{window.AUTH_CHECANDO=false}
       },
       async esqueci(email){await a.sendPasswordResetEmail(auth,email)},
       async reenviar(){if(auth.currentUser)await a.sendEmailVerification(auth.currentUser)},

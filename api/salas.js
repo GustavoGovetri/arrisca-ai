@@ -100,7 +100,7 @@ async function titulo(body) {
   let t = null, foto = null;
   if (body.token) {
     const u = await require('./_auth').verifica(String(body.token).slice(0, 4000));
-    if (u.provedor !== 'anonymous' && ID.test(u.uid)) {
+    if (u.provedor !== 'anonymous' && ID.test(u.uid) && (u.verificado || u.provedor === 'google.com')) {
       const [p, st] = await Promise.all([ST.ler('usuarios/' + u.uid + '/perfil'), ST.ler('usuarios/' + u.uid + '/stats')]);
       t = p && p.titulo ? STATS.titulo(p.titulo, st, u.uid) : null;
       foto = p && typeof p.mini === 'string' && p.mini.length <= 12000 && /^data:image\/jpeg;base64,/.test(p.mini) ? p.mini : null;

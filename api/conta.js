@@ -211,6 +211,7 @@ module.exports = async (req, res) => {
   try {
     const u = await quemE(req);
     if (!idOk(u.uid)) throw falha(400, 'Conta inválida.');
+    if (!emailOk(u)) throw falha(403, 'Confirme seu e-mail para entrar na conta.');
     let body = req.body;
     if (typeof body === 'string') { try { body = JSON.parse(body) } catch (e) { body = {} } }
     body = body && typeof body === 'object' ? body : {};

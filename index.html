@@ -1028,7 +1028,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
       <h4 class="regsub">Conta, ranking e títulos</h4>
       <ul>
         <li>Com conta (Google ou e-mail e senha), as partidas <b>online</b> com 2 jogadores ou mais valem pontos: fácil 1, médio 2, difícil 3, impossível 5 e vitória +10. O ranking (🏆) é da semana e do mês.</li>
-        <li>Quem cria conta com e-mail precisa <b>confirmar o e-mail</b> (link enviado na hora) para as partidas contarem.</li>
+        <li>Quem cria conta com e-mail e senha recebe um link na hora e só consegue <b>entrar depois de confirmar o e-mail</b>. Não chegou? Olhe o spam ou use “Mandar o link de novo” na tela de entrar.</li>
         <li>As <b>conquistas</b> têm 6 níveis: bronze, prata, ouro, platina, diamante e grão-mestre. Cada uma libera um <b>título</b> (ex.: 🎮 Gamer para quem acerta muito de Games) para mostrar ao lado do nome, na sala e no ranking. Escolha o seu no 👤.</li>
         <li><b>Foto:</b> com conta, dá para colocar uma foto no 👤. Ela aparece junto do seu nome na sala, no placar, no chat e no ranking.</li>
       </ul>
@@ -2290,7 +2290,7 @@ function contaErroTxt(e){
   const c=(e&&e.code)||'';
   const M={'auth/invalid-credential':'E-mail ou senha errados.','auth/invalid-login-credentials':'E-mail ou senha errados.','auth/wrong-password':'E-mail ou senha errados.','auth/user-not-found':'E-mail ou senha errados.',
     'auth/email-already-in-use':'Já existe uma conta com esse e-mail. Use a aba "Entrar".','auth/weak-password':'Essa senha é fraca demais. Use pelo menos 8 caracteres, com letras e números.',
-    'auth/invalid-email':'Esse e-mail não parece certo.','auth/missing-password':'Digite a senha.','auth/missing-email':'Digite o e-mail.',
+    'auth/invalid-email':'Esse e-mail não parece certo.','auth/email-nao-confirmado':'Você ainda não confirmou o e-mail. Clique no link que mandamos (olhe também o spam) e tente de novo.','auth/missing-password':'Digite a senha.','auth/missing-email':'Digite o e-mail.',
     'auth/popup-closed-by-user':'','auth/cancelled-popup-request':'','auth/user-cancelled':'',
     'auth/popup-blocked':'O navegador bloqueou a janela do Google. Libere as janelas pop-up deste site e tente de novo.',
     'auth/too-many-requests':'Muitas tentativas seguidas. Espere um pouco e tente de novo.','auth/network-request-failed':'Sem conexão. Confira a internet e tente de novo.',
@@ -2321,13 +2321,16 @@ function localAuth(){
   return {
     onChange(cb){subs.push(cb);setTimeout(()=>cb(atual()),0)},
     async google(){await espera();if(localStorage.getItem('netsim:google-cancela'))throw err('auth/popup-closed-by-user');wr(KL,{uid:'loc-g1',email:'google@teste.local',nome:'Teste Google',verificado:true,provedor:'google.com'});avisa()},
-    async entrar(email,senha){await espera();const c=(rd(K)||{})[email.toLowerCase()];if(!c||c.h!==hs(senha))throw err('auth/invalid-credential');wr(KL,c.user);avisa()},
+    async entrar(email,senha){await espera();const all=rd(K)||{},e=email.toLowerCase(),c=all[e];if(!c||c.h!==hs(senha))throw err('auth/invalid-credential');
+      if(!c.user.verificado&&localStorage.getItem('netsim:confirmou:'+e)){c.user.verificado=true;wr(K,all)} // simula o clique no link do e-mail
+      if(!c.user.verificado)throw err('auth/email-nao-confirmado');wr(KL,c.user);avisa()},
+    async reenviarCom(email,senha){await espera();const c=(rd(K)||{})[email.toLowerCase()];if(!c||c.h!==hs(senha))throw err('auth/invalid-credential')},
     async criar(email,senha,nome){
       await espera();const e=email.toLowerCase();
       if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e))throw err('auth/invalid-email');if(senha.length<6)throw err('auth/weak-password');
       const all=rd(K)||{};if(all[e])throw err('auth/email-already-in-use');
       const user={uid:e.startsWith('admin@')?'loc-admin':'loc-'+hs(e),email:e,nome,verificado:false,provedor:'password'};
-      all[e]={h:hs(senha),user};wr(K,all);wr(KL,user);avisa();
+      all[e]={h:hs(senha),user};wr(K,all); // como no site: manda o link e não entra até confirmar
     },
     async esqueci(email){await espera();if(!email.includes('@'))throw err('auth/invalid-email')},
     async reenviar(){await espera()},
@@ -2343,6 +2346,11 @@ function contaInicia(){
   if(!AUTH){CONTA.pronto=!!window.AUTH_DONE;contaPinta();if(window.AUTH_ERRO)fetch('/api/bugs',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({tipo:'travou',texto:'Login não carregou: '+window.AUTH_ERRO,nome:myName()||'',info:bugInfo()})}).catch(()=>{});return}
   if(AUTH.resultadoRedirect)AUTH.resultadoRedirect().then(e=>{if(e&&e.code&&!/cancel|closed/.test(e.code)){CONTA_UI.erro=contaErroTxt(e);contaAbre()}}); // voltou da página do Google
   AUTH.onChange(async u=>{
+    if(u&&u.provedor!=='google.com'&&!u.verificado){ // conta de e-mail e senha sem confirmar: não fica logada
+      const n=AUTH.recarrega?await AUTH.recarrega().catch(()=>null):null;
+      if(!(n&&n.verificado)){await AUTH.sair().catch(()=>{});toast('📩 Confirme seu e-mail (link na sua caixa de entrada) para entrar na conta.');return}
+      u=n;
+    }
     const antes=CONTA.user&&CONTA.user.uid;
     CONTA.user=u;CONTA.admin=false;if(!u||u.uid!==antes){CONTA.perfil=null;CONTA.dados=null;CONTA.resumo=null;CONTA_HIST.ok=false}
     if(u){
@@ -2405,7 +2413,7 @@ async function contaResumo(){ // pontos e conquistas para os cartões e para a j
   if(!CONTA.user)return;
   try{const j=await contaApi('GET',{acao:'eu'});CONTA.dados=j;CONTA.resumo={semana:j.stats.semana,mes:j.stats.mes,total:j.stats.p};contaPinta()}catch(e){console.warn(e)}
 }
-function contaMsgs(){return (CONTA_UI.erro?`<div class="contaerro">${esc(CONTA_UI.erro)}</div>`:'')+(CONTA_UI.ok?`<div class="contaok">${esc(CONTA_UI.ok)}</div>`:'')}
+function contaMsgs(){return (CONTA_UI.erro?`<div class="contaerro">${esc(CONTA_UI.erro)}${CONTA_UI.naoConf?` <button type="button" class="linkbtn" ${CONTA_UI.ocupado?'disabled':''} onclick="contaReenviaCom()">Mandar o link de novo</button>`:''}</div>`:'')+(CONTA_UI.ok?`<div class="contaok">${esc(CONTA_UI.ok)}</div>`:'')}
 function olhoSenha(){const i=document.getElementById('ctsenha'),b=document.getElementById('ctolho');if(!i)return;const v=i.type==='password';i.type=v?'text':'password';if(b){b.textContent=v?'🙈':'👁️';b.title=v?'Esconder a senha':'Mostrar a senha'}}
 function contaHtml(){
   if(!AUTH&&!CONTA.pronto)return `<p class="containtro">Carregando o login…</p>`;
@@ -2602,8 +2610,16 @@ function contaEmail(){
   CONTA_UI.email=email;
   const falta=criar&&!nome?'Escolha um nome para o jogo.':!email?'Digite o e-mail.':!senha?'Digite a senha.':criar?senhaFraca(senha,email,nome):'';
   if(falta){CONTA_UI.erro=falta;CONTA_UI.ok='';contaRender();return}
-  CONTA_UI.esperando=true;
-  return contaFaz(async()=>{if(criar){setMyName(nome);await AUTH.criar(email,senha,nome)}else await AUTH.entrar(email,senha)});
+  CONTA_UI.esperando=!criar;CONTA_UI.naoConf=false;
+  return contaFaz(async()=>{
+    if(criar){setMyName(nome);await AUTH.criar(email,senha,nome);CONTA_UI.aba='entrar';CONTA_UI.ok=`Conta criada! Mandamos um link para ${email}. Clique nele (olhe também o spam) e depois entre aqui com seu e-mail e senha.`;return}
+    try{await AUTH.entrar(email,senha)}catch(e){if(e&&e.code==='auth/email-nao-confirmado')CONTA_UI.naoConf=true;throw e}
+  });
+}
+function contaReenviaCom(){
+  const email=((document.getElementById('ctemail')||{}).value||'').trim(),senha=(document.getElementById('ctsenha')||{}).value||'';
+  if(!email||!senha){CONTA_UI.erro='Digite o e-mail e a senha para mandar o link de novo.';contaRender();return}
+  return contaFaz(async()=>{await AUTH.reenviarCom(email,senha);CONTA_UI.naoConf=false;CONTA_UI.ok=`Mandamos o link de novo para ${email}. Clique nele e depois entre aqui.`});
 }
 function contaEsqueci(){
   const email=((document.getElementById('ctemail')||{}).value||'').trim();
