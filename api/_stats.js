@@ -87,7 +87,9 @@ function aplica(s, { ok, nivel, tema, fim, agora = Date.now() }) {
 }
 
 // título escolhido (id da conquista) → texto e nível atuais; null se ainda não liberou
-function titulo(id, s) {
+const TITULO_DONO = { id: 'dono', x: '👑 Dono do Jogo', n: 7 }; // só a conta do dono (conferida pelo uid)
+function titulo(id, s, uid) {
+  if (id === 'dono') return uid && require('./_auth').ehAdmin({ uid }) ? Object.assign({}, TITULO_DONO) : null;
   const c = CONQ.find(x => x.id === id);
   if (!c) return null;
   const nivel = c.alvos.filter(a => c.v(normaliza(s)) >= a).length;

@@ -97,17 +97,19 @@ async function titulo(body) {
   const [meta, guardada] = await Promise.all([ST.ler('salas/' + code + '/meta'), ST.ler('srv/chaves/' + code + '/' + q.dev)]);
   if (!meta) throw erro(404, 'Sala não encontrada');
   await confereChave(code, q, guardada);
-  let t = null;
+  let t = null, foto = null;
   if (body.token) {
     const u = await require('./_auth').verifica(String(body.token).slice(0, 4000));
     if (u.provedor !== 'anonymous' && ID.test(u.uid)) {
       const [p, st] = await Promise.all([ST.ler('usuarios/' + u.uid + '/perfil'), ST.ler('usuarios/' + u.uid + '/stats')]);
-      t = p && p.titulo ? STATS.titulo(p.titulo, st) : null;
+      t = p && p.titulo ? STATS.titulo(p.titulo, st, u.uid) : null;
+      foto = p && typeof p.mini === 'string' && p.mini.length <= 12000 && /^data:image\/jpeg;base64,/.test(p.mini) ? p.mini : null;
     }
   }
-  if (t) delete t.id;
-  await ST.grava('PUT', 'salas/' + code + '/titulos/' + q.dev, t);
-  return { titulo: t };
+  // junto vai a foto pequena da conta (aparece ao lado do nome na sala)
+  const v = (t || foto) ? Object.assign({}, t ? { x: t.x, n: t.n } : {}, foto ? { f: foto } : {}) : null;
+  await ST.grava('PUT', 'salas/' + code + '/titulos/' + q.dev, v);
+  return { titulo: v };
 }
 const liberou = g => !!(g && g.qid && g.tk && (g.resp || (g.chosen !== null && g.chosen !== undefined) || g.phase === 'result' || g.phase === 'won'));
 let PERG = null;
@@ -140,6 +142,8 @@ async function jogada(body) {
   const prevN = juiz.nucleo(estadoG(atual) || {});
   const nh = (h.length ? h : [{ v: base, c: prevN }]).concat([{ v, c: juiz.nucleo(next) }]).slice(-25);
   const mapa = { ['srv/hist/' + code]: nh };
+  // quem criou a sala foi tirado da partida: o comando da sala passa para o primeiro da roda
+  if (r.expulso && r.expulso === meta.host && Array.isArray(next.players) && next.players[0]) mapa['salas/' + code + '/meta/host'] = next.players[0].dev;
   if (r.resp) mapa['srv/resp/' + code + '/' + r.resp.qid] = Object.assign({}, r.resp, { jogo: next.jogo || null, w: agora });
   // a jogada que mostra a resposta (respondeu, escolheu, "não sei", tempo esgotado) já leva a resposta oficial:
   // quem jogou recebe aqui e os outros pela sala, sem precisar pedir de novo
@@ -157,7 +161,7 @@ async function jogada(body) {
 async function votar(body) {
   const code = codigo(body.sala), q = quem(body);
   const id = String(body.id || '');
-  if (id !== q.dev && id !== q.dev + '_u') throw erro(403, 'Voto de outro aparelho');
+  if (id !== q.dev && id !== q.dev + '_u' && id !== q.dev + '_x') throw erro(403, 'Voto de outro aparelho');
   const voto = body.voto && typeof body.voto === 'object' ? body.voto : null;
   if (!voto || typeof voto.k !== 'string' || voto.k.length > 60) throw erro(400, 'Voto inválido');
   const guardada = await ST.ler('srv/chaves/' + code + '/' + q.dev);

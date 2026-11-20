@@ -132,8 +132,8 @@ async function progresso(c, base, g, quem) {
   }
   const ajA = aj(P[cur]), ajB = aj(Q[cur]);
   const pulou = !ajA.pular && ajB.pular, deuDica = !ajA.dica && ajB.dica;
-  const podeTema = fin ? !ehCur && (idx >= 0 || ehHost) : ehCur || ehHost; // na pergunta final, quem escolhe o tema são os outros
-  const podeCur = ehCur || ehHost;
+  const podeTema = fin ? !ehCur && idx >= 0 : ehCur; // na pergunta final, quem escolhe o tema são os outros jogadores
+  const podeCur = ehCur; // ninguém joga pelo outro (quem some pode ser tirado da partida por votação)
   const novaQ = g.phase === 'question' && !!g.qid && (g.qid !== base.qid || base.phase !== 'question');
 
   if (g.phase === 'won' || g.phase === 'result') { // nada importante muda depois do resultado
@@ -247,14 +247,13 @@ async function fechamento(c, base, g, quem) {
       if (!Number.isInteger(escolha) || String(o[escolha]) !== String(info.a)) return nao('Essa alternativa não é a certa');
     } else {
       const dec = decisaoVoto(base, c.votos, c.lobby);
-      const juizHost = quem.ehHost && dono.dev !== c.host; // quem criou a sala pode decidir pela resposta dos outros
       const exata = !!(base.resp && igualOficial(base.resp.t, info.a));
-      if (dec !== true && !juizHost && !exata) return nao('A turma ainda não aceitou a resposta');
+      if (dec !== true && !exata) return nao('A turma ainda não aceitou a resposta');
     }
   } else {
     const dec = base.theme === 'V' ? null : decisaoVoto(base, c.votos, c.lobby);
     const acabou = Number.isFinite(+base.tEnd) && c.agora > +base.tEnd + 1500;
-    if (!(ehCur || quem.ehHost || dec === false || acabou)) return nao('Só quem está na vez pode desistir');
+    if (!(ehCur || dec === false || acabou)) return nao('Só quem está na vez pode desistir');
   }
   const u = g.ult || {};
   if (u.q !== base.qid || !!u.ok !== ok || (u.d || null) !== (dono.dev || null) || !!u.fim !== !!(ok && fin)) return nao('Registro da resposta não confere');
@@ -322,6 +321,8 @@ async function confere(c) {
   const f = fixosIguais(prev, g);
   if (f) return nao('Não dá para mudar ' + f + ' no meio da partida');
   if ((prev.jogo || null) !== (g.jogo || null)) return nao('Partida trocada');
+  if (Q.length === P.length - 1) return expulsao(c, prev, g, quem);
+  if (Q.length === P.length + 1) return entrada(c, prev, g, quem);
   if (P.length !== Q.length) return nao('Jogadores mudaram');
 
   const r = await andamento(c, prev, g, quem);
@@ -337,8 +338,83 @@ async function confere(c) {
   return r;
 }
 
+// ---------------------------------------------------------------- expulsar (votação) e entrar no meio (quem criou aceita)
+const DUR_EXPULSAR = 30000;
+// pedido aprovado: quem pediu conta como sim; votam os outros jogadores conectados (menos quem vai sair)
+function expulsarAprovado(g, votos, lobby) {
+  const ex = g.expulsar, P = pls(g);
+  if (!ex || !P) return null;
+  const k = 'x:' + ex.id;
+  const el = P.filter(p => p.dev && p.dev !== ex.alvo && (p.dev === ex.dev || (lobby[p.dev] && lobby[p.dev].on !== false) || (votos[p.dev + '_x'] && votos[p.dev + '_x'].k === k)));
+  let s = 0, n = 0;
+  el.forEach(p => { if (p.dev === ex.dev) { s++; return } const v = votos[p.dev + '_x']; if (v && v.k === k) { if (v.v) s++; else n++ } });
+  if (s > el.length / 2) return true;
+  if (n >= el.length / 2) return false;
+  return null;
+}
+// tudo da vez que não pode mudar quando alguém entra ou sai sem ser o jogador da vez
+const DA_VEZ = ['phase', 'qid', 'tk', 'qd', 'q', 'qt', 'theme', 'token', 'resp', 'chosen', 'hint', 'dobro', 'seen', 'tEnd', 'sortTema', 'ult', 'round'];
+function vezIgual(a, b) { for (const k of DA_VEZ) if (!igual(a[k], b[k])) return k; return null }
+async function expulsao(c, prev, g, quem) {
+  const P = pls(prev), Q = pls(g), ex = prev.expulsar;
+  if (!ex) return nao('Ninguém pediu para tirar esse jogador');
+  if (quem.idx < 0) return nao('Só quem está jogando aplica a votação');
+  if (expulsarAprovado(prev, c.votos, c.lobby) !== true) return nao('A turma ainda não aprovou');
+  if (c.agora > (+ex.ate || 0) + 15000) return nao('O tempo da votação acabou');
+  const ia = P.findIndex(p => p.dev === ex.alvo);
+  if (ia < 0) return nao('Esse jogador não está na partida');
+  const resto = P.filter((_, i) => i !== ia);
+  if (!igual(resto.map(identidade), Q.map(identidade)) || !igual(resto.map(nucleoJ), Q.map(nucleoJ))) return nao('Só sai quem a turma tirou');
+  if (g.expulsar) return nao('O pedido continua aberto');
+  if (!igual(prev.desfazer, g.desfazer) && !(prev.desfazer && prev.desfazer.dev === ex.alvo && !g.desfazer)) return nao('Desfazer mudou');
+  const cur0 = +prev.cur || 0, r0 = +prev.round || 1;
+  if (ia !== cur0) {
+    if (+g.cur !== (ia < cur0 ? cur0 - 1 : cur0)) return nao('A vez continua com a mesma pessoa');
+    const k = vezIgual(prev, g); if (k) return nao('Tirar um jogador não mexe na jogada (' + k + ')');
+    return sim({ expulso: ex.alvo });
+  }
+  // saiu quem estava na vez: a vez passa para o próximo
+  const cur1 = ia < Q.length ? ia : 0, r1 = ia < Q.length ? r0 : r0 + 1;
+  if (+g.cur !== cur1 || +g.round !== r1) return nao('A vez passa para o próximo');
+  const base = baseDaVez(prev, cur1, r1, Q, Array.isArray(prev.seen) ? prev.seen : []);
+  base.expulsar = null; base.desfazer = g.desfazer || null;
+  const r = await progresso(c, base, g, Object.assign({}, quem, { inicioVez: true }));
+  return r.ok ? sim({ expulso: ex.alvo }) : r;
+}
+async function entrada(c, prev, g, quem) {
+  const P = pls(prev), Q = pls(g);
+  if (!quem.ehHost) return nao('Quem aceita jogador novo é quem criou a sala');
+  if (Q.length > MAXJ) return nao('No máximo ' + MAXJ + ' jogadores');
+  if (!igual(P.map(identidade), Q.slice(0, P.length).map(identidade)) || !igual(P.map(nucleoJ), Q.slice(0, P.length).map(nucleoJ))) return nao('Quem entra vai para o fim da roda');
+  const novo = Q[Q.length - 1], n = nucleoJ(novo);
+  if (P.some(p => p.dev === novo.dev)) return nao('Esse jogador já está na partida');
+  if (!c.semLobby && !c.lobby[novo.dev]) return nao('Quem entra precisa estar na sala');
+  if (n.pos !== 0 || n.used.length || n.forced || n.estrelas || n.aj.pular || n.aj.dica) return nao('Quem entra começa do zero');
+  if (!/^#[0-9a-fA-F]{6}$/.test(String(novo.color || '')) || !String(novo.name || '').trim() || String(novo.name).length > 16) return nao('Nome ou cor inválidos');
+  if (+g.cur !== +prev.cur) return nao('A vez continua com a mesma pessoa');
+  const k = vezIgual(prev, g); if (k) return nao('Entrar não mexe na jogada (' + k + ')');
+  if (!igual(prev.desfazer, g.desfazer) || !igual(prev.expulsar, g.expulsar)) return nao('Entrar não mexe nos pedidos');
+  return sim({ entrou: novo.dev });
+}
+
 async function andamento(c, prev, g, quem) {
   const P = pls(prev), Q = pls(g), { ehHost, idx } = quem;
+  // pedir, cancelar ou encerrar a votação para tirar alguém da partida
+  if (!igual(prev.expulsar, g.expulsar)) {
+    const ex = g.expulsar, ag = c.agora;
+    if (ex && prev.expulsar) return nao('Já tem um pedido aberto');
+    if (ex) {
+      if (ex.dev !== c.dev || idx < 0) return nao('Pedido para tirar jogador inválido');
+      if (typeof ex.id !== 'string' || !/^[A-Za-z0-9_-]{4,30}$/.test(ex.id) || !Number.isFinite(+ex.ate) || +ex.ate > ag + DUR_EXPULSAR + 10000) return nao('Pedido para tirar jogador inválido');
+      if (ex.alvo === c.dev || !P.some(p => p.dev === ex.alvo)) return nao('Esse jogador não está na partida');
+      if (P.length < 3) return nao('Com 2 jogadores não dá para tirar ninguém');
+      if (prev.phase === 'won') return nao('A partida já acabou');
+    } else {
+      const px = prev.expulsar;
+      const pode = px.dev === c.dev || (idx >= 0 && (ag > (+px.ate || 0) + 2000 || expulsarAprovado(prev, c.votos, c.lobby) === false)) || ehHost && !P.some(p => p.dev === px.dev);
+      if (!pode) return nao('Só quem pediu cancela, até o tempo acabar');
+    }
+  }
   // pedir ou cancelar o desfazer
   if (!igual(prev.desfazer, g.desfazer)) {
     if (g.desfazer && !(g.desfazer.dev === c.dev && idx >= 0 && !prev.desfazer)) return nao('Pedido de desfazer inválido');
@@ -371,8 +447,8 @@ async function andamento(c, prev, g, quem) {
   if (!(ehHost || idx === cur0 || (leitor && leitor.dev === c.dev))) return nao('Quem passa a vez é quem jogou, quem leu ou quem criou a sala');
   for (let i = 0; i < P.length; i++) if (!igual(nucleoJ(P[i]), nucleoJ(Q[i]))) return nao('Placar mudou ao passar a vez');
   const base = baseDaVez(prev, cur1, r1, P, Array.isArray(prev.seen) ? prev.seen : []);
-  if (g.phase !== 'theme' && !temaAutomatico(base) && !(ehHost || idx === cur1)) return nao('Quem escolhe o tema é o jogador da vez');
+  if (g.phase !== 'theme' && !temaAutomatico(base) && idx !== cur1) return nao('Quem escolhe o tema é o jogador da vez');
   return progresso(c, base, g, Object.assign({}, quem, { inicioVez: true }));
 }
 
-module.exports = { confere, nucleo, decisaoVoto, desfazerAprovado, igualOficial };
+module.exports = { confere, nucleo, decisaoVoto, desfazerAprovado, expulsarAprovado, igualOficial };

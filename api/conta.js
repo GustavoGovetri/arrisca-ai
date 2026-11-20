@@ -18,8 +18,19 @@ const falha = (status, m) => Object.assign(new Error(m), { status });
 function bugsDev() { try { return Object.fromEntries(require('./bugs.js').MEM.map((b, i) => ['b' + i, b])) } catch (e) { return {} } }
 
 const emailOk = u => !!u && (u.verificado || u.provedor === 'google.com');
+// foto de perfil: JPEG pequeno (o aparelho já manda reduzido); confere o formato antes de guardar
+const FOTO_RE = /^data:image\/jpeg;base64,([A-Za-z0-9+/]+={0,2})$/;
+function fotoOk(x, max) {
+  if (typeof x !== 'string' || x.length > max) return null;
+  const m = FOTO_RE.exec(x); if (!m) return null;
+  const b = Buffer.from(m[1], 'base64');
+  if (b.length < 100 || b[0] !== 0xFF || b[1] !== 0xD8 || b[2] !== 0xFF || b[b.length - 2] !== 0xFF || b[b.length - 1] !== 0xD9) return null;
+  return x;
+}
+// linha da conta no ranking: pontos, nome, cor, título e foto pequena
+const linhaRanking = (pts, p, t) => ({ p: pts, n: p.nome || 'Jogador', c: p.cor || null, t: t || null, f: p.mini || null });
 function perfilPublico(p, u) {
-  return { nome: p.nome || '', cor: p.cor || null, titulo: p.titulo || '', criado: p.criado || '', email: u.email, verificado: u.verificado, provedor: u.provedor };
+  return { nome: p.nome || '', cor: p.cor || null, titulo: p.titulo || '', foto: p.foto || null, criado: p.criado || '', email: u.email, verificado: u.verificado, provedor: u.provedor };
 }
 
 async function entrar(u, body) {
@@ -42,14 +53,29 @@ async function mudaPerfil(u, body) {
   if (!Object.keys(muda).length) throw falha(400, 'Nada para mudar.');
   const [atual, st] = await Promise.all([ler(base + '/perfil'), ler(base + '/stats')]);
   if (!atual) throw falha(404, 'Conta não encontrada. Entre de novo.');
-  if (muda.titulo && !ST.titulo(muda.titulo, st)) throw falha(400, 'Você ainda não liberou esse título.');
+  if (muda.titulo && !ST.titulo(muda.titulo, st, u.uid)) throw falha(400, 'Você ainda não liberou esse título.');
   const p = Object.assign({}, atual, muda), per = ST.periodo(), s = ST.normaliza(st);
   if (!p.titulo) delete p.titulo;
-  const t = p.titulo ? ST.titulo(p.titulo, s) : null;
+  const t = p.titulo ? ST.titulo(p.titulo, s, u.uid) : null;
   const mapa = { [base + '/perfil']: p };
   // o nome, a cor e o título aparecem no ranking da semana e do mês atuais
-  if (s.sem.id === per.semana && s.sem.p > 0) mapa['ranking/semana/' + per.semana + '/' + u.uid] = { p: s.sem.p, n: p.nome, c: p.cor || null, t };
-  if (s.mes.id === per.mes && s.mes.p > 0) mapa['ranking/mes/' + per.mes + '/' + u.uid] = { p: s.mes.p, n: p.nome, c: p.cor || null, t };
+  if (s.sem.id === per.semana && s.sem.p > 0) mapa['ranking/semana/' + per.semana + '/' + u.uid] = linhaRanking(s.sem.p, p, t);
+  if (s.mes.id === per.mes && s.mes.p > 0) mapa['ranking/mes/' + per.mes + '/' + u.uid] = linhaRanking(s.mes.p, p, t);
+  await gravaVarios(mapa);
+  return { perfil: perfilPublico(p, u) };
+}
+
+async function mudaFoto(u, body) {
+  const base = 'usuarios/' + u.uid, tira = !body.foto;
+  const foto = tira ? null : fotoOk(body.foto, 60000), mini = tira ? null : fotoOk(body.mini, 12000);
+  if (!tira && (!foto || !mini)) throw falha(400, 'Não consegui usar essa imagem. Tente outra foto.');
+  const [atual, st] = await Promise.all([ler(base + '/perfil'), ler(base + '/stats')]);
+  if (!atual) throw falha(404, 'Conta não encontrada. Entre de novo.');
+  const p = Object.assign({}, atual, { foto, mini }); if (tira) { delete p.foto; delete p.mini }
+  const s = ST.normaliza(st), per = ST.periodo(), t = p.titulo ? ST.titulo(p.titulo, s, u.uid) : null;
+  const mapa = { [base + '/perfil']: p };
+  if (s.sem.id === per.semana && s.sem.p > 0) mapa['ranking/semana/' + per.semana + '/' + u.uid] = linhaRanking(s.sem.p, p, t);
+  if (s.mes.id === per.mes && s.mes.p > 0) mapa['ranking/mes/' + per.mes + '/' + u.uid] = linhaRanking(s.mes.p, p, t);
   await gravaVarios(mapa);
   return { perfil: perfilPublico(p, u) };
 }
@@ -110,14 +136,14 @@ async function resposta(u, body) {
   if (ok) part.a++; else part.e++;
   part.p += pts; part.fim = quando; if (fim) part.venceu = true;
   const tem = conq || {}, ganhou = ST.novas(s, tem);
-  const per = ST.periodo(agora), nome = perfil.nome || 'Jogador', cor = perfil.cor || null, t = perfil.titulo ? ST.titulo(perfil.titulo, s) : null;
+  const per = ST.periodo(agora), nome = perfil.nome || 'Jogador', cor = perfil.cor || null, t = perfil.titulo ? ST.titulo(perfil.titulo, s, u.uid) : null;
   const mapa = {
     [regC]: { u: u.uid, ok, n: nivel, w: agora },
     [base + '/stats']: s,
     [base + '/partidas/' + chave]: part
   };
-  if (s.sem.p > 0) { mapa['ranking/semana/' + per.semana + '/' + u.uid] = { p: s.sem.p, n: nome, c: cor, t }; mapa[base + '/rk/semana_' + per.semana] = true }
-  if (s.mes.p > 0) { mapa['ranking/mes/' + per.mes + '/' + u.uid] = { p: s.mes.p, n: nome, c: cor, t }; mapa[base + '/rk/mes_' + per.mes] = true }
+  if (s.sem.p > 0) { mapa['ranking/semana/' + per.semana + '/' + u.uid] = linhaRanking(s.sem.p, perfil, t); mapa[base + '/rk/semana_' + per.semana] = true }
+  if (s.mes.p > 0) { mapa['ranking/mes/' + per.mes + '/' + u.uid] = linhaRanking(s.mes.p, perfil, t); mapa[base + '/rk/mes_' + per.mes] = true }
   ganhou.forEach(c => { mapa[base + '/conquistas/' + c.id] = quando });
   await gravaVarios(mapa);
   return { pts, nivel, fim, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n, nivel: c.nivel })) };
@@ -194,6 +220,7 @@ module.exports = async (req, res) => {
     else if (get && acao === 'painel') { if (!ehAdmin(u)) throw falha(403, 'Só o dono do jogo vê o painel.'); r = await painel() }
     else if (!get && acao === 'entrar') r = await entrar(u, body);
     else if (!get && acao === 'perfil') r = await mudaPerfil(u, body);
+    else if (!get && acao === 'foto') r = await mudaFoto(u, body);
     else if (!get && acao === 'resposta') r = await resposta(u, body);
     else if (acao === 'usadas') r = await usadas(u, body, get);
     else if (!get && acao === 'apagar') { await apagar(u); r = { ok: true } }
