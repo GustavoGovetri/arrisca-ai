@@ -667,6 +667,12 @@ html.parado .silhmapa i{animation:none}
 .avatar.ctfoto{width:48px;height:48px;border-width:3px}
 .chatfoto{display:inline-block;width:18px;height:18px;border-radius:50%;vertical-align:-4px;margin-right:4px;border:2px solid var(--k)}
 .tfoto{display:inline-block;width:1.1em;height:1.1em;border-radius:50%;vertical-align:-.12em;margin-right:6px;border:2px solid var(--k);box-shadow:0 0 0 2px var(--c)}
+.nivchips{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.nivchip{padding:6px 10px;border-radius:999px;font-size:13px;background:rgba(0,0,0,.25);border:2px solid transparent;box-shadow:none;display:inline-flex;align-items:center;gap:6px}
+.nivchip.on{background:var(--btn);border-color:var(--amarelo)}
+.nivchip:hover:not(:disabled):not(.on){background:rgba(255,255,255,.12)}
+.nivchip.on:hover:not(:disabled){background:var(--btn-h)}
+.nivchip small{opacity:.8;font-weight:600;font-size:11px}
 .titsel{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px}
 .titop{padding:5px 8px;border-radius:12px;font-size:13px;background:rgba(0,0,0,.22);border:2px solid transparent;box-shadow:none}
 .titop.on{border-color:var(--amarelo);background:rgba(255,208,0,.15)}
@@ -988,7 +994,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
       <h4 class="regsub">A partida</h4>
       <ul>
         <li>2 a 10 jogadores. Cada um tem 5, 6 ou 7 fichas (de 1 até o número escolhido na preparação). Com mais fichas, a partida fica mais rápida.</li>
-        <li>Antes de começar, escolham os temas (mínimo 3), o tamanho do tabuleiro e o modo de jogo. As casas são divididas entre os temas escolhidos.</li>
+        <li>Antes de começar, escolham os temas (mínimo 3), o tamanho do tabuleiro, as dificuldades que entram (fácil, médio, difícil e impossível, quantas quiser) e o modo de jogo. As casas são divididas entre os temas escolhidos. Sem difícil nem impossível, o jogo fica no modo Tradicional.</li>
         <li>Os peões andam no sentido horário. Na casa INÍCIO, o jogador escolhe o tema. Nas outras, o tema é o da casa; nas casas com dois temas, ele escolhe um.</li>
         <li><b>Antes de ver a pergunta</b>, quem está na vez escolhe uma ficha. Se acertar, anda aquele número de casas (a casa de destino brilha no tabuleiro).</li>
         <li>A ficha usada fica de lado até todas serem usadas; aí o jogador recupera todas.</li>
@@ -1143,7 +1149,7 @@ function fixLegacy(){ // partidas salvas antes dos 12 temas
   if(!Array.isArray(G.selThemes)||!G.selThemes.length)G.selThemes=[...ORDER];
   G.selThemes=[...new Set(G.selThemes.map(m))].filter(k=>T[k]);
   if(G.selThemes.length<3)G.selThemes=[...ORDER];
-  if(!['misto','1','2','3','4'].includes(String(G.level)))G.level='misto';
+  G.level=nivelNorm(G.level);
   if(!Array.isArray(G.seen))G.seen=[];
   if(!SIZES[G.size])G.size='normal';
 }
@@ -1395,6 +1401,8 @@ let HIST_N=40;
 function renderHist(){
   const el=document.getElementById('hist');if(!el)return;
   if(!Q){el.innerHTML='<p class="muted">Carregando…</p>';return}
+  // redesenhar não pode fechar as seções abertas nem pular a rolagem (ex.: ao liberar um tema)
+  const abertos=new Set([...el.querySelectorAll('details[data-k]')].filter(d=>d.open).map(d=>d.dataset.k)),rolagem=el.scrollTop;
   let tot=0,totU=0;
   ORDER.forEach(k=>{tot+=QN(k);totU+=countUsed(k)});
   const vistas=Object.entries(VISTAS).map(([id,v])=>({id,t:v[0],q:v[1],a:v[2],ts:v[3]||0})).filter(v=>v.q).sort((x,y)=>y.ts-x.ts);
@@ -1406,12 +1414,14 @@ function renderHist(){
   el.innerHTML=`<p class="muted" style="margin-top:0">Já saíram <b>${totU.toLocaleString('pt-BR')}</b> de ${tot.toLocaleString('pt-BR')} perguntas neste aparelho. Elas não voltam a cair.</p>
   ${itens||'<p class="muted">Ainda não tem nada aqui. As perguntas aparecem depois que a resposta é mostrada.</p>'}
   ${vistas.length>HIST_N?`<div class="row" style="justify-content:center;margin-top:10px"><button class="small" onclick="HIST_N+=100;renderHist()">Mostrar mais (${(vistas.length-HIST_N).toLocaleString('pt-BR')})</button></div>`:''}
-  ${REPORTS.length?`<details><summary>⚑ Perguntas que você reportou (${REPORTS.length})</summary><p class="muted">Enviadas para revisão. Quando a correção entrar no jogo, elas saem desta lista.</p><ol class="hlist">${REPORTS.map((r,i)=>`<li>${esc(r.q)} <span class="muted">— ${esc(r.a)} · <b>${esc(r.motivo)}</b></span> <button class="small" onclick="removeReport(${i})">✕</button></li>`).join('')}</ol></details>`:''}
-  <details><summary>Avançado: liberar perguntas</summary>
+  ${REPORTS.length?`<details data-k="rep"><summary>⚑ Perguntas que você reportou (${REPORTS.length})</summary><p class="muted">Enviadas para revisão. Quando a correção entrar no jogo, elas saem desta lista.</p><ol class="hlist">${REPORTS.map((r,i)=>`<li>${esc(r.q)} <span class="muted">— ${esc(r.a)} · <b>${esc(r.motivo)}</b></span> <button class="small" onclick="removeReport(${i})">✕</button></li>`).join('')}</ol></details>`:''}
+  <details data-k="liberar"><summary>Avançado: liberar perguntas</summary>
   <p class="muted">Liberar faz as perguntas de um tema voltarem a cair neste aparelho. Quando um tema acaba, o jogo já pergunta se você quer liberar.</p>
   ${linhas}
   <div class="row" style="margin-top:12px"><button class="${confAll?'bad':''}" ${totU?'':'disabled'} onclick="resetTheme('ALL')">${confAll?'Clique de novo para confirmar':'Liberar todas as perguntas'}</button></div>
   </details>`;
+  el.querySelectorAll('details[data-k]').forEach(d=>{if(abertos.has(d.dataset.k))d.open=true});
+  el.scrollTop=rolagem;
 }
 
 let G={phase:'setup',count:4,fichas:5,names:['Jogador 1','Jogador 2','Jogador 3','Jogador 4','Jogador 5','Jogador 6','Jogador 7','Jogador 8','Jogador 9','Jogador 10'],colors:[...PCOLORS],selThemes:[...ORDER],size:'normal',level:'misto',seen:[],modo:'bonus',publica:false};
@@ -1546,7 +1556,7 @@ function renderPanel(){
     if(G.pickColor!=null&&G.pickColor<G.count)h+=`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.names[G.pickColor]||'Jogador '+(G.pickColor+1))}</b>:</span>${paletaHtml(G.colors[G.pickColor],`setupColor(${G.pickColor},'#C')`,G.colors.slice(0,G.count))}</div>`;
     h+=`<div class="row" style="margin:-2px 0 10px"><button class="small" onclick="shuffleSetup()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem; quem está em 1º começa. Toque na bolinha para trocar a cor.</span></div>`;
     h+=`<div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
-    <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}${Q&&v!=='misto'?' · '+lvCount(+v).toLocaleString('pt-BR')+' perguntas':''}</option>`).join('')}</select></div>`;
+    ${niveisHtml(true)}`;
     h+=`</div><div class="pcol"><h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].n+': '+T[k].d+(chipInfo(k,G.selThemes,true)?' ('+chipInfo(k,G.selThemes,true)+')':''))}"><span class="tdot"></span><span class="tnome">${ic(k)} ${T[k].n}</span><small>${chipConta(k,G.selThemes,true)}</small></button>`}).join('')}</div>
     <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>${juntaNota(G.selThemes)}
     ${modosHtml(true)}
@@ -1809,10 +1819,23 @@ const MODOS={
   arriscado:{n:'Arriscado',e:'🔥',d:'Tudo do Bônus e mais: na difícil e na impossível dá para arriscar o dobro. Acertou, anda o dobro; errou, volta as casas da ficha.'}
 };
 const ORDEM_MODOS=['classico','bonus','arriscado'];
-function modo(){return G.modo==='semdo'?'arriscado':MODOS[G.modo]?G.modo:'classico'} // o Sem dó saiu: sala antiga nele segue como Arriscado
+// dificuldades da partida: 'misto' (todas) ou os níveis escolhidos juntos, ex. '12' = fácil e médio
+function nivelNorm(v){v=String(v==null?'misto':v);if(v==='misto')return 'misto';const d=[...new Set(v.replace(/[^1-4]/g,'').split(''))].sort().join('');return !d||d==='1234'?'misto':d}
+function niveisSel(){const v=nivelNorm(G.level);return v==='misto'?[1,2,3,4]:v.split('').map(Number)}
+const temDificeis=()=>niveisSel().some(l=>l>=3); // Bônus e Arriscado só fazem sentido com difícil ou impossível
+function trocaNivel(l){
+  const at=new Set(niveisSel());if(at.has(l)){if(at.size===1)return;at.delete(l)}else at.add(l);
+  G.level=nivelNorm([...at].join(''));if(!temDificeis())G.modo='classico';render();
+}
+function niveisHtml(contar){
+  const sel=niveisSel();
+  return `<div class="setup-row niveis"><label style="flex:none">Dificuldades:</label><div class="nivchips">${[[1,'Fácil'],[2,'Médio'],[3,'Difícil'],[4,'Impossível']].map(([l,n])=>`<button class="nivchip${sel.includes(l)?' on':''}" onclick="trocaNivel(${l})" aria-pressed="${sel.includes(l)}">${sel.includes(l)?'✓ ':''}${n}${contar&&Q?`<small>${lvCount(l).toLocaleString('pt-BR')}</small>`:''}</button>`).join('')}</div></div>`;
+}
+function modo(){if(!temDificeis())return 'classico';return G.modo==='semdo'?'arriscado':MODOS[G.modo]?G.modo:'classico'} // o Sem dó saiu: sala antiga nele segue como Arriscado
 function regra(r){const m=modo();return r==='bonus'?m!=='classico':r==='dobro'?m==='arriscado':false}
 function modosHtml(pode){
-  return `<h2 style="margin-top:16px">Modo de jogo</h2><div class="modos">${ORDEM_MODOS.map(k=>{const m=MODOS[k],on=modo()===k;return `<button class="modo${on?' on':''}" ${pode?'':'disabled'} onclick="G.modo='${k}';render()" title="${esc(m.d)}"><span class="me">${m.e}</span><b>${m.n}</b></button>`}).join('')}</div><p class="mododesc">${MODOS[modo()].d}</p>`;
+  const sem=!temDificeis();
+  return `<h2 style="margin-top:16px">Modo de jogo</h2><div class="modos">${ORDEM_MODOS.map(k=>{const m=MODOS[k],on=modo()===k,trava=sem&&k!=='classico';return `<button class="modo${on?' on':''}" ${pode&&!trava?'':'disabled'} onclick="G.modo='${k}';render()" title="${esc(trava?'Precisa de perguntas difíceis ou impossíveis':m.d)}"><span class="me">${m.e}</span><b>${m.n}</b></button>`}).join('')}</div><p class="mododesc">${MODOS[modo()].d}${sem?'<br><small>Bônus e Arriscado só valem com Difícil ou Impossível nas dificuldades.</small>':''}</p>`;
 }
 function podeDobrar(){
   const p=G.players&&G.players[G.cur];
@@ -2227,7 +2250,7 @@ function fechaSalas(){SALAS_ABERTO=false;clearInterval(SALAS_TIMER);const b=docu
 function infoSala(s){
   const m=MODOS[s.modo]||MODOS.classico;
   const temas=s.classico?'6 temas clássicos':s.temas===ORDER.length?'Todos os temas':s.temas+' temas';
-  const nivel={misto:'Todos os níveis','1':'Fácil','2':'Médio','3':'Difícil','4':'Impossível'}[s.nivel]||'';
+  const nv=nivelNorm(s.nivel),nivel=nv==='misto'?'Todos os níveis':nv.split('').map(l=>({'1':'Fácil','2':'Médio','3':'Difícil','4':'Impossível'})[l]).join(' + ');
   return `${m.e} ${m.n} · ${temas} · ${nivel}`;
 }
 function renderSalas(){
@@ -3017,7 +3040,7 @@ function lobbyHtml(){
     h+=`<div class="row" style="margin:6px 0 4px"><button class="small" onclick="shuffleLobby()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem. Quem está em 1º começa.</span></div>
     <div class="setup-row"><label style="flex:none">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
     <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;G.previewBoard=null;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
-    <div class="setup-row"><label style="flex:none">Dificuldade:</label><select onchange="G.level=this.value;render()">${[['misto','Misturado (todos os níveis)'],['1','Fácil'],['2','Médio'],['3','Difícil'],['4','Impossível']].map(([v,l])=>`<option value="${v}" ${String(G.level)===v?'selected':''}>${l}</option>`).join('')}</select></div>
+    ${niveisHtml(false)}
     </div><div class="pcol"><h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].n+': '+T[k].d+(chipInfo(k,G.selThemes,false)?' ('+chipInfo(k,G.selThemes,false)+')':''))}"><span class="tdot"></span><span class="tnome">${ic(k)} ${T[k].n}</span><small>${chipConta(k,G.selThemes,false)}</small></button>`}).join('')}</div>
     <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>${juntaNota(G.selThemes)}
     ${modosHtml(true)}

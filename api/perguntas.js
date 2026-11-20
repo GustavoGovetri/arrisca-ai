@@ -124,10 +124,14 @@ function sortear(B, t, nivel, usadas, vistas, junta) {
   const refs = B.temas[t].items.map((_, i) => [t, i]);
   if (junta && B.extra[t]) refs.push(...B.extra[t]);
   for (const r of refs) { const [s, i] = r; if (!used.has(B.temas[s].ids[i])) byLv[qDiff(s, B.temas[s].items[i])].push(r) }
-  const lv = String(nivel || 'misto');
+  // nível: 'misto' (todos), um só ('3') ou vários juntos ('12', '34'...)
+  let lv = String(nivel || 'misto');
+  const escolhidos = lv === 'misto' ? [1, 2, 3, 4] : [...new Set(lv.replace(/[^1-4]/g, '').split('').map(Number))].sort();
+  if (!escolhidos.length || escolhidos.length === 4) lv = 'misto';
+  const varios = lv !== 'misto' && escolhidos.length > 1;
   let order;
-  if (lv === 'misto') { // sorteia o nível pesando pela raiz de quantas perguntas ainda faltam nele: os níveis pequenos (fácil e impossível) não se esgotam antes
-    const pesos = [1, 2, 3, 4].map(l => [l, Math.sqrt(byLv[l].length)]);
+  if (lv === 'misto' || varios) { // sorteia o nível pesando pela raiz de quantas perguntas ainda faltam nele: os níveis pequenos (fácil e impossível) não se esgotam antes
+    const pesos = escolhidos.map(l => [l, Math.sqrt(byLv[l].length)]);
     order = [];
     while (pesos.some(p => p[1] > 0)) {
       const tot = pesos.reduce((x, p) => x + p[1], 0);
@@ -135,7 +139,9 @@ function sortear(B, t, nivel, usadas, vistas, junta) {
       while (k < pesos.length - 1 && (pesos[k][1] === 0 || x >= pesos[k][1])) { x -= pesos[k][1]; k++ }
       order.push(pesos[k][0]); pesos[k][1] = 0;
     }
-    [1, 2, 3, 4].forEach(l => { if (!order.includes(l)) order.push(l) });
+    // se os escolhidos acabarem, vale o nível de fora mais perto deles
+    const dist = l => Math.min(...escolhidos.map(e => Math.abs(e - l)));
+    [1, 2, 3, 4].filter(l => !order.includes(l)).sort((x, y) => dist(x) - dist(y)).forEach(l => order.push(l));
   }
   else { const w = +lv; order = [w, w + 1, w - 1, w + 2, w - 2, w + 3, w - 3].filter(l => l >= 1 && l <= 4) }
   order = order.filter(l => byLv[l].length);
@@ -165,7 +171,7 @@ function sortear(B, t, nivel, usadas, vistas, junta) {
   let pick = null, usedLv = 0;
   for (const l of order) { pick = tryPool(byLv[l]); if (pick) { usedLv = l; break } }
   if (!pick) { const pool = byLv[order[0]]; pick = pool[rnd(pool.length)]; usedLv = order[0] }
-  const lvNote = lv !== 'misto' && usedLv !== +lv ? `Acabaram as perguntas de nível ${LEVELS[+lv]} de ${TEMA_N[t]} que podiam cair agora; esta é de nível ${LEVELS[usedLv]}.` : '';
+  const lvNote = lv !== 'misto' && !escolhidos.includes(usedLv) ? `Acabaram as perguntas de nível ${escolhidos.map(l => LEVELS[l]).join(' e ')} de ${TEMA_N[t]} que podiam cair agora; esta é de nível ${LEVELS[usedLv]}.` : '';
   return { s: pick[0], i: pick[1], lvNote };
 }
 
