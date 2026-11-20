@@ -247,3 +247,15 @@ module.exports._infoTk = async tk => {
   if (i === undefined) return null;
   return { qid: x.i, t: x.t, m: x.m, s: x.s || null, e: +x.e || 0, nivel: Math.min(4, Math.max(1, +qDiff(x.t, T.items[i]) || 2)) };
 };
+// para o juiz da sala: a pergunta por trás de um token, com nível, texto e resposta certa (nunca vai para o aparelho)
+module.exports._pergTk = async tk => {
+  const x = confere(tk);
+  if (!x || typeof x.i !== 'string' || typeof x.t !== 'string') return null;
+  const B = await banco(), T = B.temas[x.t];
+  if (!T) return null;
+  const i = T.idx.get(x.i);
+  if (i === undefined) return null;
+  const q = T.items[i];
+  return { qid: x.i, t: x.t, m: x.m, s: x.s || null, e: +x.e || 0, nivel: Math.min(4, Math.max(1, +qDiff(x.t, q) || 2)),
+    q: q[0], a: resposta(x.t, q), opts: x.t === 'V' ? q[1].slice() : null };
+};

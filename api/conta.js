@@ -75,22 +75,23 @@ async function resposta(u, body) {
   const jogo = String(body.jogo || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 24) || 'x';
   const ok = !!body.ok, dev = String(body.dev || '').slice(0, 40);
   const base = 'usuarios/' + u.uid, regC = 'srv/reg/' + sala + '/' + info.qid, chave = sala + '_' + jogo;
-  const [reg, st, conq, part0, perfil, estado, jogadores] = await Promise.all([
+  const [reg, st, conq, part0, perfil, estado, jogadores, rr] = await Promise.all([
     ler(regC), ler(base + '/stats'), ler(base + '/conquistas'), ler(base + '/partidas/' + chave), ler(base + '/perfil'),
-    DEV ? null : ler('salas/' + sala + '/estado'), DEV ? null : ler('salas/' + sala + '/jogadores')
+    DEV ? null : ler('salas/' + sala + '/estado'), DEV ? null : ler('salas/' + sala + '/jogadores'), ler('srv/resp/' + sala + '/' + info.qid)
   ]);
   if (reg) return { ja: true };
   if (!perfil) throw falha(404, 'Conta não encontrada. Entre de novo.');
   let fim = !!body.fim && ok;
+  // o que vale é o que o juiz da sala aceitou (gravado pelo servidor quando a pergunta foi fechada)
+  if (rr || !DEV) {
+    if (!rr) throw falha(400, 'Essa resposta não foi registrada pela sala.');
+    if (!!rr.ok !== ok || (rr.d || '') !== dev || (rr.jogo || 'x') !== jogo) throw falha(400, 'A resposta não confere com a sala.');
+    fim = fim && !!rr.fim;
+  }
   if (!DEV) {
     if (!jogadores || Object.keys(jogadores).length < 2) throw falha(400, 'Só contam salas com 2 jogadores ou mais.');
     let g = null; try { g = JSON.parse(estado && estado.g) } catch (e) { g = null }
     if (!g || g.jogo !== jogo) throw falha(400, 'Partida não encontrada na sala.');
-    const saiu = Array.isArray(g.seen) && g.seen.some(x => Array.isArray(x) && x[1] === info.qid);
-    if (!saiu) throw falha(400, 'Essa pergunta não saiu nessa partida.');
-    const u2 = g.ult;
-    if (u2 && u2.q === info.qid && (!!u2.ok !== ok || u2.d !== dev)) throw falha(400, 'A resposta não confere com a sala.');
-    fim = fim && g.phase === 'won' && !!(u2 && u2.q === info.qid && u2.fim);
   }
   const s = ST.normaliza(st);
   if (s.dia.id === ST.periodo().dia && s.dia.n >= LIMITE_DIA) throw falha(429, 'Limite de respostas de hoje.');

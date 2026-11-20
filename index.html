@@ -941,6 +941,7 @@ function fixLegacy(){ // partidas salvas antes dos 12 temas
 }
 function syncBoard(){
   if(G.board)setBoard(G.board);
+  else if(online()&&!amHost()&&Array.isArray(G.previewBoard)&&G.previewBoard.length)setBoard(G.previewBoard);
   else{if(!G.previewBoard||G.previewKey!==G.selThemes.join()+G.size){G.previewBoard=makeBoard(G.selThemes.length?G.selThemes:ORDER,SIZES[G.size].n);G.previewKey=G.selThemes.join()+G.size}setBoard(G.previewBoard)}
 }
 function activeThemes(){return G.themes&&G.themes.length?G.themes:ORDER}
@@ -1544,7 +1545,7 @@ function shuffleSetup(){const idx=[...Array(G.count).keys()];for(let i=idx.lengt
 function setupColor(i,c){const j=G.colors.indexOf(c);if(j>=0&&j!==i)G.colors[j]=G.colors[i];G.colors[i]=c;G.pickColor=null;render()}
 function moveGame(k,d){const j=k+d;if(j<0||j>=G.players.length)return;snapshot('Mudar a ordem');[G.players[k],G.players[j]]=[G.players[j],G.players[k]];if(G.cur===k)G.cur=j;else if(G.cur===j)G.cur=k;if(G.pickColor===k)G.pickColor=j;else if(G.pickColor===j)G.pickColor=k;render()}
 function gameColor(k,c){snapshot('Trocar a cor');const o=G.players.find((x,i)=>i!==k&&x.color===c);if(o)o.color=G.players[k].color;G.players[k].color=c;G.pickColor=null;render()}
-function rematch(){UNDO=[];G.seen=[];G.players.forEach(p=>{p.pos=0;p.used=[];p.forced=null;p.aj={pular:0,dica:0};p.estrelas=0});G.cur=0;G.round=1;startTurn()}
+function rematch(){UNDO=[];G.seen=[];G.jogo=Math.random().toString(36).slice(2,10);G.ult=null;G.players.forEach(p=>{p.pos=0;p.used=[];p.forced=null;p.aj={pular:0,dica:0};p.estrelas=0});G.cur=0;G.round=1;startTurn()}
 function newGame(){UNDO=[];G.seen=[];stopTimer();window.__c=0;G.players=null;G.board=null;G.themes=null;G.previewBoard=null;G.phase='setup';render()}
 
 // ---------- modos de jogo ----------
@@ -1699,6 +1700,16 @@ let MODE=null,ROOM=null,HOST=null,LOBBY={},RV=0,LASTSYNC='',APPLYING=false,HOSTA
 const URLP=new URLSearchParams(location.search);
 PENDING_ROOM=(URLP.get('sala')||'').toUpperCase().replace(/[^A-Z0-9]/g,'')||null;
 const MYDEV=(()=>{try{let d=localStorage.getItem('arrisca-dev');if(!d){d='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);localStorage.setItem('arrisca-dev',d)}return d}catch(e){return 'd'+Math.random().toString(36).slice(2,12)}})();
+// chave secreta deste aparelho: prova para o servidor que a jogada veio mesmo daqui (nunca aparece na sala)
+const MYKEY=(()=>{const nova=()=>{const a=new Uint8Array(24);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')};try{let k=localStorage.getItem('arrisca-chave');if(!k||k.length<20){k=nova();localStorage.setItem('arrisca-chave',k)}return k}catch(e){return nova()}})();
+const LOCALSIM=URLP.get('net')==='local';
+async function servidorSala(acao,body){ // criar, entrar, jogada e votar: quem grava na sala é o servidor, depois de conferir
+  const corpo=Object.assign({dev:MYDEV,chave:MYKEY},body,LOCALSIM?{lobby:LOBBY}:{});
+  const r=await fetch('/api/salas?acao='+acao,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(corpo)});
+  let j=null;try{j=await r.json()}catch(e){}
+  if(!r.ok){const e=new Error((j&&j.erro)||('Erro '+r.status));e.status=r.status;e.estado=j&&j.estado;throw e}
+  return j||{};
+}
 function myName(){try{return localStorage.getItem('arrisca-nome')||''}catch(e){return ''}}
 function myColor(){try{return localStorage.getItem('arrisca-cor')||''}catch(e){return ''}}
 function online(){return MODE==='online'}
@@ -1819,7 +1830,6 @@ async function createRoom(publica){
   if(!precisaNome())return;
   try{let code,tries=0;do{code=newCode();tries++}while(tries<8&&await NET.exists(code));
     CREATING=true;
-    await NET.create(code,{host:MYDEV,criada:Date.now()});
     await enterRoom(code,true,!!publica);
   }catch(e){console.error(e);CREATING=false;toast('Não consegui criar a sala. Tente de novo.')}
 }
@@ -1833,13 +1843,14 @@ async function enterRoom(code,created,publica){
     MODE='online';ROOM=code;RV=0;LASTSYNC='';UNDO=[];HOST=created?MYDEV:null;LOBBY={};LOBBY_N=0;LOBBY_VISTOS=null;HOSTALL=false;
     G=JSON.parse(G_DEFAULT);G.ordem=created?[MYDEV]:[];G.publica=!!(created&&publica);ANUNCIO.foi=false;ANUNCIO.k='';SALAS_ABERTO=false;
     try{history.replaceState(null,'','?sala='+code+(URLP.get('net')?'&net='+URLP.get('net'):''))}catch(e){}
-    if(created){const j=syncJson();await NET.tx(code,0,{v:1,g:j,por:MYDEV,ts:Date.now()});RV=Math.max(RV,1);LASTSYNC=j;CREATING=false}
+    if(created){const j=syncJson();await servidorSala('criar',{sala:code,g:j});if(NET.espelha){NET.espelha('salas/'+code+'/meta',{host:MYDEV,criada:Date.now()});NET.espelha('salas/'+code+'/estado',{v:1,g:j,por:MYDEV,ts:Date.now()})}RV=Math.max(RV,1);LASTSYNC=j;CREATING=false}
+    else await servidorSala('entrar',{sala:code});
     VOTES={};chatZera();
     UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido});
     await NET.setMe(code,MYDEV,{nome:myName(),cor:myColor(),on:true,fora:false,ts:Date.now()});
     SALA_USADAS={};mandaUsadasSala().then(carregaUsadasSala);
     render();
-  }catch(e){console.error(e);CREATING=false;toast('Sem conexão com a sala. Tente de novo.')}
+  }catch(e){console.error(e);CREATING=false;toast(e&&e.status&&e.status!==500?e.message:'Sem conexão com a sala. Tente de novo.');if(e&&e.status===404||e&&e.status===403){if(UNWATCH){UNWATCH();UNWATCH=null}MODE=null;ROOM=null;render()}}
 }
 function leaveRoom(){
   if(UNWATCH){UNWATCH();UNWATCH=null}
@@ -2414,14 +2425,27 @@ let PUSHING=false,PUSH_AGAIN=false,SENT=null;
 async function netPush(){
   if(!online()||APPLYING||!NET||CREATING||RV<1)return;
   const j=syncJson();if(j===LASTSYNC)return;
+  if(G.phase==='setup'&&!amHost()){LASTSYNC=j;return} // na sala de espera só quem criou a sala mexe
+  if(RECUSAS>=4){RECUSAS=0;LASTSYNC=j;return} // não fica insistindo numa jogada que o servidor já recusou
   if(PUSHING){PUSH_AGAIN=true;return}
-  PUSHING=true;const base=RV;SENT={v:base+1,g:j};
+  PUSHING=true;const base=RV,sala=ROOM;SENT={v:base+1,g:j};
   try{
-    const ok=await NET.tx(ROOM,base,{v:base+1,g:j,por:MYDEV,ts:Date.now()});
-    if(ok){if(RV<base+1)RV=base+1;LASTSYNC=j}
-    else toast('Alguém mexeu ao mesmo tempo. A tela foi atualizada.');
-  }catch(e){console.error(e);toast('Sem conexão: a jogada não foi enviada.')}
+    const r=await servidorSala('jogada',{sala,base,g:j});
+    const v=r.v||base+1;
+    if(NET.espelha)NET.espelha('salas/'+sala+'/estado',{v,g:j,por:MYDEV,ts:Date.now()});
+    if(RV<v)RV=v;LASTSYNC=j;RECUSAS=0;
+  }catch(e){
+    if(e.status===409||e.status===403)jogadaRecusada(e);
+    else{console.error(e);toast('Sem conexão: a jogada não foi enviada.')}
+  }
   finally{PUSHING=false;if(PUSH_AGAIN){PUSH_AGAIN=false;netPush()}}
+}
+let RECUSAS=0,AVISO_RECUSA=0;
+function jogadaRecusada(e){ // o servidor não aceitou: a tela volta para o que vale na sala
+  RECUSAS++;PUSH_AGAIN=false;
+  if(Date.now()-AVISO_RECUSA>6000){AVISO_RECUSA=Date.now();toast(e.status===409?'Alguém mexeu ao mesmo tempo. A tela foi atualizada.':'⚠️ Jogada não aceita: '+e.message)}
+  const d=e.estado;
+  if(d&&typeof d.v==='number'){RV=Math.min(RV,d.v-1);SENT=null;applyRemote(Object.assign({},d,{por:d.por===MYDEV?'servidor':d.por}))}
 }
 // ----- segurança: tudo que chega da sala (Firebase) é conferido antes de entrar no jogo -----
 // Qualquer pessoa com o código da sala consegue escrever nela; então nada vindo de lá é usado como HTML ou código sem passar por aqui.
@@ -2633,7 +2657,8 @@ function localNet(){
     removePlayer:async(c,d)=>{const k='salas/'+c+'/jogadores';const all=rd(k)||{};delete all[d];wr(k,all)},
     setUsadas:async(c,d,o)=>{const k='salas/'+c+'/usadas';const all=rd(k)||{};all[d]=o;wr(k,all)},
     getUsadas:async c=>rd('salas/'+c+'/usadas')||{},
-    tx:async(c,base,val)=>{const k='salas/'+c+'/estado';const cur=rd(k);if(((cur&&cur.v)||0)!==base)return false;wr(k,val);return true},
+    espelha:(k,v)=>wr(k,v), // o servidor de testes guarda a sala na memória; aqui só repassa para as outras abas
+    espelhaVoto:(c,d,o)=>{const k='salas/'+c+'/votos';const all=rd(k)||{};all[d]=o;wr(k,all)},
     report:async r=>{const all=rd('reportes')||{};all['r'+Date.now()+Math.random().toString(36).slice(2,6)]=r;wr('reportes',all)}
   };
 }
@@ -2687,7 +2712,7 @@ function votoDesfazer(v){
   const dz=G.desfazer;if(!dz||!NET||dz.dev===MYDEV)return;
   const o={k:'u:'+dz.id,v:!!v,ts:Date.now()};
   VOTES=Object.assign({},VOTES,{[MYDEV+'_u']:o});SFX.vote();
-  NET.vote(ROOM,MYDEV+'_u',o).catch(()=>toast('Sem conexão: o voto não foi enviado.'));
+  mandaVoto(MYDEV+'_u',o);
   render();
 }
 function contaDesfazer(){
@@ -2704,6 +2729,13 @@ function confereDesfazer(){ // quem pediu (que tem a jogada guardada) aplica ou 
     if(c.nao>=c.n/2||ag>dz.ate){G.desfazer=null;toast(c.nao>=c.n/2?'A turma não aprovou desfazer a jogada.':'O tempo para votar acabou: a jogada continua valendo.');render();return}
   }else if(amHost()&&(ag>dz.ate+8000||!LOBBY[dz.dev]||LOBBY[dz.dev].on===false)){G.desfazer=null;render()}
 }
+// sorteio que ficou parado (a jogada de quem sorteava não chegou): quem pode escolher o tema tenta de novo
+let SORTEIO_K='',SORTEIO_VISTO=0;
+setInterval(()=>{
+  if(!online()||G.phase!=='sorteio'||SORTEANDO||!G.players){SORTEIO_K='';return}
+  const k=G.round+'|'+G.cur+'|'+G.sortTema;if(k!==SORTEIO_K){SORTEIO_K=k;SORTEIO_VISTO=Date.now();return}
+  if(Date.now()-SORTEIO_VISTO>9000&&G.sortTema&&T[G.sortTema]&&canTheme()){SORTEIO_VISTO=Date.now();pickTheme(G.sortTema,true)}
+},1000);
 setInterval(()=>{if(G.desfazer)confereDesfazer();const el=document.getElementById('dztempo');if(el&&G.desfazer)el.textContent=Math.max(0,Math.ceil((G.desfazer.ate-agora())/1000))+' s'},1000);
 function desfazerHtml(){
   const dz=G.desfazer;if(!dz||!online())return '';
@@ -2739,10 +2771,14 @@ function julgar(){ // quem fecha a votação é o aparelho de quem respondeu (ou
 }
 function fecharVoto(ok,pre){if(G.phase!=='question'||!G.resp)return;stopTimer();resolve(ok,true,pre)}
 function forcarVoto(ok){if(!(amHost()&&HOSTALL))return;const me=G.players[myIdx()];fecharVoto(ok,`🎮 ${esc(me?me.name:'Quem criou a sala')} decidiu que a resposta ${ok?'vale':'não vale'}. `)}
+function mandaVoto(id,o){
+  const sala=ROOM;
+  servidorSala('votar',{sala,id,voto:o}).then(r=>{if(NET&&NET.espelhaVoto)NET.espelhaVoto(sala,id,r.voto||o)}).catch(e=>toast(e.status?'Voto não aceito: '+e.message:'Sem conexão: o voto não foi enviado.'));
+}
 function votar(v){
   if(!online()||!G.resp||!NET)return;const k=respKey();
   VOTES=Object.assign({},VOTES,{[MYDEV]:{k,v:!!v,ts:Date.now()}});SFX.vote();
-  NET.vote(ROOM,MYDEV,{k,v:!!v,ts:Date.now()}).catch(()=>toast('Sem conexão: o voto não foi enviado.'));
+  mandaVoto(MYDEV,{k,v:!!v,ts:Date.now()});
   render();
 }
 async function enviarResposta(auto){

@@ -38,4 +38,20 @@ async function gravaVarios(mapa) {
   await dbReq('PATCH', '', mapa);
 }
 
-module.exports = { DEV, MEM, ler, grava, gravaVarios };
+// leitura com "etiqueta" e gravação só se ninguém mudou no meio (para duas jogadas ao mesmo tempo não se atropelarem)
+async function lerEtag(caminho) {
+  if (DEV) { const v = await ler(caminho); return { v, etag: JSON.stringify(v) } }
+  const r = await fetch(DB + '/' + caminho + '.json?access_token=' + encodeURIComponent(await token()), { headers: { 'X-Firebase-ETag': 'true' } });
+  if (!r.ok) throw Object.assign(new Error('O banco respondeu ' + r.status), { status: 502 });
+  return { v: await r.json(), etag: r.headers.get('etag') };
+}
+async function gravaSe(caminho, valor, etag) {
+  if (DEV) { const v = await ler(caminho); if (JSON.stringify(v) !== etag) return false; memGrava(caminho, 'PUT', valor); return true }
+  const r = await fetch(DB + '/' + caminho + '.json?access_token=' + encodeURIComponent(await token()), {
+    method: 'PUT', headers: { 'content-type': 'application/json', 'if-match': etag || 'null_etag' }, body: JSON.stringify(valor) });
+  if (r.status === 412) return false;
+  if (!r.ok) throw Object.assign(new Error('O banco respondeu ' + r.status), { status: 502 });
+  return true;
+}
+
+module.exports = { DEV, MEM, ler, grava, gravaVarios, lerEtag, gravaSe };

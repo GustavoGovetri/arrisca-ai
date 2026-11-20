@@ -6,6 +6,9 @@
 // aberta pelo dono, ainda na sala de espera, com o dono presente e com vaga. O índice fica em /publicas,
 // que só esta função lê e escreve (fechado para o público).
 const { dbGet, dbReq } = require('./_fb');
+const crypto = require('crypto');
+const ST = require('./_store');
+const juiz = require('./_juiz');
 
 const MAX = 10;              // jogadores por partida
 const VIVA = 3 * 60 * 1000;  // sem notícia do dono por 3 minutos, a sala sai da lista
@@ -44,7 +47,101 @@ async function leSala(code) {
   return resumo(meta, g, jog);
 }
 
+// ---------------------------------------------------------------- estado da partida: quem grava é o servidor
+//   POST criar   {sala, dev, chave, g}        cria a sala (meta e estado inicial); quem cria vira o dono
+//   POST entrar  {sala, dev, chave}           registra o aparelho na sala (a chave fica guardada só como hash)
+//   POST jogada  {sala, dev, chave, base, g}  confere a jogada com o juiz e grava a versão base+1
+//   POST votar   {sala, dev, chave, id, voto} voto na resposta (id = dev) ou no desfazer (id = dev_u)
+// O aparelho prova quem é com uma chave aleatória que só ele tem. Ninguém grava "meta", "estado" ou "votos" direto.
+const ID = /^[A-Za-z0-9_-]{1,60}$/;
+const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
+const erro = (status, msg, extra) => Object.assign(new Error(msg), { status }, extra || {});
+function codigo(x) { const c = String(x || '').toUpperCase(); if (!CODIGO.test(c)) throw erro(400, 'Sala inválida'); return c }
+function quem(body) {
+  const dev = String(body.dev || ''), chave = String(body.chave || '');
+  if (!ID.test(dev) || chave.length < 20 || chave.length > 100) throw erro(400, 'Aparelho inválido');
+  return { dev, h: hash(chave) };
+}
+async function confereChave(code, q, guardada) {
+  if (guardada == null) { await ST.grava('PUT', 'srv/chaves/' + code + '/' + q.dev, q.h); return }
+  if (guardada !== q.h) throw erro(403, 'Este aparelho não confere com o que entrou na sala. Saia e entre de novo.');
+}
+function estadoG(e) { try { return e && e.g ? JSON.parse(e.g) : null } catch (x) { return null } }
+
+async function criar(body) {
+  const code = codigo(body.sala), q = quem(body);
+  const g = typeof body.g === 'string' && body.g.length < 400000 ? estadoG({ g: body.g }) : null;
+  if (!g) throw erro(400, 'Estado inválido');
+  if (await ST.ler('salas/' + code + '/meta')) throw erro(409, 'Esse código já está em uso');
+  const r = await juiz.confere({ prev: null, next: g, dev: q.dev, host: q.dev, lobby: {}, votos: {}, hist: [], sala: code, agora: Date.now(), perg: perg() });
+  if (!r.ok) throw erro(403, r.motivo);
+  const agora = Date.now();
+  await ST.gravaVarios({
+    ['salas/' + code + '/meta']: { host: q.dev, criada: agora },
+    ['salas/' + code + '/estado']: { v: 1, g: body.g, por: q.dev, ts: agora },
+    ['srv/chaves/' + code + '/' + q.dev]: q.h
+  });
+  return { v: 1 };
+}
+async function entrar(body) {
+  const code = codigo(body.sala), q = quem(body);
+  const [meta, guardada] = await Promise.all([ST.ler('salas/' + code + '/meta'), ST.ler('srv/chaves/' + code + '/' + q.dev)]);
+  if (!meta) throw erro(404, 'Sala não encontrada');
+  await confereChave(code, q, guardada);
+  return { host: meta.host || null };
+}
+let PERG = null;
+function perg() { if (!PERG) PERG = require('./perguntas.js')._pergTk; return PERG }
+async function jogada(body) {
+  const code = codigo(body.sala), q = quem(body);
+  if (typeof body.g !== 'string' || body.g.length > 400000) throw erro(400, 'Estado inválido');
+  const base = Number(body.base);
+  const [meta, est, guardada, jog, votos, hist] = await Promise.all([
+    ST.ler('salas/' + code + '/meta'), ST.lerEtag('salas/' + code + '/estado'), ST.ler('srv/chaves/' + code + '/' + q.dev),
+    DEV ? Promise.resolve(body.lobby && typeof body.lobby === 'object' ? body.lobby : {}) : ST.ler('salas/' + code + '/jogadores'),
+    ST.ler('salas/' + code + '/votos'), ST.ler('srv/hist/' + code)
+  ]);
+  if (!meta) throw erro(404, 'Sala não encontrada');
+  await confereChave(code, q, guardada);
+  const atual = est.v || null;
+  const devolve = atual && typeof atual.v === 'number' ? { v: atual.v, g: atual.g, por: atual.por || null, ts: atual.ts || 0 } : null;
+  if (!atual || atual.v !== base) throw erro(409, 'Alguém mexeu ao mesmo tempo', { estado: devolve });
+  const next = estadoG({ g: body.g });
+  const h = Array.isArray(hist) ? hist : [];
+  const r = await juiz.confere({ prev: estadoG(atual), next, dev: q.dev, host: meta.host, lobby: jog || {}, votos: votos || {}, hist: h,
+    sala: code, agora: Date.now(), perg: perg(), semLobby: DEV && !body.lobby, porAnterior: atual.por || null });
+  if (!r.ok) {
+    if (DEV) { const a = estadoG(atual) || {}; console.log('[juiz] recusou', q.dev, r.motivo, '|', a.phase, a.cur, a.qid, a.resp && a.resp.k, '→', next.phase, next.cur, next.qid, '| votos', JSON.stringify(votos)) }
+    throw erro(403, r.motivo, { estado: devolve });
+  }
+  const agora = Date.now(), v = base + 1;
+  const gravou = await ST.gravaSe('salas/' + code + '/estado', { v, g: body.g, por: q.dev, ts: agora }, est.etag);
+  if (!gravou) { const e2 = await ST.ler('salas/' + code + '/estado'); throw erro(409, 'Alguém mexeu ao mesmo tempo', { estado: e2 }) }
+  const prevN = juiz.nucleo(estadoG(atual) || {});
+  const nh = (h.length ? h : [{ v: base, c: prevN }]).concat([{ v, c: juiz.nucleo(next) }]).slice(-25);
+  const mapa = { ['srv/hist/' + code]: nh };
+  if (r.resp) mapa['srv/resp/' + code + '/' + r.resp.qid] = Object.assign({}, r.resp, { jogo: next.jogo || null, w: agora });
+  await ST.gravaVarios(mapa);
+  return { v };
+}
+async function votar(body) {
+  const code = codigo(body.sala), q = quem(body);
+  const id = String(body.id || '');
+  if (id !== q.dev && id !== q.dev + '_u') throw erro(403, 'Voto de outro aparelho');
+  const voto = body.voto && typeof body.voto === 'object' ? body.voto : null;
+  if (!voto || typeof voto.k !== 'string' || voto.k.length > 60) throw erro(400, 'Voto inválido');
+  const guardada = await ST.ler('srv/chaves/' + code + '/' + q.dev);
+  await confereChave(code, q, guardada);
+  const v = { k: voto.k, v: !!voto.v, ts: Date.now() };
+  await ST.grava('PUT', 'salas/' + code + '/votos/' + id, v);
+  return { ok: true, voto: v };
+}
+
 async function handle(acao, body) {
+  if (acao === 'criar') return criar(body);
+  if (acao === 'entrar') return entrar(body);
+  if (acao === 'jogada') return jogada(body);
+  if (acao === 'votar') return votar(body);
   if (acao === 'lista') {
     const todas = DEV ? MEM : ((await dbGet('publicas')) || {});
     const agora = Date.now(), out = [], velhas = [];
@@ -83,6 +180,7 @@ module.exports = async (req, res) => {
     res.status(200).json(out);
   } catch (e) {
     res.setHeader('Cache-Control', 'no-store');
-    res.status(e.status || 500).json({ erro: e.message || 'Erro' });
+    res.status(e.status || 500).json(Object.assign({ erro: e.message || 'Erro' }, e.estado !== undefined ? { estado: e.estado } : {}));
   }
 };
+module.exports._handle = handle;
