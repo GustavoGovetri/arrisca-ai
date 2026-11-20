@@ -619,6 +619,47 @@ input.chama{animation:chama .9s}
 .ctnv em{display:block;height:100%;border-radius:6px}
 .ctnv small{text-align:right;opacity:.9}
 .ctdica{font-size:14px;line-height:1.45;margin:10px 0 0;opacity:.95}
+.silhbox{display:flex;flex-direction:column;align-items:center;gap:8px;margin:10px 0 4px}
+.silh{width:min(250px,72%);aspect-ratio:1;padding:10px;border-radius:20px;background:radial-gradient(circle at 50% 40%,#fff8e6,#f1dcc0);border:3px solid var(--k);box-shadow:0 4px 0 var(--k);display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+.silh svg{width:100%;height:100%;overflow:visible}
+.silh path{fill:#141414;stroke:#141414;stroke-width:.6;stroke-linejoin:round;transition:fill .7s,stroke .7s}
+.silh.rev path{fill:var(--c);stroke:#2a0410}
+.silh.carr span{font-size:13px;color:#7a4a3a;font-weight:700}
+.silhmapa{position:relative;width:min(320px,88%);aspect-ratio:360/144;background:#2a6fbf;border:3px solid var(--k);border-radius:12px;overflow:hidden;animation:pin .4s ease-out}
+.silhmapa img{width:100%;height:100%;display:block}
+.silhmapa i{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:#ff2d55;border:2px solid #fff;box-shadow:0 0 0 4px rgba(255,45,85,.35);animation:silhPulsa 1.2s ease-in-out infinite}
+@keyframes silhPulsa{50%{box-shadow:0 0 0 9px rgba(255,45,85,0)}}
+html.parado .silhmapa i{animation:none}
+.titulo{display:inline-block;vertical-align:middle;margin-left:4px;padding:1px 7px;border-radius:999px;font-size:11.5px;font-weight:800;line-height:1.5;white-space:nowrap;color:#2a0410;border:2px solid var(--k);box-shadow:0 1px 0 var(--k);letter-spacing:.01em}
+.titulo.tn1{background:linear-gradient(180deg,#f0b07a,#c9783c)}
+.titulo.tn2{background:linear-gradient(180deg,#f4f6fa,#b9c1cf)}
+.titulo.tn3{background:linear-gradient(180deg,#ffe76a,#ffc21a)}
+.titulo.tn4{background:linear-gradient(180deg,#c9fff5,#6fd9c8)}
+.titulo.tn5{background:linear-gradient(180deg,#d6e6ff,#7fa8ff);color:#0d1b44}
+.titulo.tn6{background:linear-gradient(90deg,#ff6ad5,#c774e8,#ad8cff,#8795e8,#94d0ff);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.45)}
+.cqtit{display:block;margin-top:4px}.titulo.bloq{filter:grayscale(1);opacity:.6}
+.titsel{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 2px}
+.titop{padding:5px 8px;border-radius:12px;font-size:13px;background:rgba(0,0,0,.22);border:2px solid transparent;box-shadow:none}
+.titop.on{border-color:var(--amarelo);background:rgba(255,208,0,.15)}
+.titop .titulo{margin-left:0}
+.rknome .titulo{font-size:10.5px}
+.somgeral{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.22);margin:0 0 6px}
+.somgeral .primary,.somgeral button{flex:none}
+.somgeral .somvol{flex:1;min-width:0;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+.somgeral input[type=range]{flex:1;min-width:0;accent-color:#ffd000}
+.somck{display:flex;gap:10px;align-items:flex-start;padding:8px 4px;cursor:pointer;line-height:1.3;font-weight:700;font-size:15px}
+.somck input,.somlin input{width:20px;height:20px;flex:none;margin:1px 0 0;accent-color:#22b558;cursor:pointer}
+.somck small{display:block;opacity:.8;font-weight:400;font-size:12.5px;margin-top:2px}
+.somgrupo{margin:12px 0 2px;font-size:12px;font-weight:800;opacity:.75;text-transform:uppercase;letter-spacing:.05em}
+.somlin{display:flex;align-items:center;gap:8px;padding:3px 0;border-bottom:1px solid rgba(42,4,16,.35)}
+.somlin:last-child{border-bottom:0}
+.somlin label{flex:1;min-width:0;display:flex;gap:10px;align-items:center;cursor:pointer;font-size:15px;padding:5px 0}
+.somlin.off label{opacity:.55}
+.somlin.trava label{cursor:not-allowed}
+.somlin small{opacity:.8;font-size:12px}
+.somlin button.small{flex:none;padding:4px 10px}
+.somtodos{display:flex;gap:8px;justify-content:center;margin:12px 0 4px}
+.somoff .somlista{opacity:.5}
 .ctsub{margin:18px 0 8px;font-family:'Lilita One',sans-serif;font-weight:400;font-size:18px;color:var(--amarelo);text-shadow:var(--txt-contorno);text-align:center}
 .ctpainel{width:100%;margin-top:14px}
 .conqs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
@@ -826,7 +867,7 @@ html.parado #fundo .holofote,html.parado #fundo .ficha,html.parado #fundo .raios
 <div class="wrap">
   <div class="ringwrap"><div class="ring" id="ring"></div></div>
   <div>
-    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Efeitos visuais" onclick="trocaEfeitos()"></button><button id="rankbtn" class="tab snd" title="Ranking da semana e do mês" onclick="rankingAbre()">🏆</button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" onclick="contaAbre()">👤</button><button id="bugbtn" class="tab snd" title="Reportar um problema no site" onclick="bugAbre()">🐞</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Ligar ou desligar o som" onclick="SFX.toggle()">🔊</button></div>
+    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Efeitos visuais" onclick="trocaEfeitos()"></button><button id="rankbtn" class="tab snd" title="Ranking da semana e do mês" onclick="rankingAbre()">🏆</button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" onclick="contaAbre()">👤</button><button id="bugbtn" class="tab snd" title="Reportar um problema no site" onclick="bugAbre()">🐞</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Sons e avisos" onclick="somAbre()">🔊</button></div>
     <div id="view-jogo">
     <div class="card" id="panel"></div>
     <div class="card" id="scores" style="display:none"></div>
@@ -870,6 +911,7 @@ html.parado #fundo .holofote,html.parado #fundo .ficha,html.parado #fundo .raios
 <div id="contabox" class="chatbox modal contabox" style="display:none"><div class="chathead"><b id="contatit">👤 Sua conta</b><button class="small" onclick="contaFecha()">✕</button></div><div id="contacorpo" class="histcorpo"></div></div>
 <div id="rankbox" class="chatbox modal rankbox" style="display:none"><div class="chathead"><b>🏆 Ranking</b><div class="row"><button class="small" title="Atualizar" onclick="rankingCarrega()">↻</button><button class="small" onclick="rankingFecha()">✕</button></div></div><div id="rankcorpo" class="histcorpo"></div></div>
 <div id="painelbox" class="chatbox modal largo painelbox" style="display:none"><div class="chathead"><b>🛠 Painel</b><div class="row"><button class="small" title="Atualizar" onclick="painelCarrega()">↻</button><button class="small" onclick="painelFecha()">✕</button></div></div><div id="painelcorpo" class="histcorpo"></div></div>
+<div id="sombox" class="chatbox modal sombox" style="display:none"><div class="chathead"><b>🔊 Sons e avisos</b><button class="small" onclick="modalFecha('sombox')">✕</button></div><div id="somcorpo" class="histcorpo"></div></div>
 <div id="bugbox" class="chatbox histbox bugbox" style="display:none"><div class="chathead"><b>🐞 Reportar um problema</b><button class="small" onclick="bugFecha()">✕</button></div><div id="bugcorpo" class="histcorpo"></div></div>
 <div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
 <div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b>💬 Chat da sala</b><button class="small" onclick="chatFecha()">✕</button></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
@@ -1058,6 +1100,21 @@ const ANS={};let BUSCA={};
 const VIS_KEY='arrisca-vistas-v1';let VISTAS={};
 try{VISTAS=JSON.parse(localStorage.getItem(VIS_KEY)||'{}')||{}}catch(e){VISTAS={}}
 function guardaVista(t,id,q,a){delete VISTAS[id];VISTAS[id]=[t,q,a,Date.now()];const ks=Object.keys(VISTAS);if(ks.length>4000)ks.slice(0,ks.length-4000).forEach(k=>delete VISTAS[k]);try{localStorage.setItem(VIS_KEY,JSON.stringify(VISTAS))}catch(e){}}
+// ----- perguntas de silhueta: o contorno do país em preto; na resposta ganha cor e aparece no mapa -----
+const FORMAS={},MAPAS={};
+const ehSilhueta=()=>!!(G.q&&G.q[2]==='silhueta');
+function buscaForma(){
+  const id=G.qid,t=G.qt||G.theme;if(!id||!G.tk||id in FORMAS)return;FORMAS[id]=null;
+  api('forma',{id,t,tk:G.tk}).then(r=>{FORMAS[id]=String(r.d||'').replace(/[^MLZ0-9 .\-]/g,'');if(G.qid===id){forcePanel();render()}})
+    .catch(()=>{delete FORMAS[id];setTimeout(()=>{if(G.qid===id&&ehSilhueta()){forcePanel();render()}},3000)});
+}
+function silhuetaHtml(rev){
+  if(!ehSilhueta())return '';
+  const id=G.qid,d=FORMAS[id];
+  if(!d){buscaForma();return `<div class="silhbox"><div class="silh carr"><span>Carregando o desenho…</span></div></div>`}
+  const m=rev?MAPAS[id]:null;
+  return `<div class="silhbox"><div class="silh${rev?' rev':''}" style="--c:${T.M.c}"><svg viewBox="0 0 100 100" role="img" aria-label="${rev?'O país no mapa':'Silhueta de um país'}"><path d="${d}" fill-rule="evenodd"/></svg></div>${m?`<div class="silhmapa" title="Onde fica"><img src="mundo.svg" alt="Mapa-múndi"><i style="left:${((m[0]+180)/360*100).toFixed(2)}%;top:${((84-m[1])/144*100).toFixed(2)}%"></i></div>`:''}</div>`;
+}
 function respostaTxt(){return G.qid?ANS[G.qid]:undefined}
 function certaIdx(){const a=respostaTxt();return G.theme==='V'&&a!=null&&G.q?G.q[1].indexOf(a):null}
 function buscaResposta(){
@@ -1065,7 +1122,7 @@ function buscaResposta(){
   if(!id)return Promise.reject(new Error('sem pergunta'));
   if(ANS[id]!=null)return Promise.resolve(ANS[id]);
   if(BUSCA[id])return BUSCA[id];
-  BUSCA[id]=api('resposta',{id,t,tk:G.tk}).then(r=>{ANS[id]=r.a;guardaVista(t,id,q0,r.a);return r.a}).finally(()=>{delete BUSCA[id]});
+  BUSCA[id]=api('resposta',{id,t,tk:G.tk}).then(r=>{if(r.m)MAPAS[id]=r.m;ANS[id]=r.a;guardaVista(t,id,q0,r.a);return r.a}).finally(()=>{delete BUSCA[id]});
   return BUSCA[id];
 }
 function precisaResposta(){ // a resposta já pode aparecer nesta tela?
@@ -1292,7 +1349,7 @@ function renderScores(){
   const ed=!!G.editPl;
   el.innerHTML=`<div class="row" style="align-items:center;justify-content:space-between"><h2 style="margin:0">Jogadores <span class="muted">· rodada ${G.round}</span></h2>${editBtn(ed)}</div>${ed?'<p class="muted" style="margin:6px 0 0">Arraste pelo ⠿ para mudar a ordem e toque na bolinha para trocar a cor. A vez continua com quem está jogando.</p>':''}<div class="players" style="margin-top:8px">`+G.players.map((p,k)=>`
     <div class="pl${k===G.cur?' cur':''}" data-idx="${k}">${ed?`<span class="grip" title="Arraste para mudar a ordem" onpointerdown="dragRow(event,'game')">⠿</span><button class="swatch${G.pickColor===k?' on':''}" style="background:${p.color}" title="Trocar a cor" onclick="G.pickColor=G.pickColor===${k}?null:${k};renderScores()"></button>`:`<div class="pawn" style="background:${p.color}"></div>`}
-    <div class="nm">${esc(p.name)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
+    <div class="nm">${esc(p.name)}${online()?tituloChip(TITULOS[p.dev]):''}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
 function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE);document.body.classList.toggle('prep',!!MODE&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
@@ -1337,7 +1394,7 @@ function renderPanel(){
   }
   if(G.phase==='won'){
     const ub=undoBtn();
-    el.innerHTML=`<div class="fimbox"><div class="win">🏆 ${esc(p.name)} venceu!</div><p class="msg" style="text-align:center">Chegou à última casa e acertou a pergunta final.</p>${reiHtml()}<div class="answer"><div class="muted">${esc(G.q[0])}</div>${esc(answerText())}</div>${reportHtml()}<div class="fimacoes">${wonBtns()}${ub}</div></div>`;
+    el.innerHTML=`<div class="fimbox"><div class="win">🏆 ${esc(p.name)} venceu!</div><p class="msg" style="text-align:center">Chegou à última casa e acertou a pergunta final.</p>${reiHtml()}<div class="answer"><div class="muted">${esc(G.q[0])}</div>${esc(answerText())}</div>${silhuetaHtml(true)}${reportHtml()}<div class="fimacoes">${wonBtns()}${ub}</div></div>`;
     return;
   }
   const isFinal=p.pos===FINAL, isV=G.theme==='V';
@@ -1350,7 +1407,7 @@ function renderPanel(){
   if(canAnswer){
     if(G.resetNote&&G.phase==='question')h+=`<div class="note2">${G.resetNote}</div>`;
     if(G.lvNote&&G.phase==='question')h+=`<div class="note2">${G.lvNote}</div>`;
-  h+=`${online()?'':`<p class="muted" style="margin-top:10px">📖 Quem lê: <b style="color:${reader.color}">${esc(reader.name)}</b></p>`}<div class="qtext">${esc(G.q[0])}</div>`;
+  h+=`${online()?'':`<p class="muted" style="margin-top:10px">📖 Quem lê: <b style="color:${reader.color}">${esc(reader.name)}</b></p>`}<div class="qtext">${esc(G.q[0])}</div>${silhuetaHtml(respostaTxt()!=null&&(G.phase==='result'||!!G.revealed))}`;
     if(G.phase==='question'&&online())h+=timerOnlineHtml();
     else if(G.phase==='question'&&can('reader'))h+=`<div class="timerbox"><button onclick="startTimer()">⏱ ${G.timerLeft!=null?'Reiniciar timer':'Timer de 10 s'}</button><div id="timer" class="timer${G.timerLeft===0?' done':G.timerLeft!=null&&G.timerLeft<=3?' low':''}" style="${G.timerLeft==null?'display:none':''}">${G.timerLeft===0?'⏰ 0':G.timerLeft??''}</div><span id="timermsg" class="muted">${G.timerLeft===0?'Tempo esgotado!':''}</span></div>`;
     if(online()&&((G.phase==='question'&&!G.resp)||G.phase==='result'))h+=abaTxt(G.phase==='question');
@@ -1717,7 +1774,7 @@ function nextTurn(){snapshot('Próximo jogador');G.cur=(G.cur+1)%G.players.lengt
 
 // ================= Arrisca Aí: modo online (salas) e reportes =================
 const G_DEFAULT=JSON.stringify(G);
-let MODE=null,ROOM=null,HOST=null,LOBBY={},RV=0,LASTSYNC='',APPLYING=false,HOSTALL=false,NET=null,NETREADY=false,QREADY=false,PENDING_ROOM=null,UNWATCH=null,CREATING=false,CONNECTED=true;
+let TITULOS={},MODE=null,ROOM=null,HOST=null,LOBBY={},RV=0,LASTSYNC='',APPLYING=false,HOSTALL=false,NET=null,NETREADY=false,QREADY=false,PENDING_ROOM=null,UNWATCH=null,CREATING=false,CONNECTED=true;
 const URLP=new URLSearchParams(location.search);
 PENDING_ROOM=(URLP.get('sala')||'').toUpperCase().replace(/[^A-Z0-9]/g,'')||null;
 const MYDEV=(()=>{try{let d=localStorage.getItem('arrisca-dev');if(!d){d='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);localStorage.setItem('arrisca-dev',d)}return d}catch(e){return 'd'+Math.random().toString(36).slice(2,12)}})();
@@ -1752,6 +1809,18 @@ function nm(p){return p?`<b style="color:${p.color}">${esc(p.name)}</b>`:'algué
 function turnTitle(p){return online()&&myIdx()===G.cur?`Sua vez, <span style="color:${p.color}">${esc(p.name)}</span>!`:`Vez de <span style="color:${p.color}">${esc(p.name)}</span>`}
 function waitHtml(role,acao){const p=role==='reader'?G.players[readerIdx()]:G.players[G.cur];return `<p class="wait">⏳ Aguardando ${nm(p)} ${acao}…</p>`}
 function waitThemeHtml(){const p=G.players[G.cur];return p.pos===FINAL?`<p class="wait">⏳ Os outros jogadores escolhem o tema da pergunta final de ${nm(p)}.</p>`:waitHtml('cur','escolher o tema')}
+// ----- títulos das conquistas ao lado do nome -----
+const NIVEIS_TIT=['Bronze','Prata','Ouro','Platina','Diamante','Grão-mestre'];
+function limpaTitulos(t){const o={};Object.entries(t||{}).slice(0,40).forEach(([d,x])=>{if(sId(d)&&x&&typeof x.x==='string')o[d]={x:x.x.slice(0,40),n:Math.max(1,Math.min(6,+x.n||1))}});return o}
+function tituloChip(t){return t&&t.x?` <span class="titulo tn${t.n}" title="Título · ${NIVEIS_TIT[t.n-1]||''}">${esc(t.x)}</span>`:''}
+async function tituloSala(){ // mostra (ou tira) o título da conta para quem está na sala
+  if(!ROOM||!NET||MODE!=='online')return;
+  try{
+    const token=CONTA.user&&AUTH?await AUTH.token():null;
+    const r=await servidorSala('titulo',{sala:ROOM,token});
+    if(NET.espelhaTitulo)NET.espelhaTitulo(ROOM,MYDEV,r.titulo||null);
+  }catch(e){console.warn('título:',e.message)}
+}
 function plTag(p){if(!online())return '';let s='';if(p.dev===MYDEV)s+=' <span class="you">você</span>';const l=LOBBY[p.dev];if(!l||l.on===false)s+=' <span class="off" title="Sem conexão">offline</span>';else if(l.fora)s+=' <span class="fora" title="Está em outra aba">👀 fora da aba</span>';return s}
 function editBtn(ed){return can('host')?`<button class="small" onclick="G.editPl=!G.editPl;G.pickColor=null;renderScores()">${ed?'✓ Pronto':'✎ Ordem e cores'}</button>`:''}
 const NOVO_BTN=`<button onclick="if(window.__c){newGame()}else{window.__c=1;this.textContent='Confirmar?';const b=this;setTimeout(()=>{window.__c=0;b.textContent='Novo jogo'},2500)}">Novo jogo</button>`;
@@ -1861,15 +1930,16 @@ async function enterRoom(code,created,publica){
     if(!created&&!(await NET.exists(code))){toast('Sala '+code+' não encontrada');if(!online()){MODE=null;try{history.replaceState(null,'',location.pathname)}catch(e){}render()}return}
     if(UNWATCH){UNWATCH();UNWATCH=null}
     stopTimer();
-    MODE='online';ROOM=code;RV=0;LASTSYNC='';UNDO=[];HOST=created?MYDEV:null;LOBBY={};LOBBY_N=0;LOBBY_VISTOS=null;HOSTALL=false;
+    MODE='online';ROOM=code;RV=0;LASTSYNC='';UNDO=[];HOST=created?MYDEV:null;LOBBY={};TITULOS={};LOBBY_N=0;LOBBY_VISTOS=null;HOSTALL=false;
     G=JSON.parse(G_DEFAULT);G.ordem=created?[MYDEV]:[];G.publica=!!(created&&publica);ANUNCIO.foi=false;ANUNCIO.k='';SALAS_ABERTO=false;
     try{history.replaceState(null,'','?sala='+code+(URLP.get('net')?'&net='+URLP.get('net'):''))}catch(e){}
     if(created){const j=syncJson();await servidorSala('criar',{sala:code,g:j});if(NET.espelha){NET.espelha('salas/'+code+'/meta',{host:MYDEV,criada:Date.now()});NET.espelha('salas/'+code+'/estado',{v:1,g:j,por:MYDEV,ts:Date.now()})}RV=Math.max(RV,1);LASTSYNC=j;CREATING=false}
     else await servidorSala('entrar',{sala:code});
     VOTES={};chatZera();
-    UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido});
+    UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido,onTitulos:t=>{TITULOS=limpaTitulos(t);render()}});
     await NET.setMe(code,MYDEV,{nome:myName(),cor:myColor(),on:true,fora:false,pronto:false,ts:Date.now()});
     SALA_USADAS={};mandaUsadasSala().then(carregaUsadasSala);
+    tituloSala();
     render();
   }catch(e){console.error(e);CREATING=false;toast(e&&e.status&&e.status!==500?e.message:'Sem conexão com a sala. Tente de novo.');if(e&&e.status===404||e&&e.status===403){if(UNWATCH){UNWATCH();UNWATCH=null}MODE=null;ROOM=null;render()}}
 }
@@ -1878,7 +1948,7 @@ function leaveRoom(){
   const saiu=ROOM,anunciada=ANUNCIO.foi;
   if(NET&&ROOM&&G.phase==='setup')NET.removePlayer(ROOM,MYDEV).then(()=>{if(anunciada)apiSalas('anunciar',{sala:saiu,dev:URLP.get('net')==='local'?{}:undefined}).catch(()=>{})}).catch(()=>{});
   ANUNCIO.foi=false;
-  stopTimer();MODE=null;ROOM=null;HOST=null;LOBBY={};RV=0;LASTSYNC='';UNDO=[];HOSTALL=false;VOTES={};chatZera();
+  stopTimer();MODE=null;ROOM=null;HOST=null;LOBBY={};TITULOS={};RV=0;LASTSYNC='';UNDO=[];HOSTALL=false;VOTES={};chatZera();
   G=JSON.parse(G_DEFAULT);
   try{const r=JSON.parse(localStorage.getItem(GAME_KEY)||'null');if(r&&r.json)applyGame(r)}catch(e){}
   try{history.replaceState(null,'',location.pathname+(URLP.get('net')?'?net='+URLP.get('net'):''))}catch(e){}
@@ -1978,12 +2048,12 @@ async function bugEnvia(){
 // ================= Contas: login (Google ou e-mail), perfil e painel do dono =================
 let AUTH=null,CONTA_T=null,PAINEL={aba:'bugs',dados:null,erro:'',resolvidos:false};
 const CONTA={user:null,perfil:null,admin:false,pronto:false};
-const CONTA_UI={aba:'entrar',email:'',nome:'',pnome:null,pcor:null,ocupado:false,esperando:false,erro:'',ok:'',apagar:0};
+const CONTA_UI={aba:'entrar',email:'',nome:'',pnome:null,pcor:null,ptit:null,ocupado:false,esperando:false,erro:'',ok:'',apagar:0};
 const GOOGLE_SVG=`<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>`;
 function contaErroTxt(e){
   const c=(e&&e.code)||'';
   const M={'auth/invalid-credential':'E-mail ou senha errados.','auth/invalid-login-credentials':'E-mail ou senha errados.','auth/wrong-password':'E-mail ou senha errados.','auth/user-not-found':'E-mail ou senha errados.',
-    'auth/email-already-in-use':'Já existe uma conta com esse e-mail. Use a aba "Entrar".','auth/weak-password':'A senha precisa ter pelo menos 6 caracteres.',
+    'auth/email-already-in-use':'Já existe uma conta com esse e-mail. Use a aba "Entrar".','auth/weak-password':'Essa senha é fraca demais. Use pelo menos 8 caracteres, com letras e números.',
     'auth/invalid-email':'Esse e-mail não parece certo.','auth/missing-password':'Digite a senha.','auth/missing-email':'Digite o e-mail.',
     'auth/popup-closed-by-user':'','auth/cancelled-popup-request':'','auth/user-cancelled':'',
     'auth/popup-blocked':'O navegador bloqueou a janela do Google. Libere as janelas pop-up deste site e tente de novo.',
@@ -2025,7 +2095,7 @@ function localAuth(){
     },
     async esqueci(email){await espera();if(!email.includes('@'))throw err('auth/invalid-email')},
     async reenviar(){await espera()},
-    async recarrega(){const u=atual();if(u){u.verificado=true;wr(KL,u)}return u},
+    async recarrega(){const u=atual();if(u&&!localStorage.getItem('netsim:sem-confirmar')){u.verificado=true;wr(KL,u)}return u},
     async token(){const u=atual();return u?'local.'+b64(JSON.stringify(u)):null},
     async sair(){wr(KL,null);avisa()},
     async apagar(){const u=atual();if(!u)return;const all=rd(K)||{};Object.keys(all).forEach(k=>{if(all[k].user.uid===u.uid)delete all[k]});wr(K,all);wr(KL,null);avisa()}
@@ -2042,7 +2112,7 @@ function contaInicia(){
     if(u){
       try{const j=await contaApi('POST',{acao:'entrar',nome:myName(),cor:myColor()});contaAplica(j.perfil);CONTA.admin=!!j.admin}
       catch(e){console.warn(e);CONTA_UI.erro='Você entrou, mas não consegui carregar o perfil agora: '+e.message}
-      contaResumo();contaHistInicia();
+      contaResumo();contaHistInicia();if(ROOM)tituloSala();
       CONTA_UI.aba='entrar'; // quando sair, a janela volta na aba Entrar
       if(CONTA_UI.esperando){CONTA_UI.esperando=false;toast('✔ Você entrou'+(CONTA.perfil?' como '+CONTA.perfil.nome:'')+'!')}
     }
@@ -2068,7 +2138,7 @@ function contaSalvaDepois(){ // mudou nome ou cor na tela inicial: guarda na con
   },1200);
 }
 // ----- janelas por cima da tela (conta, ranking, painel), com fundo escurecido -----
-const MODAIS=['contabox','rankbox','painelbox'];
+const MODAIS=['contabox','rankbox','painelbox','sombox'];
 function modalAbre(id){
   chatFecha&&chatFecha();if(typeof fechaSalas==='function')fechaSalas();bugFecha();if(TAB==='hist')setTab('jogo');
   MODAIS.forEach(m=>{if(m!==id){const b=document.getElementById(m);if(b)b.style.display='none'}});
@@ -2116,7 +2186,7 @@ function contaHtml(){
     <form class="ctform" onsubmit="event.preventDefault();contaEmail()">
       ${criar?`<label for="ctnome">Nome no jogo</label><input id="ctnome" maxlength="16" autocomplete="nickname" value="${esc(CONTA_UI.nome||myName())}" oninput="CONTA_UI.nome=this.value">`:''}
       <label for="ctemail">E-mail</label><input id="ctemail" type="email" autocomplete="${criar?'email':'username'}" placeholder="voce@exemplo.com" value="${esc(CONTA_UI.email)}" oninput="CONTA_UI.email=this.value">
-      <label for="ctsenha">Senha${criar?' <small>(pelo menos 6 caracteres)</small>':''}</label><div class="senhawrap"><input id="ctsenha" type="password" autocomplete="${criar?'new-password':'current-password'}"><button type="button" id="ctolho" class="olho" title="Mostrar a senha" onclick="olhoSenha()">👁️</button></div>
+      <label for="ctsenha">Senha${criar?' <small>(pelo menos 8 caracteres, com letras e números)</small>':''}</label><div class="senhawrap"><input id="ctsenha" type="password" autocomplete="${criar?'new-password':'current-password'}"><button type="button" id="ctolho" class="olho" title="Mostrar a senha" onclick="olhoSenha()">👁️</button></div>
       <button class="primary" type="submit" ${dis}>${CONTA_UI.ocupado?'Aguarde…':criar?'Criar conta':'Entrar'}</button>
       ${criar?'':`<button type="button" class="linkbtn" ${dis} onclick="contaEsqueci()">Esqueci minha senha</button>`}
     </form>${contaMsgs()}`;
@@ -2129,12 +2199,13 @@ function contaHtml(){
   if(CONTA_UI.tab==='conq')return topo+conquistasHtml(d);
   if(CONTA_UI.tab==='hist')return topo+historicoHtml(d);
   const nome=CONTA_UI.pnome!=null?CONTA_UI.pnome:(p.nome||'');
-  return topo+`${!google&&!u.verificado?`<div class="contaerro">📩 Confirme seu e-mail: mandamos um link para <b>${esc(u.email)}</b>. Não chegou? Olhe o spam. <button class="linkbtn" ${dis} onclick="contaReenvia()">Mandar de novo</button><button class="linkbtn" ${dis} onclick="contaJaConfirmei()">Já confirmei</button></div>`:''}
+  return topo+`${!google&&!u.verificado?`<div class="contaerro">📩 Confirme seu e-mail: mandamos um link para <b>${esc(u.email)}</b>. Enquanto não confirmar, suas partidas não contam no ranking. Não chegou? Olhe o spam. <button class="linkbtn" ${dis} onclick="contaReenvia()">Mandar de novo</button><button class="linkbtn" ${dis} onclick="contaJaConfirmei()">Já confirmei</button></div>`:''}
     ${statsHtml(d)}
     <h4 class="ctsub">Editar perfil</h4>
     <form class="ctform" onsubmit="event.preventDefault();contaSalva()">
       <label for="ctnome2">Nome no jogo</label><input id="ctnome2" maxlength="16" autocomplete="nickname" value="${esc(nome)}" oninput="CONTA_UI.pnome=this.value">
       <label>Cor</label><div class="palette">${PALETA.map(([c,n])=>`<button type="button" class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="CONTA_UI.pcor='${c}';contaRender()"></button>`).join('')}</div>
+      ${tituloEscolhaHtml(d,p)}
       <button class="primary" type="submit" ${dis}>Salvar</button>
     </form>${contaMsgs()}
     ${CONTA.admin?`<button class="ctpainel" onclick="painelAbre()">🛠 Painel do dono: bugs e perguntas reportadas</button>`:''}
@@ -2166,7 +2237,7 @@ function conquistasHtml(d){
       <span class="cqe">${c.e}</span><b>${esc(c.n)}</b><em class="cqniv">${nv?NIV_CONQ[nv-1][0]:'Sem medalha'}</em>
       <span class="cqpts">${NIV_CONQ.map(([n,cc],t)=>`<i class="${t<nv?'on':''}" style="--m:${cc}" title="${n}: ${c.alvos[t]}"></i>`).join('')}</span>
       ${prox?`<i class="cqbar"><em style="width:${pc}%"></em></i><small>${Number(c.prog).toLocaleString('pt-BR')} de ${prox.toLocaleString('pt-BR')} para <b>${NIV_CONQ[nv][0]}</b></small>`:`<small>👑 Nível máximo!</small>`}
-      <small class="cqd">${esc(c.d)}</small></div>`}).join('')}</div>`;
+      <small class="cqd">${esc(c.d)}</small>${c.ti?`<small class="cqtit">${nv?'Título liberado:':'Libera o título'} <span class="titulo tn${nv||1}${nv?'':' bloq'}">${esc(c.e+' '+c.ti)}</span></small>`:''}</div>`}).join('')}</div>`;
 }
 function historicoHtml(d){
   if(!d)return `<p class="pvazio">Carregando…</p>`;
@@ -2182,7 +2253,7 @@ function contaRender(){
   const t=document.getElementById('contatit');if(t)t.textContent=CONTA.user?'👤 Sua conta':'👤 Entrar ou criar conta';
 }
 function contaAbre(tab){
-  Object.assign(CONTA_UI,{erro:'',ok:'',apagar:0,pnome:null,pcor:null,tab:tab||'perfil'});
+  Object.assign(CONTA_UI,{erro:'',ok:'',apagar:0,pnome:null,pcor:null,ptit:null,tab:tab||'perfil'});
   contaRender();modalAbre('contabox');
   if(CONTA.user)contaResumo().then(contaRender);
 }
@@ -2208,7 +2279,7 @@ function rankingHtml(){
   if(!d)return h+`<p class="pvazio">Carregando…</p>`;
   h+=`<p class="rkper">${esc(d.texto)}</p>`;
   if(!d.lista.length)h+=`<p class="pvazio">Ninguém pontuou ainda ${RANK.periodo==='semana'?'nesta semana':'neste mês'}. Jogue uma partida online com a sua conta e seja o primeiro! 🏆</p>`;
-  else h+=`<div class="rklista">${d.lista.map(x=>`<div class="rk${x.eu?' eu':''}${x.pos<=3?' top':''}"><span class="rkpos">${x.pos<=3?['🥇','🥈','🥉'][x.pos-1]:x.pos+'º'}</span><span class="swatch" style="background:${x.c||'#b0b8c4'}"></span><span class="rknome">${esc(x.n)}${x.eu?' <span class="you">você</span>':''}</span><b>${x.p.toLocaleString('pt-BR')} <small>pts</small></b></div>`).join('')}</div>`;
+  else h+=`<div class="rklista">${d.lista.map(x=>`<div class="rk${x.eu?' eu':''}${x.pos<=3?' top':''}"><span class="rkpos">${x.pos<=3?['🥇','🥈','🥉'][x.pos-1]:x.pos+'º'}</span><span class="swatch" style="background:${x.c||'#b0b8c4'}"></span><span class="rknome">${esc(x.n)}${tituloChip(x.t)}${x.eu?' <span class="you">você</span>':''}</span><b>${x.p.toLocaleString('pt-BR')} <small>pts</small></b></div>`).join('')}</div>`;
   if(d.minha&&!d.lista.some(x=>x.eu))h+=`<div class="rk eu"><span class="rkpos">${d.minha.pos}º</span><span class="rknome">Você</span><b>${d.minha.p} <small>pts</small></b></div>`;
   if(!CONTA.user)h+=`<div class="rkcta"><span>Quer aparecer aqui?</span><button class="primary" onclick="contaAbre()">👤 Entrar ou criar conta</button></div>`;
   else if(!d.minha)h+=`<p class="ctdica" style="text-align:center">Você ainda não pontuou ${RANK.periodo==='semana'?'nesta semana':'neste mês'}.</p>`;
@@ -2246,6 +2317,7 @@ function contaRegistra(){
   const u=G.ult;
   if(!u||!u.tk||!CONTA.user||!CONTA.perfil||!online()||!ROOM||u.d!==MYDEV||!G.jogo||!G.players)return;
   if(G.phase==='result')return; // espera passar a vez: assim dá para desfazer um clique errado antes
+  if(!contaEmailOk()){contaPedeConfirmar();return} // sem e-mail confirmado a partida não conta no ranking
   const k=G.jogo+'|'+u.q;if(CONTA_REG.has(k))return;CONTA_REG.add(k);
   contaApi('POST',{acao:'resposta',sala:ROOM,jogo:G.jogo,dev:MYDEV,tk:u.tk,ok:u.ok,fim:!!u.fim&&G.phase==='won',modo:modo(),nj:G.players.length})
     .then(j=>{
@@ -2256,6 +2328,16 @@ function contaRegistra(){
       Object.values(maior).forEach((c,i)=>setTimeout(()=>{toast(`🏅 Medalha nova: ${c.e} ${c.n}`);SFX.correct&&SFX.correct()},2200*(i+1)));
     }).catch(e=>console.warn('conta:',e.message));
 }
+const contaEmailOk=()=>!!CONTA.user&&(CONTA.user.verificado||CONTA.user.provedor==='google.com');
+const CONTA_AVISO={jogo:null,checando:false};
+function contaPedeConfirmar(){ // uma vez por partida: confere se a pessoa já clicou no link; se não, avisa
+  if(CONTA_AVISO.checando||CONTA_AVISO.jogo===G.jogo||!AUTH)return;
+  CONTA_AVISO.checando=true;const jogo=G.jogo;
+  Promise.resolve(AUTH.recarrega?AUTH.recarrega():null).then(async n=>{
+    if(n&&n.verificado){CONTA.user=n;await AUTH.token(true);contaPinta();setTimeout(contaRegistra,0);return}
+    CONTA_AVISO.jogo=jogo;toast('📩 Confirme seu e-mail (link na sua caixa de entrada) para suas partidas contarem no ranking.');
+  }).catch(()=>{CONTA_AVISO.jogo=jogo}).finally(()=>{CONTA_AVISO.checando=false});
+}
 function contaAba(a){CONTA_UI.aba=a;CONTA_UI.erro='';CONTA_UI.ok='';contaRender()}
 async function contaFaz(fn){ // trava os botões enquanto espera e mostra o erro em português
   CONTA_UI.erro='';CONTA_UI.ok='';CONTA_UI.ocupado=true;contaRender();
@@ -2263,12 +2345,25 @@ async function contaFaz(fn){ // trava os botões enquanto espera e mostra o erro
   CONTA_UI.ocupado=false;contaRender();
 }
 function contaGoogle(){CONTA_UI.esperando=true;return contaFaz(()=>AUTH.google())}
+// senha de conta nova: pelo menos 8 caracteres, com letras e números, e nada óbvio
+const SENHAS_COMUNS=new Set(['senha123','senha1234','senha12345','password','password1','password123','qwerty12','qwerty123','q1w2e3r4','qwertyuiop','asdfghjkl','12345678a','a12345678','abc12345','abcd1234','1234abcd','mudar123','trocar123','teste123','teste1234','admin123','iloveyou','iloveyou1','brasil123','brasil2026','flamengo1','corinthians1','palmeiras1','familia123','amor1234','euteamo1','meuamor1','jesus123','deusefiel','deus1234','gabriel123','arrisca123','arriscaai','arriscaai1','quest123','minhasenha','minhasenha1','senhasenha']);
+function senhaFraca(senha,email,nome){
+  const s=String(senha||''),l=s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(s.length<8)return 'A senha precisa ter pelo menos 8 caracteres.';
+  if(!/[a-zA-ZÀ-ÿ]/.test(s)||!/[0-9\W_]/.test(s))return 'Misture letras com números (ou símbolos) na senha.';
+  if(SENHAS_COMUNS.has(l)||new Set(l).size<4)return 'Essa senha é muito comum. Escolha outra.';
+  const seq='abcdefghijklmnopqrstuvwxyz0123456789qwertyuiopasdfghjklzxcvbnm';const sem=l.replace(/[^a-z0-9]/g,'');
+  if(sem.length>=8&&(seq.includes(sem)||seq.split('').reverse().join('').includes(sem)))return 'Essa senha é uma sequência fácil de adivinhar. Escolha outra.';
+  const partes=[String(email||'').toLowerCase().split('@')[0],String(nome||'').toLowerCase()].map(x=>x.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,'')).filter(x=>x.length>=4);
+  if(partes.some(x=>l.includes(x)))return 'A senha não pode ter o seu nome ou o seu e-mail.';
+  return '';
+}
 function contaEmail(){
   const criar=CONTA_UI.aba==='criar';
   const email=((document.getElementById('ctemail')||{}).value||'').trim(),senha=(document.getElementById('ctsenha')||{}).value||'';
   const nome=criar?((document.getElementById('ctnome')||{}).value||'').trim().slice(0,16):'';
   CONTA_UI.email=email;
-  const falta=criar&&!nome?'Escolha um nome para o jogo.':!email?'Digite o e-mail.':!senha?'Digite a senha.':criar&&senha.length<6?'A senha precisa ter pelo menos 6 caracteres.':'';
+  const falta=criar&&!nome?'Escolha um nome para o jogo.':!email?'Digite o e-mail.':!senha?'Digite a senha.':criar?senhaFraca(senha,email,nome):'';
   if(falta){CONTA_UI.erro=falta;CONTA_UI.ok='';contaRender();return}
   CONTA_UI.esperando=true;
   return contaFaz(async()=>{if(criar){setMyName(nome);await AUTH.criar(email,senha,nome)}else await AUTH.entrar(email,senha)});
@@ -2281,12 +2376,20 @@ function contaEsqueci(){
 }
 function contaReenvia(){return contaFaz(async()=>{await AUTH.reenviar();CONTA_UI.ok='Mandamos o link de novo para '+CONTA.user.email+'.'})}
 function contaJaConfirmei(){return contaFaz(async()=>{const u=await AUTH.recarrega();if(u){CONTA.user=u;await AUTH.token(true)}if(!(u&&u.verificado))throw new Error('Ainda não aparece como confirmado. Clique no link do e-mail e tente de novo.');CONTA_UI.ok='E-mail confirmado. ✔'})}
+function tituloEscolhaHtml(d,p){ // títulos liberados pelas conquistas (a cor acompanha o nível)
+  if(!d||!Array.isArray(d.conquistas))return '';
+  const lib=d.conquistas.filter(c=>c.nivel>0&&c.ti).sort((a,b)=>b.nivel-a.nivel);
+  const sel=CONTA_UI.ptit!=null?CONTA_UI.ptit:((p&&p.titulo)||'');
+  if(!lib.length)return `<label>Título ao lado do nome</label><p class="muted" style="margin:4px 0">Jogue partidas online para ganhar conquistas: cada uma libera um título, tipo <span class="titulo tn1">🎮 Gamer</span> para quem acerta muito de Games.</p>`;
+  return `<label>Título ao lado do nome</label><div class="titsel"><button type="button" class="titop${!sel?' on':''}" onclick="CONTA_UI.ptit='';contaRender()">Nenhum</button>${lib.map(c=>`<button type="button" class="titop${sel===c.id?' on':''}" title="${esc(c.n)} · ${NIVEIS_TIT[c.nivel-1]}" onclick="CONTA_UI.ptit='${c.id}';contaRender()"><span class="titulo tn${c.nivel}">${esc(c.e+' '+c.ti)}</span></button>`).join('')}</div><p class="muted" style="margin:2px 0 0;font-size:12px">A cor muda conforme o nível: bronze, prata, ouro, platina, diamante e grão-mestre.</p>`;
+}
 function contaSalva(){
   const nome=((document.getElementById('ctnome2')||{}).value||'').trim().slice(0,16),cor=CONTA_UI.pcor;
   if(!nome){CONTA_UI.erro='Escolha um nome para o jogo.';contaRender();return}
   return contaFaz(async()=>{
-    const d={acao:'perfil',nome};if(cor)d.cor=cor;
-    const j=await contaApi('POST',d);CONTA_UI.pnome=null;CONTA_UI.pcor=null;contaAplica(j.perfil);CONTA_UI.ok='Salvo!';
+    const d={acao:'perfil',nome};if(cor)d.cor=cor;const mudouTit=CONTA_UI.ptit!=null&&CONTA_UI.ptit!==((CONTA.perfil||{}).titulo||'');if(mudouTit)d.titulo=CONTA_UI.ptit;
+    const j=await contaApi('POST',d);CONTA_UI.pnome=null;CONTA_UI.pcor=null;CONTA_UI.ptit=null;contaAplica(j.perfil);CONTA_UI.ok='Salvo!';
+    if(mudouTit&&ROOM)tituloSala();
     const h=document.getElementById('homeconta');if(h)h.innerHTML=contaLinhaHtml();
   });
 }
@@ -2580,12 +2683,26 @@ function marcaVistas(){ // as perguntas que saem na sala também ficam marcadas 
   if(mudou)persist();
 }
 let LOBBY_N=0,LOBBY_VISTOS=null;const NOVOS={};
-let FORA_ANT={};
+let FORA_ANT={},ON_ANT={};const AVISOU_FORA={};
+// saiu da aba: espera um pouquinho, porque quem fecha o jogo também "sai da aba" antes de cair a conexão
+function avisoFora(d){setTimeout(()=>{const l=LOBBY[d];if(!l||l.on===false||!l.fora||!emPartida()||!PREF.avisoAba)return;
+  const p=(G.players||[]).find(x=>x.dev===d);AVISOU_FORA[d]=true;toast('👀 '+((p&&p.name)||(l.nome||'').trim()||'Alguém')+' saiu da aba');SFX.fora()},1500)}
+function avisoSaida(n,saiu){if(!PREF.avisoSaiu)return;toast(saiu?'🚪 '+n+' saiu do jogo':'↩ '+n+' voltou para o jogo');if(saiu)SFX.saiu()}
 function lobbyChanged(){
   const devs=Object.keys(LOBBY).sort().join(',');if(devs!==lobbyChanged.devs){lobbyChanged.devs=devs;carregaUsadasDepois()} // entrou alguém: pega o histórico da pessoa
   // alguém saiu ou voltou para a aba durante a partida: todo mundo fica sabendo
-  if(emPartida())Object.entries(LOBBY).forEach(([d,l])=>{if(d===MYDEV)return;const p=(G.players||[]).find(x=>x.dev===d),n=(p&&p.name)||(l.nome||'').trim()||'Alguém';if(l.fora&&!FORA_ANT[d]){toast('👀 '+n+' saiu da aba');SFX.pop&&SFX.pop()}else if(!l.fora&&FORA_ANT[d]&&l.on!==false)toast('↩ '+n+' voltou para o jogo')});
-  FORA_ANT={};Object.entries(LOBBY).forEach(([d,l])=>{if(l.fora)FORA_ANT[d]=true});
+  // (cada aviso pode ser desligado em 🔊 Sons e avisos; desligado, o som dele também não toca)
+  const nomeDe=d=>{const p=(G.players||[]).find(x=>x.dev===d),l=LOBBY[d]||{};return (p&&p.name)||(l.nome||'').trim()||'Alguém'};
+  if(emPartida()){
+    Object.keys(ON_ANT).forEach(d=>{if(d!==MYDEV&&ON_ANT[d]&&!LOBBY[d])avisoSaida(nomeDe(d),true)}); // saiu da sala
+    Object.entries(LOBBY).forEach(([d,l])=>{if(d===MYDEV)return;const n=nomeDe(d),on=l.on!==false;
+      if(ON_ANT[d]===true&&!on){delete AVISOU_FORA[d];avisoSaida(n,true)}
+      else if(ON_ANT[d]===false&&on)avisoSaida(n,false);
+      else if(on&&l.fora&&!FORA_ANT[d])avisoFora(d);
+      else if(on&&!l.fora&&FORA_ANT[d]&&AVISOU_FORA[d]){delete AVISOU_FORA[d];if(PREF.avisoAba)toast('↩ '+n+' voltou para a aba')}
+    });
+  }
+  FORA_ANT={};ON_ANT={};Object.entries(LOBBY).forEach(([d,l])=>{if(l.fora)FORA_ANT[d]=true;ON_ANT[d]=l.on!==false});
   // alguém novo na sala: chamada de apito, aviso e a linha da pessoa piscando
   if(LOBBY_VISTOS){
     const novos=Object.keys(LOBBY).filter(d=>!LOBBY_VISTOS.has(d)&&d!==MYDEV);
@@ -2619,7 +2736,7 @@ function lobbyHtml(){
   ${G.pickColor==='me'||(!me.cor&&(me.nome||'').trim())?`<div class="pal-wrap"><span class="muted">Escolha sua cor:</span><div class="palette">${PALETA.map(([c,n])=>{const tomada=usadas.includes(c);return `<button class="swatch${c===me.cor?' on':''}${tomada?' taken':''}" style="background:${c}" title="${n}${tomada?' (já escolhida)':''}" ${tomada?'disabled':''} onclick="setMyColor('${c}')"></button>`}).join('')}</div></div>`:''}
   ${!(me.nome||'').trim()?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Digite seu nome para entrar na partida.</p>':''}
   <h2 style="margin-top:16px">Jogadores <span class="muted">(${ord.length})</span></h2><div class="plist">`;
-  ord.forEach((d,i)=>{const l=LOBBY[d]||{};h+=`<div class="setup-row lob${l.on===false?' offline':''}${NOVOS[d]?' novo':''}" data-idx="${i}">${amHost()?`<span class="grip" title="Arraste para mudar a ordem" onpointerdown="dragRow(event,'lobby')">⠿</span>`:''}<span class="ordem">${i+1}º</span><span class="swatch" style="background:${l.cor||'#3a4054'}"></span><span class="lname">${esc((l.nome||'').trim()||'(sem nome)')}${d===MYDEV?' <span class="you">você</span>':''}${d===HOST?' <span class="host">criou a sala</span>':l.pronto?' <span class="pronto">✅ pronto</span>':' <span class="espera">⏳ confirmando</span>'}${l.on===false?' <span class="off">offline</span>':''}</span>${amHost()&&d!==MYDEV?`<button class="small" title="Tirar da sala" onclick="kick('${d}')">✕</button>`:''}</div>`});
+  ord.forEach((d,i)=>{const l=LOBBY[d]||{};h+=`<div class="setup-row lob${l.on===false?' offline':''}${NOVOS[d]?' novo':''}" data-idx="${i}">${amHost()?`<span class="grip" title="Arraste para mudar a ordem" onpointerdown="dragRow(event,'lobby')">⠿</span>`:''}<span class="ordem">${i+1}º</span><span class="swatch" style="background:${l.cor||'#3a4054'}"></span><span class="lname">${esc((l.nome||'').trim()||'(sem nome)')}${tituloChip(TITULOS[d])}${d===MYDEV?' <span class="you">você</span>':''}${d===HOST?' <span class="host">criou a sala</span>':l.pronto?' <span class="pronto">✅ pronto</span>':' <span class="espera">⏳ confirmando</span>'}${l.on===false?' <span class="off">offline</span>':''}</span>${amHost()&&d!==MYDEV?`<button class="small" title="Tirar da sala" onclick="kick('${d}')">✕</button>`:''}</div>`});
   h+='</div>';
   if(amHost()){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
@@ -2688,7 +2805,7 @@ function localNet(){
   return {
     exists:async c=>!!rd('salas/'+c+'/meta'),
     create:async(c,m)=>wr('salas/'+c+'/meta',m),
-    watch(c,h){const u=[sub('salas/'+c+'/meta',h.onMeta),sub('salas/'+c+'/jogadores',v=>h.onLobby(v||{})),sub('salas/'+c+'/estado',h.onState),sub('salas/'+c+'/votos',v=>h.onVotes&&h.onVotes(v||{})),sub('salas/'+c+'/chat',v=>h.onChat&&h.onChat(v||[]))];return ()=>u.forEach(f=>f())},
+    watch(c,h){const u=[sub('salas/'+c+'/titulos',v=>h.onTitulos&&h.onTitulos(v||{})),sub('salas/'+c+'/meta',h.onMeta),sub('salas/'+c+'/jogadores',v=>h.onLobby(v||{})),sub('salas/'+c+'/estado',h.onState),sub('salas/'+c+'/votos',v=>h.onVotes&&h.onVotes(v||{})),sub('salas/'+c+'/chat',v=>h.onChat&&h.onChat(v||[]))];return ()=>u.forEach(f=>f())},
     agora:()=>Math.round(performance.timeOrigin+performance.now()), // simula a hora do servidor
     vote:async(c,d,o)=>{const k='salas/'+c+'/votos';const all=rd(k)||{};all[d]=o;wr(k,all)},
     chat:async(c,m)=>{const k='salas/'+c+'/chat';const a=rd(k)||[];const ts=Math.round(performance.timeOrigin+performance.now()); /* simula a hora do servidor */a.push(Object.assign({id:ts.toString(36)+Math.random().toString(36).slice(2,6)},m,{ts}));wr(k,a.slice(-60))},
@@ -2698,6 +2815,7 @@ function localNet(){
     getUsadas:async c=>rd('salas/'+c+'/usadas')||{},
     espelha:(k,v)=>wr(k,v), // o servidor de testes guarda a sala na memória; aqui só repassa para as outras abas
     espelhaVoto:(c,d,o)=>{const k='salas/'+c+'/votos';const all=rd(k)||{};all[d]=o;wr(k,all)},
+    espelhaTitulo:(c,d,t)=>{const k='salas/'+c+'/titulos';const all=rd(k)||{};if(t)all[d]=t;else delete all[d];wr(k,all)},
     report:async r=>{const all=rd('reportes')||{};all['r'+Date.now()+Math.random().toString(36).slice(2,6)]=r;wr('reportes',all)}
   };
 }
@@ -3012,11 +3130,17 @@ function painelSons(){
 if(URLP.get('sons')!==null)setTimeout(painelSons,300);
 
 // ================= sons, confete e efeitos =================
+// preferências deste aparelho: quais sons tocam, volume e quais avisos aparecem
+const PREF=(()=>{
+  let o={};try{o=JSON.parse(localStorage.getItem('arrisca-prefs')||'{}')||{}}catch(e){}
+  return {sonsOff:new Set(Array.isArray(o.sonsOff)?o.sonsOff:[]),avisoAba:o.avisoAba!==false,avisoSaiu:o.avisoSaiu!==false,vol:typeof o.vol==='number'&&o.vol>=0&&o.vol<=1?o.vol:1};
+})();
+function prefSalva(){try{localStorage.setItem('arrisca-prefs',JSON.stringify({sonsOff:[...PREF.sonsOff],avisoAba:PREF.avisoAba,avisoSaiu:PREF.avisoSaiu,vol:PREF.vol}))}catch(e){}}
 const SFX=(()=>{
   let A=null,M=null,NB=null,on=true;
   try{on=localStorage.getItem('arrisca-som')!=='0'}catch(e){}
   function ctx(){
-    if(!A){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;A=new C();M=A.createGain();M.gain.value=.55;M.connect(A.destination)}
+    if(!A){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;A=new C();M=A.createGain();M.gain.value=.55*PREF.vol;M.connect(A.destination)}
     if(A.state==='suspended')A.resume().catch(()=>{});
     return A;
   }
@@ -3061,7 +3185,10 @@ const SFX=(()=>{
   return {
     get on(){return on},
     unlock(){if(on){ctx();carrega()}},
-    toggle(){on=!on;try{localStorage.setItem('arrisca-som',on?'1':'0')}catch(e){}const b=document.getElementById('snd');if(b)b.textContent=on?'🔊':'🔇';if(on){ctx();carrega();som('agogo_agudo')||arp([660,990],.07,.12,{vol:.15})}toast(on?'🔊 Som ligado':'🔇 Som desligado')},
+    toggle(quieto){on=!on;try{localStorage.setItem('arrisca-som',on?'1':'0')}catch(e){}const b=document.getElementById('snd');if(b)b.textContent=on?'🔊':'🔇';if(on){ctx();carrega();som('agogo_agudo')||arp([660,990],.07,.12,{vol:.15})}if(!quieto)toast(on?'🔊 Som ligado':'🔇 Som desligado')},
+    volume(v){PREF.vol=v;if(M)M.gain.value=.55*v},
+    fora(){som('pandeiro_curto',{rate:.9})||tone(260,0,.14,{vol:.28,f2:880})},
+    saiu(){som('surdo',{vol:.8})?som('agogo_grave',{t:.16,rate:.85,vol:.6}):tone(440,0,.28,{vol:.15,f2:220})},
     tap(){som('toque',{rate:varia()})||tone(700,0,.045,{type:'triangle',vol:.07})},
     chip(){som((fichaAlt++)%2?'ficha2':'ficha1',{rate:varia()})||(tone(1300,0,.05,{type:'square',vol:.05}),tone(1750,.05,.09,{type:'square',vol:.05}))},
     whoosh(){som('ganza')||noise(0,.38,{vol:.22,f:350,f2:3200})},
@@ -3104,6 +3231,44 @@ const SFX=(()=>{
     teste(n,o){return som(n,o)}
   };
 })();
+// cada som pode ser desligado separado; os avisos de aba e de saída levam o som junto
+const SONS=[
+  ['No jogo',[['tap','Toque em botão'],['chip','Apostar ficha'],['whoosh','Pergunta aparece'],['flip','Mostrar resposta'],['pop','Escolher tema e pronto'],['step','Peão andando'],['correct','Acertou'],['wrong','Errou'],['magic','Dica'],['dobro','Arriscar o dobro'],['rasteira','Rasteira'],['impossivel','Acertou uma impossível'],['final','Chegou na última casa'],['start','Começar partida'],['win','Vitória']]],
+  ['Tempo',[['go','Timer começa'],['tick','Timer (segundos)'],['hurry','Timer (3 últimos)'],['timeup','Tempo esgotado']]],
+  ['Sala online',[['myturn','Sua vez'],['turn','Vez de outro'],['join','Alguém entrou na sala'],['fora','Alguém saiu da aba','avisoAba'],['saiu','Alguém saiu do jogo','avisoSaiu'],['msg','Mensagem no chat'],['vote','Voto']]]
+];
+const SFX_ORIG={};
+SONS.forEach(([,l])=>l.forEach(([k,,aviso])=>{const f=SFX[k];if(typeof f!=='function')return;SFX_ORIG[k]=f;
+  SFX[k]=function(){if(PREF.sonsOff.has(k)||(aviso&&!PREF[aviso]))return;return f.apply(SFX,arguments)}}));
+function somAbre(){SFX.unlock&&SFX.unlock();somRender();modalAbre('sombox')}
+function somRender(){
+  const c=document.getElementById('somcorpo');if(!c)return;const top=c.scrollTop;
+  const ck=(id,on,txt,sub,fn)=>`<label class="somck"><input type="checkbox" id="${id}" ${on?'checked':''} onchange="${fn}"><span>${txt}${sub?`<small>${sub}</small>`:''}</span></label>`;
+  let h=`<div class="somgeral"><button class="${SFX.on?'primary':''}" onclick="SFX.toggle(true);somRender()">${SFX.on?'🔊 Som ligado':'🔇 Som desligado'}</button>
+    <span class="somvol">Volume<input type="range" min="0" max="100" step="5" value="${Math.round(PREF.vol*100)}" aria-label="Volume" oninput="SFX.volume(this.value/100)" onchange="prefSalva();somTesta('chip')"></span></div>
+    <h4 class="ctsub">Avisos na tela</h4>
+    ${ck('avaba',PREF.avisoAba,'👀 Quando alguém sai da aba','Desligando, o som desse aviso também para. O “fora da aba” continua aparecendo na lista de jogadores.','somAviso(\'avisoAba\',this.checked)')}
+    ${ck('avsaiu',PREF.avisoSaiu,'🚪 Quando alguém sai do jogo','Quando alguém fecha o jogo ou perde a conexão (e quando volta). Desligando, o som desse aviso também para.','somAviso(\'avisoSaiu\',this.checked)')}
+    <h4 class="ctsub">Quais sons tocam</h4><div class="somlista${SFX.on?'':' somoff'}">`;
+  if(!SFX.on)h+=`<p class="muted" style="text-align:center;margin:0 0 6px">O som está desligado. Ligue lá em cima para ouvir.</p>`;
+  SONS.forEach(([g,l])=>{
+    h+=`<div class="somgrupo">${g}</div>`;
+    l.forEach(([k,t,aviso])=>{
+      const trava=aviso&&!PREF[aviso],on=!PREF.sonsOff.has(k)&&!trava;
+      h+=`<div class="somlin${on?'':' off'}${trava?' trava':''}"><label><input type="checkbox" ${on?'checked':''} ${trava?'disabled':''} onchange="somLiga('${k}',this.checked)"><span>${t}${trava?' <small>(aviso desligado)</small>':''}</span></label><button class="small" title="Ouvir" aria-label="Ouvir: ${t}" onclick="somTesta('${k}')">▶</button></div>`;
+    });
+  });
+  h+=`</div><div class="somtodos"><button class="small" onclick="somTodos(true)">Ligar todos</button><button class="small" onclick="somTodos(false)">Desligar todos</button></div>`;
+  c.innerHTML=h;c.scrollTop=top;
+}
+function somLiga(k,v){if(v)PREF.sonsOff.delete(k);else PREF.sonsOff.add(k);prefSalva();somRender();if(v)somTesta(k)}
+function somAviso(qual,v){PREF[qual]=!!v;prefSalva();somRender()}
+function somTodos(v){SONS.forEach(([,l])=>l.forEach(([k])=>{if(v)PREF.sonsOff.delete(k);else PREF.sonsOff.add(k)}));prefSalva();somRender()}
+function somTesta(k){
+  if(!SFX.on){toast('🔇 O som está desligado');return}
+  const f=SFX_ORIG[k];if(!f)return;
+  if(k==='step')[1,2,3,4,5].forEach(i=>setTimeout(()=>f.call(SFX,i),i*230));else f.call(SFX);
+}
 const CONF=(()=>{
   let cv=null,cx=null,parts=[],raf=0;
   function prep(){
@@ -3179,7 +3344,7 @@ function fx(){
   }
   if(s.rev&&!a.rev&&s.phase==='question'){SFX.flip();const an=panel.querySelector('.answer');if(an)an.classList.add('reveal')}
   if(s.hint&&!a.hint)SFX.magic();
-  if(online()&&myIdx()!==G.cur&&s.qid===a.qid&&G.players&&((s.abaN>a.abaN)||(s.colou&&!a.colou))){toast(s.colou&&!a.colou?`👀 ${G.players[G.cur].name} colou um texto na resposta`:`👀 ${G.players[G.cur].name} saiu da aba!`);SFX.pop&&SFX.pop()}
+  if(online()&&myIdx()!==G.cur&&s.qid===a.qid&&G.players&&((s.abaN>a.abaN)||(s.colou&&!a.colou))){const colou=s.colou&&!a.colou;if(colou||PREF.avisoAba){toast(colou?`👀 ${G.players[G.cur].name} colou um texto na resposta`:`👀 ${G.players[G.cur].name} saiu da aba!`);SFX.fora()}}
   if(s.dob&&!a.dob&&s.phase==='question'&&s.qid===a.qid){SFX.dobro();vib(30)}
   if(typeof s.ras==='number'&&a.ras==='pendente'){SFX.rasteira();vib(80);floatAt(s.ras,'🦶 -1','#c77dff')}
   if(s.resp&&s.resp!==a.resp&&s.phase==='question'){SFX.flip();const r=panel.querySelector('.resp');if(r)r.classList.add('reveal');if(myIdx()>=0&&myIdx()!==G.cur)vib(40)}

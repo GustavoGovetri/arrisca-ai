@@ -6,6 +6,7 @@
 //   POST /api/perguntas?acao=sortear    sorteia uma pergunta (sem a resposta)
 //   POST /api/perguntas?acao=resposta   devolve a resposta, só depois que a pessoa respondeu
 //   POST /api/perguntas?acao=dica       dica (primeira letra e tamanho, ou uma alternativa errada)
+//   POST /api/perguntas?acao=forma      desenho da pergunta de silhueta (contorno do país)
 const crypto = require('crypto');
 
 const ORDER = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V'];
@@ -36,6 +37,10 @@ const qid = (t, q) => cyrb53(t === 'V' ? t + '|' + q[0] + '|' + q[1][q[2]] : t +
 const bucketOf = (t, q) => (t === 'V' ? q[3] : q[2]) || 'geral';
 const qDiff = (t, q) => (t === 'V' ? q[4] : q[3]) || 2;
 const resposta = (t, q) => t === 'V' ? q[1][q[2]] : q[1];
+// perguntas de silhueta: o texto guarda a chave do desenho (⟦f:chave⟧), que não vai para o aparelho
+const MARCA = /\s*⟦f:([a-z0-9]+)⟧/;
+const textoQ = s => String(s).replace(MARCA, '');
+const formaDe = q => { const m = MARCA.exec(q[0]); return m ? m[1] : null };
 
 let BANCO = null, BANCO_V = null, CHECADO = 0, CARREGANDO = null;
 function arr(x) { return Array.isArray(x) ? x : x && typeof x === 'object' ? Object.keys(x).sort((a, b) => a - b).map(k => x[k]) : [] }
@@ -62,8 +67,13 @@ function monta(raw, versao) {
   return B;
 }
 async function banco() {
-  if (process.env.BANCO_ARQUIVO) { // testes locais
-    if (!BANCO) BANCO = monta(JSON.parse(require('fs').readFileSync(process.env.BANCO_ARQUIVO, 'utf8')), 'local');
+  if (process.env.BANCO_ARQUIVO) { // testes locais (aceita o questions.json ou o banco.json com as silhuetas)
+    if (!BANCO) {
+      const raw = JSON.parse(require('fs').readFileSync(process.env.BANCO_ARQUIVO, 'utf8'));
+      const completo = raw.perguntas && !raw.M;
+      BANCO = monta(completo ? raw.perguntas : raw, 'local');
+      BANCO.formas = (completo && raw.formas) || {}; BANCO.mapa = (completo && raw.mapa) || {};
+    }
     return BANCO;
   }
   if (BANCO && Date.now() - CHECADO < 5 * 60 * 1000) return BANCO;
@@ -73,7 +83,11 @@ async function banco() {
       const v = await dbGet('banco/versao');
       if (!v) throw Object.assign(new Error('O banco de perguntas ainda está vazio.'), { status: 503 });
       CHECADO = Date.now();
-      if (!BANCO || v !== BANCO_V) { BANCO = monta(await dbGet('banco/perguntas'), v); BANCO_V = v }
+      if (!BANCO || v !== BANCO_V) {
+        const [p, f, m] = await Promise.all([dbGet('banco/perguntas'), dbGet('banco/formas'), dbGet('banco/mapa')]);
+        const B = monta(p, v); B.formas = f || {}; B.mapa = m || {};
+        BANCO = B; BANCO_V = v;
+      }
       return BANCO;
     } finally { CARREGANDO = null }
   })();
@@ -203,7 +217,7 @@ async function handle(acao, body) {
     if (r.esgotado) return r;
     const s = r.s, q = B.temas[s].items[r.i], id = B.temas[s].ids[r.i];
     const sala = body.sala && /^[A-Z0-9]{4,6}$/.test(body.sala) ? body.sala : null;
-    const out = { id, t: s, q: q[0], b: bucketOf(s, q), d: qDiff(s, q), lvNote: r.lvNote, tk: assina({ i: id, t: s, m: sala ? 'o' : 'l', s: sala, e: Date.now() + 864e5 }) };
+    const out = { id, t: s, q: textoQ(q[0]), b: bucketOf(s, q), d: qDiff(s, q), lvNote: r.lvNote, tk: assina({ i: id, t: s, m: sala ? 'o' : 'l', s: sala, e: Date.now() + 864e5 }) };
     if (s === 'V') out.opts = shuffle(q[1].slice());
     return out;
   }
@@ -214,7 +228,13 @@ async function handle(acao, body) {
   const q = B.temas[t].items[i];
   if (acao === 'resposta') {
     if (tk.m === 'o' && !(await salaLiberou(tk.s, tk.i))) throw Object.assign(new Error('A resposta só aparece depois que a pessoa responde.'), { status: 403 });
-    return { a: resposta(t, q) };
+    const f = formaDe(q);
+    return f ? { a: resposta(t, q), m: B.mapa[f] || null } : { a: resposta(t, q) };
+  }
+  if (acao === 'forma') { // o desenho da silhueta (é a própria pergunta, então sai junto com ela)
+    const f = formaDe(q);
+    if (!f || !B.formas[f]) throw Object.assign(new Error('Essa pergunta não tem desenho.'), { status: 404 });
+    return { d: B.formas[f] };
   }
   if (acao === 'dica') {
     if (t === 'V') { const erradas = q[1].filter((_, j) => j !== q[2]); return { elim: erradas[rnd(erradas.length)] } }
@@ -257,5 +277,5 @@ module.exports._pergTk = async tk => {
   if (i === undefined) return null;
   const q = T.items[i];
   return { qid: x.i, t: x.t, m: x.m, s: x.s || null, e: +x.e || 0, nivel: Math.min(4, Math.max(1, +qDiff(x.t, q) || 2)),
-    q: q[0], a: resposta(x.t, q), opts: x.t === 'V' ? q[1].slice() : null };
+    q: textoQ(q[0]), a: resposta(x.t, q), opts: x.t === 'V' ? q[1].slice() : null };
 };

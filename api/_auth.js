@@ -28,7 +28,7 @@ async function verifica(token) {
   if (DEV && /^local\./.test(token)) {
     const u = b64json(token.slice(6));
     if (!u || !u.uid) throw erro('Login inválido.');
-    return { uid: String(u.uid), email: u.email || '', verificado: true, nome: u.nome || '', provedor: u.provedor || 'password' };
+    return { uid: String(u.uid), email: u.email || '', verificado: u.verificado !== false, nome: u.nome || '', provedor: u.provedor || 'password' };
   }
   const partes = String(token || '').split('.');
   if (partes.length !== 3) throw erro('Login inválido.');

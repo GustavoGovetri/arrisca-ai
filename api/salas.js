@@ -9,6 +9,7 @@ const { dbGet, dbReq } = require('./_fb');
 const crypto = require('crypto');
 const ST = require('./_store');
 const juiz = require('./_juiz');
+const STATS = require('./_stats');
 
 const MAX = 10;              // jogadores por partida
 const VIVA = 3 * 60 * 1000;  // sem notícia do dono por 3 minutos, a sala sai da lista
@@ -90,6 +91,24 @@ async function entrar(body) {
   await confereChave(code, q, guardada);
   return { host: meta.host || null };
 }
+// título da conta ao lado do nome na sala: o servidor confere a conta (token do login) e grava; ninguém grava "titulos" direto
+async function titulo(body) {
+  const code = codigo(body.sala), q = quem(body);
+  const [meta, guardada] = await Promise.all([ST.ler('salas/' + code + '/meta'), ST.ler('srv/chaves/' + code + '/' + q.dev)]);
+  if (!meta) throw erro(404, 'Sala não encontrada');
+  await confereChave(code, q, guardada);
+  let t = null;
+  if (body.token) {
+    const u = await require('./_auth').verifica(String(body.token).slice(0, 4000));
+    if (u.provedor !== 'anonymous' && ID.test(u.uid)) {
+      const [p, st] = await Promise.all([ST.ler('usuarios/' + u.uid + '/perfil'), ST.ler('usuarios/' + u.uid + '/stats')]);
+      t = p && p.titulo ? STATS.titulo(p.titulo, st) : null;
+    }
+  }
+  if (t) delete t.id;
+  await ST.grava('PUT', 'salas/' + code + '/titulos/' + q.dev, t);
+  return { titulo: t };
+}
 let PERG = null;
 function perg() { if (!PERG) PERG = require('./perguntas.js')._pergTk; return PERG }
 async function jogada(body) {
@@ -142,6 +161,7 @@ async function handle(acao, body) {
   if (acao === 'entrar') return entrar(body);
   if (acao === 'jogada') return jogada(body);
   if (acao === 'votar') return votar(body);
+  if (acao === 'titulo') return titulo(body);
   if (acao === 'lista') {
     const todas = DEV ? MEM : ((await dbGet('publicas')) || {});
     const agora = Date.now(), out = [], velhas = [];

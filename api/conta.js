@@ -17,8 +17,9 @@ const idOk = id => typeof id === 'string' && /^[-A-Za-z0-9_]{1,128}$/.test(id);
 const falha = (status, m) => Object.assign(new Error(m), { status });
 function bugsDev() { try { return Object.fromEntries(require('./bugs.js').MEM.map((b, i) => ['b' + i, b])) } catch (e) { return {} } }
 
+const emailOk = u => !!u && (u.verificado || u.provedor === 'google.com');
 function perfilPublico(p, u) {
-  return { nome: p.nome || '', cor: p.cor || null, criado: p.criado || '', email: u.email, verificado: u.verificado, provedor: u.provedor };
+  return { nome: p.nome || '', cor: p.cor || null, titulo: p.titulo || '', criado: p.criado || '', email: u.email, verificado: u.verificado, provedor: u.provedor };
 }
 
 async function entrar(u, body) {
@@ -37,14 +38,18 @@ async function mudaPerfil(u, body) {
   const muda = {};
   if (body.nome !== undefined) { const n = txt(body.nome, 16); if (!n) throw falha(400, 'Escolha um nome.'); muda.nome = n }
   if (body.cor !== undefined) { const c = corOk(body.cor); if (c) muda.cor = c }
+  if (body.titulo !== undefined) muda.titulo = body.titulo ? String(body.titulo).slice(0, 30) : null;
   if (!Object.keys(muda).length) throw falha(400, 'Nada para mudar.');
   const [atual, st] = await Promise.all([ler(base + '/perfil'), ler(base + '/stats')]);
   if (!atual) throw falha(404, 'Conta não encontrada. Entre de novo.');
+  if (muda.titulo && !ST.titulo(muda.titulo, st)) throw falha(400, 'Você ainda não liberou esse título.');
   const p = Object.assign({}, atual, muda), per = ST.periodo(), s = ST.normaliza(st);
+  if (!p.titulo) delete p.titulo;
+  const t = p.titulo ? ST.titulo(p.titulo, s) : null;
   const mapa = { [base + '/perfil']: p };
-  // o nome e a cor aparecem no ranking da semana e do mês atuais
-  if (s.sem.id === per.semana && s.sem.p > 0) mapa['ranking/semana/' + per.semana + '/' + u.uid] = { p: s.sem.p, n: p.nome, c: p.cor || null };
-  if (s.mes.id === per.mes && s.mes.p > 0) mapa['ranking/mes/' + per.mes + '/' + u.uid] = { p: s.mes.p, n: p.nome, c: p.cor || null };
+  // o nome, a cor e o título aparecem no ranking da semana e do mês atuais
+  if (s.sem.id === per.semana && s.sem.p > 0) mapa['ranking/semana/' + per.semana + '/' + u.uid] = { p: s.sem.p, n: p.nome, c: p.cor || null, t };
+  if (s.mes.id === per.mes && s.mes.p > 0) mapa['ranking/mes/' + per.mes + '/' + u.uid] = { p: s.mes.p, n: p.nome, c: p.cor || null, t };
   await gravaVarios(mapa);
   return { perfil: perfilPublico(p, u) };
 }
@@ -67,6 +72,8 @@ async function eu(u) {
 // uma resposta de partida online. O servidor confere a pergunta pelo token que ele mesmo assinou ao sortear,
 // e confere no estado da sala que ela saiu mesmo ali; cada pergunta da sala vale uma vez só.
 async function resposta(u, body) {
+  // conta de e-mail e senha só pontua depois de confirmar o e-mail (evita conta com e-mail inventado ou de outra pessoa)
+  if (!emailOk(u)) throw falha(403, 'Confirme seu e-mail para suas partidas contarem no ranking.');
   const info = await require('./perguntas.js')._infoTk(body.tk);
   if (!info || info.m !== 'o' || !info.s) throw falha(400, 'Só perguntas de partidas online contam.');
   if (info.e < Date.now() - 6 * 3600e3) throw falha(400, 'Essa pergunta já é antiga.');
@@ -103,14 +110,14 @@ async function resposta(u, body) {
   if (ok) part.a++; else part.e++;
   part.p += pts; part.fim = quando; if (fim) part.venceu = true;
   const tem = conq || {}, ganhou = ST.novas(s, tem);
-  const per = ST.periodo(agora), nome = perfil.nome || 'Jogador', cor = perfil.cor || null;
+  const per = ST.periodo(agora), nome = perfil.nome || 'Jogador', cor = perfil.cor || null, t = perfil.titulo ? ST.titulo(perfil.titulo, s) : null;
   const mapa = {
     [regC]: { u: u.uid, ok, n: nivel, w: agora },
     [base + '/stats']: s,
     [base + '/partidas/' + chave]: part
   };
-  if (s.sem.p > 0) { mapa['ranking/semana/' + per.semana + '/' + u.uid] = { p: s.sem.p, n: nome, c: cor }; mapa[base + '/rk/semana_' + per.semana] = true }
-  if (s.mes.p > 0) { mapa['ranking/mes/' + per.mes + '/' + u.uid] = { p: s.mes.p, n: nome, c: cor }; mapa[base + '/rk/mes_' + per.mes] = true }
+  if (s.sem.p > 0) { mapa['ranking/semana/' + per.semana + '/' + u.uid] = { p: s.sem.p, n: nome, c: cor, t }; mapa[base + '/rk/semana_' + per.semana] = true }
+  if (s.mes.p > 0) { mapa['ranking/mes/' + per.mes + '/' + u.uid] = { p: s.mes.p, n: nome, c: cor, t }; mapa[base + '/rk/mes_' + per.mes] = true }
   ganhou.forEach(c => { mapa[base + '/conquistas/' + c.id] = quando });
   await gravaVarios(mapa);
   return { pts, nivel, fim, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n, nivel: c.nivel })) };

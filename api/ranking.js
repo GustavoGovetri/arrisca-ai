@@ -5,6 +5,7 @@ const { ler } = require('./_store');
 const ST = require('./_stats');
 
 const TOP = 50;
+const tituloOk = t => t && typeof t === 'object' && typeof t.x === 'string' ? { x: t.x.slice(0, 40), n: Math.max(1, Math.min(6, +t.n || 1)) } : null;
 let CACHE = {}; // período → { t, lista } (30 s)
 
 module.exports = async (req, res) => {
@@ -15,7 +16,7 @@ module.exports = async (req, res) => {
     if (!c || Date.now() - c.t > 30000) {
       const dados = await ler('ranking/' + periodo + '/' + id);
       const lista = Object.entries(dados || {}).filter(([, v]) => v && +v.p > 0)
-        .map(([uid, v]) => ({ uid, p: Math.floor(+v.p), n: String(v.n || 'Jogador').slice(0, 16), c: /^#[0-9a-f]{6}$/i.test(v.c || '') ? v.c : null }))
+        .map(([uid, v]) => ({ uid, p: Math.floor(+v.p), n: String(v.n || 'Jogador').slice(0, 16), c: /^#[0-9a-f]{6}$/i.test(v.c || '') ? v.c : null, t: tituloOk(v.t) }))
         .sort((a, b) => b.p - a.p || a.n.localeCompare(b.n));
       c = CACHE[periodo + id] = { t: Date.now(), lista };
     }
@@ -26,7 +27,7 @@ module.exports = async (req, res) => {
     let pos = 0, minha = null;
     const top = c.lista.map((x, i) => {
       if (i > 0 && x.p < c.lista[i - 1].p) pos = i; // empate fica na mesma posição
-      const linha = { pos: pos + 1, p: x.p, n: x.n, c: x.c, eu: !!eu && x.uid === eu };
+      const linha = { pos: pos + 1, p: x.p, n: x.n, c: x.c, t: x.t, eu: !!eu && x.uid === eu };
       if (linha.eu) minha = linha;
       return linha;
     });
