@@ -11,7 +11,8 @@
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:radial-gradient(circle at 30% 0%,#1f2433,#111318 60%);color:#ececf1;min-height:100vh}
 .wrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:22px;max-width:1340px;margin:0 auto;padding:18px 20px 30px;align-items:start}
 @media(max-width:980px){.wrap{grid-template-columns:1fr}}
-.ring{max-width:calc(100vh - 36px);margin:0 auto} /* o tabuleiro inteiro cabe na altura da tela */
+.ring{max-width:calc((100vh - 36px) / var(--z,1));margin:0 auto} /* o tabuleiro inteiro cabe na altura da tela */
+.wrap{zoom:var(--z,1)} /* telas grandes: tudo cresce junto, como se fosse o zoom do navegador */
 .prepfoot{margin-top:16px;padding-top:14px;border-top:2px dashed rgba(255,255,255,.18);text-align:center}
 .prepfoot .muted{margin:0 0 10px}
 .prepfoot .primary{min-width:min(280px,100%)}
@@ -781,6 +782,26 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
 .cm.me.emo .ch{text-align:right}
 .fora{font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:middle;font-weight:700;background:#ffcf4a;color:#2a1600;border:2px solid var(--k)}
 
+/* ===== confirmação de todos e largada ===== */
+.lname .pronto,.lname .espera{font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:middle;font-weight:700;border:2px solid var(--k)}
+.lname .pronto{background:#2fbf63;color:#fff}.lname .espera{background:#5a2a3a;color:#ffd79a}
+button.pronto{display:block;width:100%;margin:14px 0 6px;padding:14px 16px;font-size:20px;font-family:'Lilita One',sans-serif;font-weight:400;background:linear-gradient(180deg,#ffd23f,#ffb300);color:#2a0410;border-radius:16px}
+button.pronto.on{background:linear-gradient(180deg,#3ad07a,#1f9a52);color:#fff}
+button.pronto small{display:block;font-family:inherit;font-size:12px;opacity:.85}
+.largada{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;pointer-events:none;background:radial-gradient(circle,rgba(42,4,16,.6),rgba(42,4,16,0) 65%)}
+.largada .lc{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.largada b{display:block;font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(110px,26vmin,300px);line-height:1;color:#ffd23f;-webkit-text-stroke:.035em #2a0410;text-shadow:0 .07em 0 #2a0410,0 0 .35em rgba(255,190,60,.65);animation:largadaPop .6s cubic-bezier(.2,.9,.3,1.3) both}
+.largada b.vale{font-size:clamp(60px,14vmin,180px);color:#fff;animation:largadaVale 1.15s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes largadaPop{0%{transform:scale(.2);opacity:0}35%{transform:scale(1.18);opacity:1}70%{transform:scale(1);opacity:1}100%{transform:scale(1.5);opacity:0}}
+@keyframes largadaVale{0%{transform:scale(.3) rotate(-8deg);opacity:0}25%{transform:scale(1.12) rotate(2deg);opacity:1}75%{transform:scale(1);opacity:1}100%{transform:scale(1.3);opacity:0}}
+
+/* ===== "sentido horário" dentro da roda (antes ficava por cima da cortina) ===== */
+.ring .arrow{left:50%!important;top:16.2cqw!important;transform:translateX(-50%);font-size:1.75cqw;opacity:.9;pointer-events:none;z-index:2}
+
+/* ===== janela sem foco (outro monitor, outra janela, aba escondida): enfeites param e a placa de vídeo descansa ===== */
+html.parado *,html.parado *::before,html.parado *::after{animation-play-state:paused!important}
+html.parado #fundo .holofote,html.parado #fundo .ficha,html.parado #fundo .raios{will-change:auto}
+
 /* ===== celular: menos margem em volta e cartões de conta/ranking que cabem ===== */
 .hcard{overflow:hidden}
 @media(max-width:520px){
@@ -877,7 +898,7 @@ const LAMPADAS=[45.7,36.3].map(r=>`<circle class="halo" cx="50" cy="50" r="${r}"
 const LOGO_HTML='<div class="letreiro"><div class="logo" aria-label="Arrisca Aí">'+[...'ARRISCA AÍ'].map((ch,i)=>ch===' '?'<span class="lt esp"></span>':`<span class="lt" style="--i:${i}">${ch}</span>`).join('')+'</div></div>';
 (function luzes(){ // lâmpadas do letreiro acendendo em sequência (3 trocas por segundo, sem animação contínua)
   if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  let n=0;setInterval(()=>{if(document.hidden)return;const v=String(n++%3);document.querySelectorAll('svg.track,.letreiro').forEach(e=>{e.dataset.luz=v})},340);
+  let n=0;setInterval(()=>{if(document.hidden||document.documentElement.classList.contains('parado'))return;const v=String(n++%3);document.querySelectorAll('svg.track,.letreiro').forEach(e=>{e.dataset.luz=v})},340);
 })();
 setTimeout(()=>{fetch('/api/perguntas?acao=aquece',{cache:'no-store'}).catch(()=>{})},1200);
 (function montaFundo(){ // palco: cortinas, bambinela, holofotes passando e brilhos
@@ -1180,13 +1201,13 @@ function anim(el,kf,o){try{return el&&el.animate&&!REDUZ?el.animate(kf,o):null}c
 const TC='translate(-50%,-50%)';
 function renderBoard(){
   const R=41, tgt=targetPos(), ring=document.getElementById('ring');
-  const sz=Math.min(8.4,2*Math.PI*R/(N+1)*0.86);
+  const sz=Math.min(8.4,2*Math.PI*R/(N+1)*0.95);
   const key=N+'|'+sz.toFixed(2)+'|'+board.map(s=>s.type+(s.themes||[]).join('/')).join(',');
   if(key!==BOARD_KEY){ // só monta as casas quando o tabuleiro muda
     BOARD_KEY=key;SZ=sz;ring.style.setProperty('--sp',sz.toFixed(2)+'cqw');
     let h=`<svg class="track" viewBox="0 0 100 100"><circle cx="50" cy="50" r="${R}" fill="none" stroke="#2a0410" stroke-opacity=".7" stroke-width="6.2"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="#4a0619" stroke-width="5"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width=".55" stroke-dasharray="1 1.6" stroke-linecap="round"/>${LAMPADAS}</svg>`;
     SQ=board.map((s,i)=>{const a=(-90+(i+1)*360/(N+1))*Math.PI/180,x=50+R*Math.cos(a),y=50+R*Math.sin(a);return {x,y,dx:x,dy:y,ds:1}});FOCO=null;
-    h+=`<div class="arrow" style="left:${(SQ[0].x+sz*.85).toFixed(2)}%">sentido horário ▶</div>`; // começa logo depois da casa INÍCIO
+    h+=`<div class="arrow">sentido horário ↻</div>`; // dentro da roda, logo abaixo de INÍCIO e FIM
     board.forEach((s,i)=>{
       const lb=s.type==='start'?'INÍCIO':s.type==='final'?'🏁<br>FIM':s.themes.map(sg).join('<br>');
       h+=`<div class="sp ${s.type}" style="left:${SQ[i].x}%;top:${SQ[i].y}%;${spStyle(s)}" title="${i===0?'Início':i===FINAL?'Última casa':'Casa '+i+' — '+s.themes.map(t=>T[t].n).join(' ou ')}"><div class="lb">${lb}</div>${s.type==='normal'?`<div class="n">${i}</div>`:''}</div>`;
@@ -1525,9 +1546,9 @@ function dragMove(ev){
   const n=d.rows.length,top0=d.rects[0].top,lastTop=d.rects[n-1].top;
   let dy=ev.clientY-d.y0;
   dy=Math.max(top0-d.rects[d.from].top-8,Math.min(lastTop-d.rects[d.from].top+8,dy));
-  d.row.style.transform=`translateY(${dy}px) scale(1.02)`;
+  d.row.style.transform=`translateY(${dy/ZOOM}px) scale(1.02)`;
   const to=Math.max(0,Math.min(n-1,Math.round(d.from+dy/d.step)));d.to=to;
-  d.rows.forEach((r,i)=>{if(i===d.from)return;let s=0;if(d.from<to&&i>d.from&&i<=to)s=-d.step;else if(d.from>to&&i>=to&&i<d.from)s=d.step;r.style.transform=s?`translateY(${s}px)`:''});
+  d.rows.forEach((r,i)=>{if(i===d.from)return;let s=0;if(d.from<to&&i>d.from&&i<=to)s=-d.step;else if(d.from>to&&i>=to&&i<d.from)s=d.step;r.style.transform=s?`translateY(${s/ZOOM}px)`:''});
 }
 function dragEnd(){
   const d=DRAG;DRAG=null;if(!d)return;
@@ -1847,7 +1868,7 @@ async function enterRoom(code,created,publica){
     else await servidorSala('entrar',{sala:code});
     VOTES={};chatZera();
     UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido});
-    await NET.setMe(code,MYDEV,{nome:myName(),cor:myColor(),on:true,fora:false,ts:Date.now()});
+    await NET.setMe(code,MYDEV,{nome:myName(),cor:myColor(),on:true,fora:false,pronto:false,ts:Date.now()});
     SALA_USADAS={};mandaUsadasSala().then(carregaUsadasSala);
     render();
   }catch(e){console.error(e);CREATING=false;toast(e&&e.status&&e.status!==500?e.message:'Sem conexão com a sala. Tente de novo.');if(e&&e.status===404||e&&e.status===403){if(UNWATCH){UNWATCH();UNWATCH=null}MODE=null;ROOM=null;render()}}
@@ -2366,7 +2387,18 @@ function abaTitulo(){
 function avisaAba(fora){if(NET&&ROOM&&online()&&(emPartida()||!fora))NET.setMe(ROOM,MYDEV,{fora}).catch(()=>{})}
 // fora do jogo = aba escondida OU a janela sem foco (clicou em outra janela, outro programa ou outro monitor)
 let FORA=false,FOCO_T=null;
+// telas grandes no zoom 100%: o jogo inteiro cresce junto (tabuleiro, painel e letras), sem passar da altura da tela
+let ZOOM=1;
+const ZOOM_OK=(()=>{try{return CSS.supports('zoom','1.2')&&!/^((?!chrome|android).)*safari/i.test(navigator.userAgent)}catch(e){return false}})();
+function ajustaEscala(){
+  ZOOM=ZOOM_OK?Math.max(1,Math.min(innerWidth/1500,innerHeight/860,1.8)):1;
+  document.documentElement.style.setProperty('--z',ZOOM.toFixed(3));
+}
+addEventListener('resize',ajustaEscala);ajustaEscala();
 function estaFora(){return document.hidden||!document.hasFocus()}
+function marcaParado(){document.documentElement.classList.toggle('parado',estaFora())}
+['blur','focus','visibilitychange','pageshow'].forEach(ev=>(ev==='visibilitychange'?document:window).addEventListener(ev,()=>setTimeout(marcaParado,0)));
+setTimeout(marcaParado,500);
 function mudouFoco(){
   const f=estaFora();if(f===FORA)return;FORA=f;
   if(f){ABA_SAIU=emPartida()?Date.now():null;avisaAba(true);marcaSaida(true);abaTitulo();return}
@@ -2519,7 +2551,7 @@ function limpaEstado(o){
 }
 function limpaLobby(l){ // nomes e cores de quem está na sala
   const out={};if(!l||typeof l!=='object')return out;
-  Object.keys(l).slice(0,40).forEach(d=>{if(!sId(d))return;const x=l[d]||{};out[d]={nome:sStr(x.nome,16),cor:COR_OK.test(String(x.cor||''))?x.cor:'',on:x.on!==false,ts:Number(x.ts)||0,fora:!!x.fora}});
+  Object.keys(l).slice(0,40).forEach(d=>{if(!sId(d))return;const x=l[d]||{};out[d]={nome:sStr(x.nome,16),cor:COR_OK.test(String(x.cor||''))?x.cor:'',on:x.on!==false,ts:Number(x.ts)||0,fora:!!x.fora,pronto:!!x.pronto}});
   return out;
 }
 function applyRemote(d){
@@ -2535,6 +2567,7 @@ function applyRemote(d){
     if(d.por!==MYDEV)UNDO=[];
     if(G.qid!==prevQ||G.phase!==prevPhase){G.reportOpen=false;if(G.phase!=='question')stopTimer()}
     if(G.phase==='setup')G.editPl=false;
+    if(G.phase==='setup'&&prevPhase&&prevPhase!=='setup'&&NET&&ROOM&&LOBBY[MYDEV]&&LOBBY[MYDEV].pronto){LOBBY[MYDEV].pronto=false;NET.setMe(ROOM,MYDEV,{pronto:false}).catch(()=>{})} // partida nova: confirma de novo
     marcaVistas();fixLegacy();
     render();
     LASTSYNC=syncJson();
@@ -2586,7 +2619,7 @@ function lobbyHtml(){
   ${G.pickColor==='me'||(!me.cor&&(me.nome||'').trim())?`<div class="pal-wrap"><span class="muted">Escolha sua cor:</span><div class="palette">${PALETA.map(([c,n])=>{const tomada=usadas.includes(c);return `<button class="swatch${c===me.cor?' on':''}${tomada?' taken':''}" style="background:${c}" title="${n}${tomada?' (já escolhida)':''}" ${tomada?'disabled':''} onclick="setMyColor('${c}')"></button>`}).join('')}</div></div>`:''}
   ${!(me.nome||'').trim()?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Digite seu nome para entrar na partida.</p>':''}
   <h2 style="margin-top:16px">Jogadores <span class="muted">(${ord.length})</span></h2><div class="plist">`;
-  ord.forEach((d,i)=>{const l=LOBBY[d]||{};h+=`<div class="setup-row lob${l.on===false?' offline':''}${NOVOS[d]?' novo':''}" data-idx="${i}">${amHost()?`<span class="grip" title="Arraste para mudar a ordem" onpointerdown="dragRow(event,'lobby')">⠿</span>`:''}<span class="ordem">${i+1}º</span><span class="swatch" style="background:${l.cor||'#3a4054'}"></span><span class="lname">${esc((l.nome||'').trim()||'(sem nome)')}${d===MYDEV?' <span class="you">você</span>':''}${d===HOST?' <span class="host">criou a sala</span>':''}${l.on===false?' <span class="off">offline</span>':''}</span>${amHost()&&d!==MYDEV?`<button class="small" title="Tirar da sala" onclick="kick('${d}')">✕</button>`:''}</div>`});
+  ord.forEach((d,i)=>{const l=LOBBY[d]||{};h+=`<div class="setup-row lob${l.on===false?' offline':''}${NOVOS[d]?' novo':''}" data-idx="${i}">${amHost()?`<span class="grip" title="Arraste para mudar a ordem" onpointerdown="dragRow(event,'lobby')">⠿</span>`:''}<span class="ordem">${i+1}º</span><span class="swatch" style="background:${l.cor||'#3a4054'}"></span><span class="lname">${esc((l.nome||'').trim()||'(sem nome)')}${d===MYDEV?' <span class="you">você</span>':''}${d===HOST?' <span class="host">criou a sala</span>':l.pronto?' <span class="pronto">✅ pronto</span>':' <span class="espera">⏳ confirmando</span>'}${l.on===false?' <span class="off">offline</span>':''}</span>${amHost()&&d!==MYDEV?`<button class="small" title="Tirar da sala" onclick="kick('${d}')">✕</button>`:''}</div>`});
   h+='</div>';
   if(amHost()){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
@@ -2599,10 +2632,11 @@ function lobbyHtml(){
     ${modosHtml(true)}
     ${G.selThemes.length<3?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Escolha pelo menos 3 temas.</p>':''}
     </div></div><div class="prepfoot">${semNome?'<p class="muted">Quem ficar sem nome entra como "Jogador" com o número da vez.</p>':''}
-    <button class="primary" ${Q&&G.selThemes.length>=3&&ord.length>=2&&ord.length<=MAXJ?'':'disabled'} onclick="lobbyStart()">Começar</button>${ord.length<2?'<p class="muted">Precisa de pelo menos 2 jogadores na sala.</p>':ord.length>MAXJ?`<p class="muted">No máximo ${MAXJ} jogadores.</p>`:''}</div>`;
+    ${ord.length>=2&&faltaPronto().length?`<p class="muted">⏳ Esperando confirmar: <b>${faltaPronto().map(d=>esc(nomeLobby(d))).join(', ')}</b></p>`:''}
+    <button class="primary" ${Q&&G.selThemes.length>=3&&ord.length>=2&&ord.length<=MAXJ&&!faltaPronto().length?'':'disabled'} onclick="lobbyStart()">Começar</button>${ord.length<2?'<p class="muted">Precisa de pelo menos 2 jogadores na sala.</p>':ord.length>MAXJ?`<p class="muted">No máximo ${MAXJ} jogadores.</p>`:''}</div>`;
   }else{
     const hn=HOST&&LOBBY[HOST]&&(LOBBY[HOST].nome||'').trim()?esc(LOBBY[HOST].nome):'quem criou a sala';
-    h+=`<p class="muted" style="margin-top:12px">Modo: <b>${MODOS[modo()].e} ${MODOS[modo()].n}</b> — ${MODOS[modo()].d}<br>Temas: ${(G.selThemes||[]).map(k=>`<b style="color:${T[k].c}">${T[k].n}</b>`).join(', ')} · ${SIZES[G.size]?SIZES[G.size].l:''} · ${NF()} fichas · dificuldade ${G.level==='misto'?'misturada':(LEVELS[G.level]||'').toLowerCase()}</p><p class="wait">⏳ Aguardando ${hn} começar a partida…</p>`;
+    h+=`<p class="muted" style="margin-top:12px">Modo: <b>${MODOS[modo()].e} ${MODOS[modo()].n}</b> — ${MODOS[modo()].d}<br>Temas: ${(G.selThemes||[]).map(k=>`<b style="color:${T[k].c}">${T[k].n}</b>`).join(', ')} · ${SIZES[G.size]?SIZES[G.size].l:''} · ${NF()} fichas · dificuldade ${G.level==='misto'?'misturada':(LEVELS[G.level]||'').toLowerCase()}</p>${me.pronto?`<button class="pronto on" onclick="marcaPronto(false)">✅ Você está pronto! <small>toque para desfazer</small></button><p class="wait">⏳ Aguardando ${hn} começar a partida…</p>`:`<button class="pronto" onclick="marcaPronto(true)">✋ Estou pronto!</button><p class="muted" style="text-align:center">A partida só começa quando todo mundo confirmar.</p>`}`;
   }
   return h;
 }
@@ -2617,8 +2651,13 @@ function lobbyPlayers(){
   return lobbyOrder().map((d,i)=>{const l=LOBBY[d];let c=l.cor;if(!c||usados.has(c))c=PALETA.map(x=>x[0]).find(x=>!usados.has(x))||PCOLORS[i%PCOLORS.length];usados.add(c);
     return {name:(l.nome||'').trim()||'Jogador '+(i+1),color:c,pos:0,used:[],forced:null,aj:{pular:0,dica:0},dev:d}});
 }
+// confirmação de todos: cada um marca "Estou pronto" (quem criou a sala confirma ao tocar em Começar)
+function faltaPronto(){return lobbyOrder().filter(d=>d!==HOST&&!(LOBBY[d]&&LOBBY[d].pronto))}
+function marcaPronto(v){if(!NET||!ROOM)return;if(LOBBY[MYDEV])LOBBY[MYDEV].pronto=!!v;NET.setMe(ROOM,MYDEV,{pronto:!!v}).catch(()=>toast('Sem conexão: tente de novo.'));if(v){SFX.pop&&SFX.pop();vib(40)}render()}
+function nomeLobby(d){const l=LOBBY[d]||{};return (l.nome||'').trim()||'Sem nome'}
 function lobbyStart(){
   if(!amHost())return;
+  const fp=faltaPronto();if(fp.length){toast('⏳ Falta confirmar: '+fp.map(nomeLobby).join(', '));return}
   const n=lobbyOrder().length;
   if(n<2){toast('Precisa de pelo menos 2 jogadores');return}
   if(n>MAXJ){toast('No máximo '+MAXJ+' jogadores');return}
@@ -3129,7 +3168,7 @@ function fx(){
   if(s.mode!==a.mode)return;
   if(!G.players||s.phase==='setup')return;
   const p=G.players[G.cur];
-  if(a.phase==='setup'){SFX.start();turnPop();return}
+  if(a.phase==='setup'){largada();return}
   if(s.cur!==a.cur&&s.phase!=='won'){turnPop();if(online()&&myIdx()===G.cur){SFX.myturn();vib(150)}else SFX.turn()}
   if(s.phase==='theme'&&a.phase!=='theme'&&s.cur===a.cur)SFX.pop();
   if(s.tok&&!a.tok){SFX.chip();vib(15)}
@@ -3159,6 +3198,18 @@ function fx(){
     [0,350,700,1100].forEach((t,i)=>setTimeout(()=>CONF.burst(90,innerWidth*(i%2?.75:.25),innerHeight*.25,cores,1.2),t));
     setTimeout(()=>CONF.burst(120,innerWidth/2,innerHeight*.4,cores,1.4),1500);
   }
+}
+function largada(){ // 3, 2, 1, Valendo! quando a partida começa
+  if(REDUZ){SFX.start();turnPop();return}
+  document.querySelectorAll('.largada').forEach(e=>e.remove());
+  const fora=document.createElement('div');fora.className='largada';document.body.appendChild(fora);
+  const el=document.createElement('div');el.className='lc';fora.appendChild(el);
+  const r=document.getElementById('ring')&&document.getElementById('ring').getBoundingClientRect(); // no meio da roda, se ela estiver na tela
+  if(r&&r.width>200&&r.top+r.height/2>80&&r.top+r.height/2<innerHeight-80){el.style.left=(r.left+r.width/2)+'px';el.style.top=(r.top+r.height/2)+'px'}
+  const T0=620;
+  ['3','2','1'].forEach((t,i)=>setTimeout(()=>{el.innerHTML=`<b>${t}</b>`;SFX.chip&&SFX.chip()},i*T0));
+  setTimeout(()=>{el.innerHTML='<b class="vale">Valendo!</b>';SFX.start();turnPop();vib([60,40,60]);CONF.burst(120,parseFloat(el.style.left)||innerWidth/2,parseFloat(el.style.top)||innerHeight*.42,[...(G.players||[]).map(x=>x.color),'#ffd23f','#ffffff'],1.3)},3*T0);
+  setTimeout(()=>fora.remove(),3*T0+1250);
 }
 function turnPop(){anim(document.querySelector('#center .turn'),[{transform:'scale(.4)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:550,easing:'cubic-bezier(.2,.9,.3,1.4)'})}
 // som de toque e liberação do áudio (o navegador só deixa tocar depois do primeiro toque)
