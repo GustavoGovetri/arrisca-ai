@@ -780,6 +780,24 @@ html.leve .card,html.leve .hbtns .pilula{animation:none}
 .cm.emo .ch{font-size:10.5px;text-align:left}
 .cm.me.emo .ch{text-align:right}
 .fora{font-size:11px;border-radius:6px;padding:1px 6px;margin-left:4px;vertical-align:middle;font-weight:700;background:#ffcf4a;color:#2a1600;border:2px solid var(--k)}
+
+/* ===== celular: menos margem em volta e cartões de conta/ranking que cabem ===== */
+.hcard{overflow:hidden}
+@media(max-width:520px){
+  .wrap{padding:12px 8px 24px}
+  body.inicio #panel{padding:14px 12px}
+  .hbox{padding:12px}
+  .toolbar{justify-content:center;gap:5px}
+  .toolbar .snd{flex:1 1 0!important;width:auto;max-width:46px;min-width:0}
+  .hcard{gap:8px;padding:8px}
+  .hcard .hico{width:30px;height:30px;font-size:15px}
+  .hcard .htxt b{font-size:16px}
+  .hcard .htxt small{white-space:normal;font-size:11.5px}
+}
+@media(max-width:350px){
+  .hcard{flex-direction:column;gap:4px;padding:8px 6px;text-align:center}
+  .hcard .htxt{align-items:center;max-width:100%}
+}
 </style>
 </head>
 <body>
