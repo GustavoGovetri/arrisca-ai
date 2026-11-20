@@ -626,6 +626,9 @@ input.chama{animation:chama .9s}
 .entrando h3{margin:10px 0 4px;font-family:'Lilita One',sans-serif;font-weight:400;font-size:22px;color:var(--amarelo);text-shadow:var(--txt-contorno)}
 .entrando .entrgira{font-size:46px;display:inline-block;animation:entrGira 1.6s linear infinite}
 @keyframes entrGira{to{transform:rotate(360deg)}}
+.bandeira{width:min(260px,76%);border-radius:14px;overflow:hidden;border:3px solid var(--k);box-shadow:0 4px 0 var(--k);background:#fff;line-height:0}
+.bandeira img{width:100%;height:auto;display:block}
+.silhmapa.br{width:min(220px,62%);aspect-ratio:400/412}
 .silhbox{display:flex;flex-direction:column;align-items:center;gap:8px;margin:10px 0 4px}
 .silh{width:min(250px,72%);aspect-ratio:1;padding:10px;border-radius:20px;background:radial-gradient(circle at 50% 40%,#fff8e6,#f1dcc0);border:3px solid var(--k);box-shadow:0 4px 0 var(--k);display:flex;align-items:center;justify-content:center;box-sizing:border-box}
 .silh svg{width:100%;height:100%;overflow:visible}
@@ -653,6 +656,13 @@ html.parado .silhmapa i{animation:none}
 .temfoto{background-size:cover!important;background-position:center!important}
 .avatar.temfoto::before,.avatar.temfoto::after{display:none}
 .swatch.temfoto,.pawn.temfoto{box-shadow:0 0 0 2px var(--c),0 2px 0 2px var(--k)}
+.recbox{display:flex;flex-direction:column;align-items:center;gap:8px;margin:6px 0 10px;padding:12px;border-radius:16px;background:rgba(0,0,0,.25)}
+.recorte{position:relative;width:220px;height:220px;overflow:hidden;border-radius:14px;background:#111;touch-action:none;cursor:grab;user-select:none}
+.recorte:active{cursor:grabbing}
+.recorte img{position:absolute;max-width:none;pointer-events:none}
+.recmasc{position:absolute;inset:0;border-radius:50%;box-shadow:0 0 0 999px rgba(0,0,0,.55);border:3px solid #fff;pointer-events:none}
+.reczoom{display:flex;align-items:center;gap:8px;width:220px;font-size:16px}
+.reczoom input{flex:1;accent-color:var(--amarelo)}
 .fotorow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .avatar.ctfoto{width:48px;height:48px;border-width:3px}
 .chatfoto{display:inline-block;width:18px;height:18px;border-radius:50%;vertical-align:-4px;margin-right:4px;border:2px solid var(--k)}
@@ -1235,20 +1245,29 @@ const ANS={};let BUSCA={};
 const VIS_KEY='arrisca-vistas-v1';let VISTAS={};
 try{VISTAS=JSON.parse(localStorage.getItem(VIS_KEY)||'{}')||{}}catch(e){VISTAS={}}
 function guardaVista(t,id,q,a){delete VISTAS[id];VISTAS[id]=[t,q,a,Date.now()];const ks=Object.keys(VISTAS);if(ks.length>4000)ks.slice(0,ks.length-4000).forEach(k=>delete VISTAS[k]);try{localStorage.setItem(VIS_KEY,JSON.stringify(VISTAS))}catch(e){}}
-// ----- perguntas de silhueta: o contorno do país em preto; na resposta ganha cor e aparece no mapa -----
+// ----- perguntas de imagem: silhueta (contorno em preto; na resposta ganha cor e aparece no mapa) e bandeira -----
 const FORMAS={},MAPAS={};
-const ehSilhueta=()=>!!(G.q&&G.q[2]==='silhueta');
+const ehSilhueta=()=>!!(G.q&&(G.q[2]==='silhueta'||G.q[2]==='bandeira'));
+const mapaOk=m=>Array.isArray(m)&&(m.length===2||(m.length===3&&m[2]==='br'))&&Number.isFinite(+m[0])&&Number.isFinite(+m[1]);
 function buscaForma(){
   const id=G.qid,t=G.qt||G.theme;if(!id||!G.tk||id in FORMAS)return;FORMAS[id]=null;
-  api('forma',{id,t,tk:G.tk}).then(r=>{FORMAS[id]=String(r.d||'').replace(/[^MLZ0-9 .\-]/g,'');if(G.qid===id){forcePanel();render()}})
-    .catch(()=>{delete FORMAS[id];setTimeout(()=>{if(G.qid===id&&ehSilhueta()){forcePanel();render()}},3000)});
+  api('forma',{id,t,tk:G.tk}).then(r=>{
+    FORMAS[id]=r.img&&/^data:image\/(webp|png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(r.img)?{img:r.img}:{d:String(r.d||'').replace(/[^MLZ0-9 .\-]/g,'')};
+    if(G.qid===id){forcePanel();render()}
+  }).catch(()=>{delete FORMAS[id];setTimeout(()=>{if(G.qid===id&&ehSilhueta()){forcePanel();render()}},3000)});
+}
+function mapaHtml(m){
+  if(!mapaOk(m))return '';
+  const br=m[2]==='br',x=br?+m[0]:(+m[0]+180)/360*100,y=br?+m[1]:(84-m[1])/144*100;
+  return `<div class="silhmapa${br?' br':''}" title="Onde fica"><img src="${br?'brasil.svg':'mundo.svg'}" alt="${br?'Mapa do Brasil':'Mapa-múndi'}"><i style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"></i></div>`;
 }
 function silhuetaHtml(rev){
   if(!ehSilhueta())return '';
-  const id=G.qid,d=FORMAS[id];
-  if(!d){buscaForma();return `<div class="silhbox"><div class="silh carr"><span>Carregando o desenho…</span></div></div>`}
+  const id=G.qid,f=FORMAS[id];
+  if(!f||(!f.d&&!f.img)){buscaForma();return `<div class="silhbox"><div class="silh carr"><span>Carregando o desenho…</span></div></div>`}
   const m=rev?MAPAS[id]:null;
-  return `<div class="silhbox"><div class="silh${rev?' rev':''}" style="--c:${T.M.c}"><svg viewBox="0 0 100 100" role="img" aria-label="${rev?'O país no mapa':'Silhueta de um país'}"><path d="${d}" fill-rule="evenodd"/></svg></div>${m?`<div class="silhmapa" title="Onde fica"><img src="mundo.svg" alt="Mapa-múndi"><i style="left:${((m[0]+180)/360*100).toFixed(2)}%;top:${((84-m[1])/144*100).toFixed(2)}%"></i></div>`:''}</div>`;
+  if(f.img)return `<div class="silhbox"><div class="bandeira"><img src="${f.img}" alt="Bandeira de um país"></div>${mapaHtml(m)}</div>`;
+  return `<div class="silhbox"><div class="silh${rev?' rev':''}" style="--c:${T.M.c}"><svg viewBox="0 0 100 100" role="img" aria-label="${rev?'O lugar no mapa':'Silhueta'}"><path d="${f.d}" fill-rule="evenodd"/></svg></div>${mapaHtml(m)}</div>`;
 }
 function respostaTxt(){return G.qid?ANS[G.qid]:undefined}
 function certaIdx(){const a=respostaTxt();return G.theme==='V'&&a!=null&&G.q?G.q[1].indexOf(a):null}
@@ -1257,7 +1276,7 @@ function buscaResposta(){
   if(!id)return Promise.reject(new Error('sem pergunta'));
   if(ANS[id]!=null)return Promise.resolve(ANS[id]);
   if(BUSCA[id])return BUSCA[id];
-  BUSCA[id]=api('resposta',{id,t,tk:G.tk}).then(r=>{if(r.m)MAPAS[id]=r.m;ANS[id]=r.a;guardaVista(t,id,q0,r.a);return r.a}).finally(()=>{delete BUSCA[id]});
+  BUSCA[id]=api('resposta',{id,t,tk:G.tk}).then(r=>{if(mapaOk(r.m))MAPAS[id]=r.m;ANS[id]=r.a;guardaVista(t,id,q0,r.a);return r.a}).finally(()=>{delete BUSCA[id]});
   return BUSCA[id];
 }
 // na sala, a resposta oficial chega junto com a jogada que a revela (o servidor grava em salas/<código>/respostas)
@@ -1265,7 +1284,7 @@ function recebeRespostas(o){
   let mudou=false;
   Object.entries(o||{}).forEach(([id,r])=>{
     if(!r||typeof r.a!=='string'||!/^[a-z0-9]{1,16}$/.test(id)||ANS[id]!=null)return;
-    ANS[id]=r.a;if(Array.isArray(r.m)&&r.m.length===2)MAPAS[id]=r.m.map(Number);
+    ANS[id]=r.a;if(mapaOk(r.m))MAPAS[id]=r.m;
     if(id===G.qid){guardaVista(G.qt||G.theme,id,G.q&&G.q[0],r.a);mudou=true}
   });
   if(mudou){forcePanel();render()}
@@ -1983,12 +2002,47 @@ function fotoDe(dev){const t=TITULOS[dev];return (t&&t.f)||null}
 function bolinha(f,cor,cls,tag){f=fotoUrl(f);tag=tag||'span';return f?`<${tag} class="${cls} temfoto" style="--c:${cor};background:${cor} url(${f}) center/cover no-repeat"></${tag}>`:`<${tag} class="${cls}" style="background:${cor}"></${tag}>`}
 function carregaImg(file){return new Promise((ok,erro)=>{const u=URL.createObjectURL(file),i=new Image();i.onload=()=>{URL.revokeObjectURL(u);ok(i)};i.onerror=()=>{URL.revokeObjectURL(u);erro(new Error('imagem'))};i.src=u})}
 function recortaImg(img,t,q){const c=document.createElement('canvas');c.width=c.height=t;const x=c.getContext('2d'),w=img.naturalWidth,h=img.naturalHeight,s=Math.min(w,h);x.fillStyle='#fff';x.fillRect(0,0,t,t);x.imageSmoothingQuality='high';x.drawImage(img,(w-s)/2,(h-s)/2,s,s,0,0,t,t);return c.toDataURL('image/jpeg',q)}
+// escolheu a imagem: abre o ajuste (arrastar para posicionar e zoom) antes de salvar
+let RECORTE=null;const REC_V=220;
 async function fotoEscolhe(inp){
   const file=inp.files&&inp.files[0];inp.value='';if(!file)return;
   if(!/^image\//.test(file.type)){CONTA_UI.erro='Escolha um arquivo de imagem.';contaRender();return}
   if(file.size>20e6){CONTA_UI.erro='Essa imagem é grande demais. Escolha outra.';contaRender();return}
-  let foto,mini;try{const img=await carregaImg(file);foto=recortaImg(img,160,.85);mini=recortaImg(img,56,.8)}catch(e){CONTA_UI.erro='Não consegui abrir essa imagem. Tente outra (JPG ou PNG).';contaRender();return}
-  return contaFaz(async()=>{const j=await contaApi('POST',{acao:'foto',foto,mini});CONTA.perfil=j.perfil;CONTA_UI.ok='Foto salva!';if(ROOM)tituloSala();if(!MODE)render()});
+  let img;try{img=await carregaImg(file)}catch(e){CONTA_UI.erro='Não consegui abrir essa imagem. Tente outra (JPG ou PNG).';contaRender();return}
+  const c=document.createElement('canvas'),k=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));c.width=Math.round(img.naturalWidth*k);c.height=Math.round(img.naturalHeight*k);c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+  RECORTE={img:c,src:c.toDataURL('image/jpeg',.9),w:c.width,h:c.height,z:1,cx:c.width/2,cy:c.height/2};
+  CONTA_UI.erro='';CONTA_UI.ok='';contaRender();
+}
+function recorteEscala(){const r=RECORTE;return REC_V/Math.min(r.w,r.h)*r.z}
+function recorteLimita(){const r=RECORTE,s=recorteEscala(),m=REC_V/2/s;r.cx=Math.min(r.w-m,Math.max(m,r.cx));r.cy=Math.min(r.h-m,Math.max(m,r.cy))}
+function recortePinta(){
+  const r=RECORTE,im=document.getElementById('recimg');if(!r||!im)return;recorteLimita();
+  const s=recorteEscala();im.style.width=(r.w*s)+'px';im.style.height=(r.h*s)+'px';im.style.left=(REC_V/2-r.cx*s)+'px';im.style.top=(REC_V/2-r.cy*s)+'px';
+}
+function recorteZoom(v){if(!RECORTE)return;RECORTE.z=Math.max(1,Math.min(5,+v||1));recortePinta();const z=document.getElementById('reczoom');if(z&&+z.value!==RECORTE.z)z.value=RECORTE.z}
+function recorteArrasta(ev){
+  if(!RECORTE)return;ev.preventDefault();const el=ev.currentTarget;el.setPointerCapture&&el.setPointerCapture(ev.pointerId);
+  let x0=ev.clientX,y0=ev.clientY;
+  const mv=e=>{const s=recorteEscala();RECORTE.cx-=(e.clientX-x0)/s;RECORTE.cy-=(e.clientY-y0)/s;x0=e.clientX;y0=e.clientY;recortePinta()};
+  const up=()=>{el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up)};
+  el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
+}
+function recorteRoda(ev){if(!RECORTE)return;ev.preventDefault();recorteZoom(RECORTE.z*(ev.deltaY<0?1.1:1/1.1))}
+function recorteHtml(){
+  if(!RECORTE)return '';
+  setTimeout(recortePinta,0);
+  return `<div class="recbox"><div class="recorte" onpointerdown="recorteArrasta(event)" onwheel="recorteRoda(event)"><img id="recimg" src="${RECORTE.src}" alt="" draggable="false"><span class="recmasc"></span></div>
+    <label class="reczoom">🔍<input id="reczoom" type="range" min="1" max="5" step="0.01" value="${RECORTE.z}" oninput="recorteZoom(this.value)" aria-label="Zoom"></label>
+    <p class="muted" style="margin:0;font-size:12.5px;text-align:center">Arraste a foto para posicionar e use o zoom.</p>
+    <div class="row" style="justify-content:center"><button type="button" class="small primary" onclick="fotoSalvaRecorte()">Salvar foto</button><button type="button" class="small" onclick="RECORTE=null;contaRender()">Cancelar</button></div></div>`;
+}
+function recorteCorta(t,q){
+  const r=RECORTE,s=recorteEscala(),lado=REC_V/s,c=document.createElement('canvas');c.width=c.height=t;
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,t,t);x.imageSmoothingQuality='high';x.drawImage(r.img,r.cx-lado/2,r.cy-lado/2,lado,lado,0,0,t,t);return c.toDataURL('image/jpeg',q);
+}
+function fotoSalvaRecorte(){
+  if(!RECORTE)return;const foto=recorteCorta(160,.85),mini=recorteCorta(56,.8);
+  return contaFaz(async()=>{const j=await contaApi('POST',{acao:'foto',foto,mini});RECORTE=null;CONTA.perfil=j.perfil;CONTA_UI.ok='Foto salva!';if(ROOM)tituloSala();if(!MODE)render()});
 }
 function fotoTira(){return contaFaz(async()=>{const j=await contaApi('POST',{acao:'foto',foto:null});CONTA.perfil=j.perfil;CONTA_UI.ok='Foto tirada.';if(ROOM)tituloSala();if(!MODE)render()})}
 function tituloChip(t){return t&&t.x?` <span class="titulo tn${t.n}" title="Título · ${NIVEIS_TIT[t.n-1]||''}">${esc(t.x)}</span>`:''}
@@ -2385,7 +2439,7 @@ function contaHtml(){
     ${statsHtml(d)}
     <h4 class="ctsub">Editar perfil</h4>
     <form class="ctform" onsubmit="event.preventDefault();contaSalva()">
-      <label>Foto</label><div class="fotorow"><span class="avatar ctfoto${fotoUrl(p.foto)?' temfoto':''}" style="--c:${cor}${fotoUrl(p.foto)?`;background:${cor} url(${p.foto}) center/cover`:''}"></span><input type="file" id="ctfotoin" accept="image/*" hidden onchange="fotoEscolhe(this)"><button type="button" class="small" ${dis} onclick="document.getElementById('ctfotoin').click()">📷 ${fotoUrl(p.foto)?'Trocar foto':'Escolher foto'}</button>${fotoUrl(p.foto)?`<button type="button" class="small" ${dis} onclick="fotoTira()">Tirar</button>`:''}</div><small class="muted" style="margin:-2px 0 4px">Aparece junto do seu nome na sala, no chat e no ranking.</small>
+      <label>Foto</label><div class="fotorow"><span class="avatar ctfoto${fotoUrl(p.foto)?' temfoto':''}" style="--c:${cor}${fotoUrl(p.foto)?`;background:${cor} url(${p.foto}) center/cover`:''}"></span><input type="file" id="ctfotoin" accept="image/*" hidden onchange="fotoEscolhe(this)"><button type="button" class="small" ${dis} onclick="document.getElementById('ctfotoin').click()">📷 ${fotoUrl(p.foto)?'Trocar foto':'Escolher foto'}</button>${fotoUrl(p.foto)?`<button type="button" class="small" ${dis} onclick="fotoTira()">Tirar</button>`:''}</div><small class="muted" style="margin:-2px 0 4px">Aparece junto do seu nome na sala, no chat e no ranking.</small>${recorteHtml()}
       <label for="ctnome2">Nome no jogo</label><input id="ctnome2" maxlength="16" autocomplete="nickname" value="${esc(nome)}" oninput="CONTA_UI.pnome=this.value">
       <label>Cor</label><div class="palette">${PALETA.map(([c,n])=>`<button type="button" class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="CONTA_UI.pcor='${c}';contaRender()"></button>`).join('')}</div>
       ${tituloEscolhaHtml(d,p)}

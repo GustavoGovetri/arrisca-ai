@@ -38,9 +38,11 @@ const bucketOf = (t, q) => (t === 'V' ? q[3] : q[2]) || 'geral';
 const qDiff = (t, q) => (t === 'V' ? q[4] : q[3]) || 2;
 const resposta = (t, q) => t === 'V' ? q[1][q[2]] : q[1];
 // perguntas de silhueta: o texto guarda a chave do desenho (⟦f:chave⟧), que não vai para o aparelho
-const MARCA = /\s*⟦f:([a-z0-9]+)⟧/;
+// (bandeiras: ⟦b:chave⟧, com a imagem guardada em banco/bandeiras)
+const MARCA = /\s*⟦([fb]):([a-z0-9]+)⟧/;
 const textoQ = s => String(s).replace(MARCA, '');
-const formaDe = q => { const m = MARCA.exec(q[0]); return m ? m[1] : null };
+const formaDe = q => { const m = MARCA.exec(q[0]); return m ? m[2] : null };
+const tipoDe = q => { const m = MARCA.exec(q[0]); return m ? m[1] : null };
 
 let BANCO = null, BANCO_V = null, CHECADO = 0, CARREGANDO = null;
 function arr(x) { return Array.isArray(x) ? x : x && typeof x === 'object' ? Object.keys(x).sort((a, b) => a - b).map(k => x[k]) : [] }
@@ -72,7 +74,7 @@ async function banco() {
       const raw = JSON.parse(require('fs').readFileSync(process.env.BANCO_ARQUIVO, 'utf8'));
       const completo = raw.perguntas && !raw.M;
       BANCO = monta(completo ? raw.perguntas : raw, 'local');
-      BANCO.formas = (completo && raw.formas) || {}; BANCO.mapa = (completo && raw.mapa) || {};
+      BANCO.formas = (completo && raw.formas) || {}; BANCO.mapa = (completo && raw.mapa) || {}; BANCO.bandeiras = (completo && raw.bandeiras) || {};
     }
     return BANCO;
   }
@@ -84,8 +86,8 @@ async function banco() {
       if (!v) throw Object.assign(new Error('O banco de perguntas ainda está vazio.'), { status: 503 });
       CHECADO = Date.now();
       if (!BANCO || v !== BANCO_V) {
-        const [p, f, m] = await Promise.all([dbGet('banco/perguntas'), dbGet('banco/formas'), dbGet('banco/mapa')]);
-        const B = monta(p, v); B.formas = f || {}; B.mapa = m || {};
+        const [p, f, m, bd] = await Promise.all([dbGet('banco/perguntas'), dbGet('banco/formas'), dbGet('banco/mapa'), dbGet('banco/bandeiras')]);
+        const B = monta(p, v); B.formas = f || {}; B.mapa = m || {}; B.bandeiras = bd || {};
         BANCO = B; BANCO_V = v;
       }
       return BANCO;
@@ -231,10 +233,11 @@ async function handle(acao, body) {
     const f = formaDe(q);
     return f ? { a: resposta(t, q), m: B.mapa[f] || null } : { a: resposta(t, q) };
   }
-  if (acao === 'forma') { // o desenho da silhueta (é a própria pergunta, então sai junto com ela)
-    const f = formaDe(q);
-    if (!f || !B.formas[f]) throw Object.assign(new Error('Essa pergunta não tem desenho.'), { status: 404 });
-    return { d: B.formas[f] };
+  if (acao === 'forma') { // o desenho da silhueta ou a bandeira (é a própria pergunta, então sai junto com ela)
+    const f = formaDe(q), tipo = tipoDe(q);
+    if (tipo === 'b' && B.bandeiras && B.bandeiras[f]) return { img: B.bandeiras[f] };
+    if (tipo === 'f' && B.formas[f]) return { d: B.formas[f] };
+    throw Object.assign(new Error('Essa pergunta não tem desenho.'), { status: 404 });
   }
   if (acao === 'dica') {
     if (t === 'V') { const erradas = q[1].filter((_, j) => j !== q[2]); return { elim: erradas[rnd(erradas.length)] } }
