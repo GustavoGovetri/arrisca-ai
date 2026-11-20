@@ -619,6 +619,10 @@ input.chama{animation:chama .9s}
 .ctnv em{display:block;height:100%;border-radius:6px}
 .ctnv small{text-align:right;opacity:.9}
 .ctdica{font-size:14px;line-height:1.45;margin:10px 0 0;opacity:.95}
+.entrando{text-align:center;padding:26px 10px 18px}
+.entrando h3{margin:10px 0 4px;font-family:'Lilita One',sans-serif;font-weight:400;font-size:22px;color:var(--amarelo);text-shadow:var(--txt-contorno)}
+.entrando .entrgira{font-size:46px;display:inline-block;animation:entrGira 1.6s linear infinite}
+@keyframes entrGira{to{transform:rotate(360deg)}}
 .silhbox{display:flex;flex-direction:column;align-items:center;gap:8px;margin:10px 0 4px}
 .silh{width:min(250px,72%);aspect-ratio:1;padding:10px;border-radius:20px;background:radial-gradient(circle at 50% 40%,#fff8e6,#f1dcc0);border:3px solid var(--k);box-shadow:0 4px 0 var(--k);display:flex;align-items:center;justify-content:center;box-sizing:border-box}
 .silh svg{width:100%;height:100%;overflow:visible}
@@ -1373,10 +1377,11 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${online()?tituloChip(TITULOS[p.dev]):''}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE);document.body.classList.toggle('prep',!!MODE&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
+function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE||!!ENTRANDO);document.body.classList.toggle('prep',!!MODE&&!ENTRANDO&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
 
 function renderPanel(){
   const el=document.getElementById('panel');
+  if(ENTRANDO){el.innerHTML=entrandoHtml();return}
   if(!MODE){el.innerHTML=homeHtml();return}
   if(MODE==='online'&&G.phase==='setup'){el.innerHTML=lobbyHtml();return}
   if(G.phase==='setup'){
@@ -1798,6 +1803,12 @@ const G_DEFAULT=JSON.stringify(G);
 let TITULOS={},MODE=null,ROOM=null,HOST=null,LOBBY={},RV=0,LASTSYNC='',APPLYING=false,HOSTALL=false,NET=null,NETREADY=false,QREADY=false,PENDING_ROOM=null,UNWATCH=null,CREATING=false,CONNECTED=true;
 const URLP=new URLSearchParams(location.search);
 PENDING_ROOM=(URLP.get('sala')||'').toUpperCase().replace(/[^A-Z0-9]/g,'')||null;
+// voltando para uma sala (link ou página recarregada): mostra "Entrando na sala…" até chegar o estado da partida,
+// em vez de piscar a tela inicial e a sala de espera
+let ENTRANDO=PENDING_ROOM?{code:PENDING_ROOM}:null,ENTRANDO_T=null;
+function entrandoFim(){if(!ENTRANDO)return;ENTRANDO=null;clearTimeout(ENTRANDO_T);render()}
+function entrandoHtml(){return `<div class="entrando"><div class="entrgira">🎡</div><h3>Entrando na sala <b>${esc(ENTRANDO.code)}</b>…</h3><p class="muted">Só um instante.</p><button class="small" onclick="entrandoCancela()">Cancelar</button></div>`}
+function entrandoCancela(){PENDING_ROOM=null;ENTRANDO=null;clearTimeout(ENTRANDO_T);try{history.replaceState(null,'',location.pathname+(URLP.get('net')?'?net='+URLP.get('net'):''))}catch(e){}if(online())leaveRoom();else{MODE=null;render()}}
 const MYDEV=(()=>{try{let d=localStorage.getItem('arrisca-dev');if(!d){d='d'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);localStorage.setItem('arrisca-dev',d)}return d}catch(e){return 'd'+Math.random().toString(36).slice(2,12)}})();
 // chave secreta deste aparelho: prova para o servidor que a jogada veio mesmo daqui (nunca aparece na sala)
 const MYKEY=(()=>{const nova=()=>{const a=new Uint8Array(24);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('')};try{let k=localStorage.getItem('arrisca-chave');if(!k||k.length<20){k=nova();localStorage.setItem('arrisca-chave',k)}return k}catch(e){return nova()}})();
@@ -1947,8 +1958,9 @@ async function createRoom(publica){
 async function enterRoom(code,created,publica){
   code=String(code).toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(!NET){PENDING_ROOM=code;return}
+  if(!created){ENTRANDO={code};clearTimeout(ENTRANDO_T);ENTRANDO_T=setTimeout(entrandoFim,9000);render()}else ENTRANDO=null;
   try{
-    if(!created&&!(await NET.exists(code))){toast('Sala '+code+' não encontrada');if(!online()){MODE=null;try{history.replaceState(null,'',location.pathname)}catch(e){}render()}return}
+    if(!created&&!(await NET.exists(code))){ENTRANDO=null;toast('Sala '+code+' não encontrada');if(!online()){MODE=null;try{history.replaceState(null,'',location.pathname)}catch(e){}render()}return}
     if(UNWATCH){UNWATCH();UNWATCH=null}
     stopTimer();
     MODE='online';ROOM=code;RV=0;LASTSYNC='';UNDO=[];HOST=created?MYDEV:null;LOBBY={};TITULOS={};LOBBY_N=0;LOBBY_VISTOS=null;HOSTALL=false;
@@ -1962,7 +1974,7 @@ async function enterRoom(code,created,publica){
     SALA_USADAS={};mandaUsadasSala().then(carregaUsadasSala);
     tituloSala();
     render();
-  }catch(e){console.error(e);CREATING=false;toast(e&&e.status&&e.status!==500?e.message:'Sem conexão com a sala. Tente de novo.');if(e&&e.status===404||e&&e.status===403){if(UNWATCH){UNWATCH();UNWATCH=null}MODE=null;ROOM=null;render()}}
+  }catch(e){console.error(e);CREATING=false;ENTRANDO=null;toast(e&&e.status&&e.status!==500?e.message:'Sem conexão com a sala. Tente de novo.');if(e&&e.status===404||e&&e.status===403){if(UNWATCH){UNWATCH();UNWATCH=null}MODE=null;ROOM=null;render()}}
 }
 function leaveRoom(){
   if(UNWATCH){UNWATCH();UNWATCH=null}
@@ -2683,6 +2695,7 @@ function applyRemote(d){
   if(!online()||!d||typeof d.v!=='number'||d.v<=RV)return;
   if(SENT&&d.por===MYDEV&&d.v===SENT.v&&d.g===SENT.g){RV=d.v;LASTSYNC=d.g;return}
   let o;try{o=limpaEstado(JSON.parse(d.g))}catch(e){return}
+  if(ENTRANDO){ENTRANDO=null;clearTimeout(ENTRANDO_T)}
   const prevQ=G.qid,prevPhase=G.phase,prevCur=G.cur,prevPl=!!G.players;
   APPLYING=true;
   try{
@@ -3406,7 +3419,7 @@ document.addEventListener('pointerdown',e=>{SFX.unlock();const b=e.target.closes
 
 loadLocal();loadReports();
 render();
-api('meta').then(d=>{Q=d;restoreLocalGame();if(G.players&&G.phase!=='setup')MODE='local';render();loadResolvidos();QREADY=true;tryAutoJoin()}).catch(()=>{
+api('meta').then(d=>{Q=d;restoreLocalGame();if(G.players&&G.phase!=='setup'&&!PENDING_ROOM)MODE='local';render();loadResolvidos();QREADY=true;tryAutoJoin()}).catch(()=>{
   document.getElementById('panel').innerHTML='<h2>Ops</h2><p class="msg">Não consegui falar com o servidor de perguntas. Verifique a internet e recarregue a página.</p>';
 });
 </script>
