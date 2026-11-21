@@ -2228,7 +2228,7 @@ function homeHtml(){
   </div>`;
 }
 function joinFromInput(){if(!precisaNome())return;const v=((document.getElementById('joincode')||{}).value||'').trim();if(v.length<4){toast('Digite o código da sala');return}enterRoom(v,false)}
-function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=A[rndInt(A.length)];return s}
+function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=A[rndInt(A.length)];return s} // 6 letras e números (sem I, O, 0 e 1 para não confundir): mais de 1 bilhão de códigos; salas antigas de 4 continuam valendo
 async function createRoom(publica){
   if(!NET)return;
   if(!precisaNome())return;
