@@ -32,7 +32,7 @@ function fotoOk(x, max) {
 // linha da conta no ranking: pontos, nome, cor, título e foto pequena
 const linhaRanking = (pts, p, t) => ({ p: pts, n: p.nome || 'Jogador', c: p.cor || null, t: t || null, f: p.mini || null });
 function perfilPublico(p, u) {
-  return { nome: p.nome || '', cor: p.cor || null, titulo: p.titulo || '', foto: p.foto || null, criado: p.criado || '', email: u.email, verificado: u.verificado, provedor: u.provedor };
+  return { nome: p.nome || '', cor: p.cor || null, titulo: p.titulo || '', foto: p.foto || null, criado: p.criado || '', id: /^\d{8}$/.test(p.id || '') ? p.id : null, email: u.email, verificado: u.verificado, provedor: u.provedor };
 }
 
 async function entrar(u, body) {
@@ -43,6 +43,8 @@ async function entrar(u, body) {
     p = { nome, cor: corOk(body.cor), criado: new Date().toISOString(), provedor: txt(u.provedor, 20) };
     await grava('PUT', caminho, p);
   }
+  // ID público de 8 números (para os amigos acharem a conta sem ver o e-mail)
+  if (!/^\d{8}$/.test(p.id || '')) p.id = await require('./amigos.js').garanteId(u.uid, p);
   return { perfil: perfilPublico(p, u), admin: ehAdmin(u) };
 }
 
@@ -183,7 +185,7 @@ async function usadas(u, body, get) {
 async function apagar(u) {
   const base = 'usuarios/' + u.uid;
   const rk = await ler(base + '/rk');
-  const mapa = { [base]: null };
+  const mapa = Object.assign(await require('./amigos.js').apagaDe(u.uid), { [base]: null }); // some da lista dos amigos e libera o ID
   Object.keys(rk || {}).forEach(k => { const m = /^(semana|mes)_([-A-Za-z0-9]+)$/.exec(k); if (m) mapa['ranking/' + m[1] + '/' + m[2] + '/' + u.uid] = null });
   await gravaVarios(mapa);
 }

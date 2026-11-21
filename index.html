@@ -708,6 +708,32 @@ html.parado .silhmapa i{animation:none}
 .somtodos{display:flex;gap:8px;justify-content:center;margin:12px 0 4px}
 .somoff .somlista{opacity:.5}
 .ctsub{margin:18px 0 8px;font-family:'Lilita One',sans-serif;font-weight:400;font-size:18px;color:var(--amarelo);text-shadow:var(--txt-contorno);text-align:center}
+/* ===== amigos ===== */
+.meuid{text-align:center;padding:12px 12px 10px;border-radius:16px;border:3px solid var(--k);background:linear-gradient(135deg,color-mix(in srgb,#ffd000 22%,var(--painel2)),var(--ladrilho))}
+.meuid small{display:block;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-size:12px;opacity:.85}
+.meuid>b{display:block;font-family:'Lilita One',sans-serif;font-weight:400;font-size:34px;letter-spacing:3px;color:var(--amarelo);text-shadow:var(--txt-contorno);margin:2px 0 8px;font-variant-numeric:tabular-nums}
+.meuid .row{justify-content:center}
+.meuid p{margin:8px 0 0;font-size:13px;opacity:.85;line-height:1.35}
+.amg{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.22);border-radius:14px;padding:8px 10px;margin-bottom:6px}
+.amg.clica{cursor:pointer}.amg.clica:hover{background:rgba(255,255,255,.07)}
+.amg.achado{border:2px dashed rgba(255,255,255,.35);margin-top:8px}
+.amg .swatch{width:34px;height:34px}
+.amgtxt{flex:1;min-width:0}
+.amgtxt b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.amgtxt small,.amgst{display:block;font-size:12.5px;opacity:.85}
+.amgst.on{color:#7dffa8;opacity:1}.amgst.jogo{color:#ffd36b;opacity:1}
+.amgbts{display:flex;gap:6px;flex:none;align-items:center}
+.amgbts small{opacity:.85;font-size:12.5px}
+.amgadd{display:flex;gap:8px}
+.amgadd input{flex:1;font-size:22px;letter-spacing:3px;text-align:center;font-variant-numeric:tabular-nums}
+.amgdica{font-size:13px;line-height:1.4;opacity:.9;margin:8px 0 0}
+.ctid{margin-top:2px}.ctid .linkbtn{font-size:12.5px;padding:0 2px}
+.convite{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:60;width:min(440px,calc(100vw - 20px));animation:modalIn .25s ease-out}
+.convcard{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;border:3px solid var(--k);background:linear-gradient(180deg,var(--painel1),var(--painel2));box-shadow:inset 0 0 0 3px #ffcf4a,0 6px 0 var(--k),0 14px 30px rgba(0,0,0,.5)}
+.convfoto{width:40px;height:40px;flex:none;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2.5px var(--k)}
+.convtxt{flex:1;min-width:0;font-size:15px;line-height:1.25}.convtxt small{display:block;opacity:.85;font-size:13px}
+.convbts{display:flex;flex-direction:column;gap:6px;flex:none}
+@media (max-width:420px){.amg{flex-wrap:wrap}.amgbts{width:100%;justify-content:flex-end}.amg.clica .amgbts:empty{display:none}}
 .ctpainel{width:100%;margin-top:14px}
 .conqs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
 .conq{background:rgba(0,0,0,.22);border-radius:14px;padding:10px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -999,7 +1025,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
 <div class="wrap">
   <div class="ringwrap"><div class="ring" id="ring"></div></div>
   <div>
-    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Visual: estilo do site e efeitos" onclick="visualAbre()">🎨</button><button id="rankbtn" class="tab snd" title="Ranking da semana e do mês" onclick="rankingAbre()">🏆</button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" onclick="contaAbre()">👤</button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Sons e avisos" onclick="somAbre()">🔊</button></div>
+    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Visual: estilo do site e efeitos" onclick="visualAbre()">🎨</button><button id="rankbtn" class="tab snd" title="Ranking da semana e do mês" onclick="rankingAbre()">🏆</button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" onclick="contaAbre()">👤</button><button id="amigosbtn" class="tab snd" style="position:relative" title="Amigos" onclick="amigosAbre()">👥<span id="amigosn" class="chatn"></span></button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Sons e avisos" onclick="somAbre()">🔊</button></div>
     <div id="view-jogo">
     <div class="card" id="panel"></div>
     <div class="card" id="scores" style="display:none"></div>
@@ -1051,6 +1077,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
         <li>Quem cria conta com e-mail e senha recebe um link na hora e só consegue <b>entrar depois de confirmar o e-mail</b>. Não chegou? Olhe o spam ou use “Mandar o link de novo” na tela de entrar.</li>
         <li>As <b>conquistas</b> têm 6 níveis: bronze, prata, ouro, platina, diamante e grão-mestre. Cada uma libera um <b>título</b> (ex.: 🎮 Gamer para quem acerta muito de Games) para mostrar ao lado do nome, na sala e no ranking. Escolha o seu no 👤.</li>
         <li><b>Foto:</b> com conta, dá para colocar uma foto no 👤. Ela aparece junto do seu nome na sala, no placar, no chat e no ranking.</li>
+        <li><b>👥 Amigos:</b> cada conta tem um <b>ID de 8 números</b> (fica em 👥, em “Seu ID”, com botão para copiar). Para adicionar alguém, peça o ID dele ou o link de amigo; a pessoa recebe o pedido e aceita. Aí dá para ver quem está online ou jogando, abrir o perfil do amigo, comparar pontos na aba <b>Amigos</b> do ranking e, na sala, usar <b>Chamar amigos</b>: aparece um aviso na tela do amigo com o botão Entrar. O e-mail nunca aparece para ninguém.</li>
       </ul>
       <h4 class="regsub">Ajustes e ajuda</h4>
       <ul>
@@ -1073,6 +1100,8 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
 <div id="modalfundo" onclick="modaisFecha()"></div>
 <div id="contabox" class="chatbox modal contabox" style="display:none"><div class="chathead"><b id="contatit">👤 Sua conta</b><button class="small" onclick="contaFecha()">✕</button></div><div id="contacorpo" class="histcorpo"></div></div>
 <div id="rankbox" class="chatbox modal rankbox" style="display:none"><div class="chathead"><b>🏆 Ranking</b><div class="row"><button class="small" title="Atualizar" onclick="rankingCarrega()">↻</button><button class="small" onclick="rankingFecha()">✕</button></div></div><div id="rankcorpo" class="histcorpo"></div></div>
+<div id="amigosbox" class="chatbox modal amigosbox" style="display:none"><div class="chathead"><b id="amigostit">👥 Amigos</b><div class="row"><button class="small" title="Atualizar" onclick="amigosCarrega()">↻</button><button class="small" onclick="amigosFecha()">✕</button></div></div><div id="amigoscorpo" class="histcorpo"></div></div>
+<div id="convite" class="convite" style="display:none" role="alert"></div>
 <div id="painelbox" class="chatbox modal largo painelbox" style="display:none"><div class="chathead"><b>🛠 Painel</b><div class="row"><button class="small" title="Atualizar" onclick="painelCarrega()">↻</button><button class="small" onclick="painelFecha()">✕</button></div></div><div id="painelcorpo" class="histcorpo"></div></div>
 <div id="visualbox" class="chatbox modal" style="display:none"><div class="chathead"><b>🎨 Visual</b><button class="small" onclick="modalFecha('visualbox')">✕</button></div><div id="visualcorpo" class="histcorpo"></div></div>
 <div id="sombox" class="chatbox modal sombox" style="display:none"><div class="chathead"><b>🔊 Sons e avisos</b><button class="small" onclick="modalFecha('sombox')">✕</button></div><div id="somcorpo" class="histcorpo"></div></div>
@@ -2225,7 +2254,7 @@ async function enterRoom(code,created,publica){
     UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido,onTitulos:t=>{TITULOS=limpaTitulos(t);render()},onRespostas:recebeRespostas});
     await NET.setMe(code,MYDEV,{nome:myName(),cor:myColor(),on:true,fora:false,pronto:false,ts:Date.now()});
     SALA_USADAS={};mandaUsadasSala().then(carregaUsadasSala);
-    tituloSala();
+    tituloSala();amigosCarrega(true);
     render();
   }catch(e){console.error(e);CREATING=false;ENTRANDO=null;toast(e&&e.status&&e.status!==500?e.message:'Sem conexão com a sala. Tente de novo.');if(e&&e.status===404||e&&e.status===403){if(UNWATCH){UNWATCH();UNWATCH=null}MODE=null;ROOM=null;render()}}
 }
@@ -2406,11 +2435,12 @@ function contaInicia(){
     if(u){
       try{const j=await contaApi('POST',{acao:'entrar',nome:myName(),cor:myColor()});contaAplica(j.perfil);CONTA.admin=!!j.admin}
       catch(e){console.warn(e);CONTA_UI.erro='Você entrou, mas não consegui carregar o perfil agora: '+e.message}
-      contaResumo();contaHistInicia();if(ROOM)tituloSala();
+      contaResumo();contaHistInicia();if(ROOM)tituloSala();amigosCarrega(true).then(amigoLinkAbre);
       CONTA_UI.aba='entrar'; // quando sair, a janela volta na aba Entrar
       if(CONTA_UI.esperando){CONTA_UI.esperando=false;toast('✔ Você entrou'+(CONTA.perfil?' como '+CONTA.perfil.nome:'')+'!')}
     }
     CONTA.pronto=true;contaPinta();
+    if(!u){AMIGOS.dados=null;amigosBadge();conviteEsconde();if(amigosAberto())amigosRender();amigoLinkAbre()}
   });
 }
 window.addEventListener('auth-ready',contaInicia);
@@ -2432,7 +2462,7 @@ function contaSalvaDepois(){ // mudou nome ou cor na tela inicial: guarda na con
   },1200);
 }
 // ----- janelas por cima da tela (conta, ranking, painel), com fundo escurecido -----
-const MODAIS=['contabox','rankbox','painelbox','sombox','visualbox'];
+const MODAIS=['contabox','rankbox','painelbox','sombox','visualbox','amigosbox'];
 function modalAbre(id){
   chatFecha&&chatFecha();if(typeof fechaSalas==='function')fechaSalas();bugFecha();if(TAB==='hist')setTab('jogo');
   MODAIS.forEach(m=>{if(m!==id){const b=document.getElementById(m);if(b)b.style.display='none'}});
@@ -2488,7 +2518,7 @@ function contaHtml(){
   const p=CONTA.perfil||{},d=CONTA.dados;
   const cor=CONTA_UI.pcor||p.cor||myColor()||'#ffd000';
   const google=u.provedor==='google.com';
-  const topo=`<div class="ctbanner" style="--c:${p.cor||cor}"><span class="avatar ctav${fotoUrl(p.foto)?' temfoto':''}" style="--c:${p.cor||cor}${fotoUrl(p.foto)?`;background:${p.cor||cor} url(${p.foto}) center/cover`:''}"></span><div class="ctquem"><b>${esc(p.nome||u.nome||'Jogador')}</b><small>${esc(u.email)} · ${google?'Google':'e-mail e senha'}</small></div></div>
+  const topo=`<div class="ctbanner" style="--c:${p.cor||cor}"><span class="avatar ctav${fotoUrl(p.foto)?' temfoto':''}" style="--c:${p.cor||cor}${fotoUrl(p.foto)?`;background:${p.cor||cor} url(${p.foto}) center/cover`:''}"></span><div class="ctquem"><b>${esc(p.nome||u.nome||'Jogador')}</b><small>${esc(u.email)} · ${google?'Google':'e-mail e senha'}</small>${p.id?`<small class="ctid">ID ${fmtId(p.id)} <button type="button" class="linkbtn" onclick="copia('${idAm(p.id)}','📋 ID copiado')">copiar</button> · <button type="button" class="linkbtn" onclick="amigosAbre()">👥 amigos</button></small>`:''}</div></div>
     <div class="abas ctabas">${[['perfil','📊 Perfil'],['conq','🏅 Conquistas'],['hist','🕘 Histórico']].map(([k,l])=>`<button class="small${CONTA_UI.tab===k?' on':''}" onclick="CONTA_UI.tab='${k}';CONTA_UI.erro='';CONTA_UI.ok='';contaRender()">${l}</button>`).join('')}</div>`;
   if(CONTA_UI.tab==='conq')return topo+conquistasHtml(d);
   if(CONTA_UI.tab==='hist')return topo+historicoHtml(d);
@@ -2507,17 +2537,18 @@ function contaHtml(){
     <div class="contapes"><button ${dis} onclick="contaSair()">Sair da conta</button><button class="perigo" ${dis} onclick="contaApaga()">${CONTA_UI.apagar?'Clique de novo para apagar':'Apagar conta'}</button></div>`;
 }
 const NIVEIS=[null,['Fácil','#00d65c'],['Médio','#ffd000'],['Difícil','#ff7a00'],['Impossível','#ff1f4b']];
-function statsHtml(d){
+function statsHtml(d,outro){
   if(!d)return `<p class="pvazio">Carregando suas estatísticas…</p>`;
   const s=d.stats,ac=s.a.reduce((x,y)=>x+y,0),er=s.e.reduce((x,y)=>x+y,0);
   const fav=Object.entries(s.tema||{}).sort((a,b)=>b[1].a-a[1].a)[0];
   const cards=[['🏆',s.semana,'pontos na semana'],['📅',s.mes,'pontos no mês'],['⭐',s.p,'pontos no total'],['🎮',s.np,s.np===1?'partida':'partidas'],['🥇',s.v,s.v===1?'vitória':'vitórias'],['🔥',s.maxSeq,'melhor sequência']];
   let h=`<div class="ctstats">${cards.map(([e,n,l])=>`<div><span>${e}</span><b>${Number(n||0).toLocaleString('pt-BR')}</b><small>${l}</small></div>`).join('')}</div>`;
+  if(!ac&&!er&&outro)return h+`<p class="ctdica">Ainda não jogou partidas online com a conta.</p>`;
   if(!ac&&!er)return h+`<p class="ctdica">Jogue uma partida <b>online</b> com a conta para começar a pontuar. Fácil vale 1 ponto, médio 2, difícil 3, impossível 5 e cada vitória +10.</p>`;
   h+=`<div class="ctniveis"><div class="ctnt">Acertos por nível <small>${ac} de ${ac+er} (${Math.round(100*ac/Math.max(1,ac+er))}%)</small></div>`;
   for(let i=1;i<=4;i++){const a=s.a[i],t=a+s.e[i];h+=`<div class="ctnv"><span>${NIVEIS[i][0]}</span><i><em style="width:${t?Math.round(100*a/t):0}%;background:${NIVEIS[i][1]}"></em></i><small>${a}/${t}</small></div>`}
   h+='</div>';
-  if(fav&&fav[1].a&&T[fav[0]])h+=`<p class="ctdica">Seu tema mais forte: <b style="color:${T[fav[0]].c}">${T[fav[0]].n}</b> (${fav[1].a} acerto${fav[1].a>1?'s':''}).</p>`;
+  if(fav&&fav[1].a&&T[fav[0]])h+=`<p class="ctdica">${outro?'Tema mais forte':'Seu tema mais forte'}: <b style="color:${T[fav[0]].c}">${T[fav[0]].n}</b> (${fav[1].a} acerto${fav[1].a>1?'s':''}).</p>`;
   return h;
 }
 const NIV_CONQ=[['Bronze','#cd7f32'],['Prata','#c9d1d9'],['Ouro','#ffd000'],['Platina','#7fe7ff'],['Diamante','#4d8dff'],['Grão-mestre','#ff3fb4']];
@@ -2554,22 +2585,29 @@ function contaAbre(tab){
 }
 function contaFecha(){modalFecha('contabox')}
 // ----- ranking -----
-const RANK={periodo:'semana',dados:null,erro:''};
+const RANK={periodo:'semana',escopo:'todos',dados:null,erro:''};
 function rankingAbre(){RANK.erro='';rankingRender();modalAbre('rankbox');rankingCarrega()}
 function rankingFecha(){modalFecha('rankbox')}
 function rankingRender(){const el=document.getElementById('rankcorpo');if(el)el.innerHTML=rankingHtml()}
 async function rankingCarrega(){
   RANK.dados=null;RANK.erro='';rankingRender();
   try{
-    const tk=AUTH&&CONTA.user?await AUTH.token():null;
-    const r=await fetch('/api/ranking?periodo='+RANK.periodo,{headers:tk?{authorization:'Bearer '+tk}:{}});
-    const j=await r.json();if(!r.ok)throw new Error(j.erro||('Erro '+r.status));RANK.dados=j;
+    if(RANK.escopo==='amigos'&&CONTA.user){ // só você e seus amigos
+      const j=await amigosApi('GET',{acao:'ranking',periodo:RANK.periodo});
+      RANK.dados={texto:'Você e seus amigos · '+(RANK.periodo==='semana'?'nesta semana':'neste mês'),lista:j.lista.filter(x=>x.p>0||x.eu),minha:j.lista.find(x=>x.eu)||null,amigos:j.amigos,soAmigos:true};
+    }else{
+      const tk=AUTH&&CONTA.user?await AUTH.token():null;
+      const r=await fetch('/api/ranking?periodo='+RANK.periodo,{headers:tk?{authorization:'Bearer '+tk}:{}});
+      const j=await r.json();if(!r.ok)throw new Error(j.erro||('Erro '+r.status));RANK.dados=j;
+    }
   }catch(e){RANK.erro=e.message}
   rankingRender();
 }
 function rankingHtml(){
   const d=RANK.dados;
-  let h=`<div class="abas"><button class="small${RANK.periodo==='semana'?' on':''}" onclick="RANK.periodo='semana';rankingCarrega()">🗓️ Semana</button><button class="small${RANK.periodo==='mes'?' on':''}" onclick="RANK.periodo='mes';rankingCarrega()">📅 Mês</button></div>`;
+  let h=`${CONTA.user?`<div class="abas"><button class="small${RANK.escopo!=='amigos'?' on':''}" onclick="RANK.escopo='todos';rankingCarrega()">🌎 Todos</button><button class="small${RANK.escopo==='amigos'?' on':''}" onclick="RANK.escopo='amigos';rankingCarrega()">👥 Amigos</button></div>`:''}<div class="abas"><button class="small${RANK.periodo==='semana'?' on':''}" onclick="RANK.periodo='semana';rankingCarrega()">🗓️ Semana</button><button class="small${RANK.periodo==='mes'?' on':''}" onclick="RANK.periodo='mes';rankingCarrega()">📅 Mês</button></div>`;
+  if(RANK.escopo==='amigos'&&!CONTA.user)RANK.escopo='todos';
+  if(d&&d.soAmigos&&!d.amigos)return h+`<p class="pvazio">Você ainda não tem amigos para comparar pontos.</p><button class="primary" style="width:100%" onclick="rankingFecha();amigosAbre()">👥 Adicionar amigos</button>`;
   if(RANK.erro)return h+`<div class="contaerro">${esc(RANK.erro)}</div>`;
   if(!d)return h+`<p class="pvazio">Carregando…</p>`;
   h+=`<p class="rkper">${esc(d.texto)}</p>`;
@@ -2579,6 +2617,128 @@ function rankingHtml(){
   if(!CONTA.user)h+=`<div class="rkcta"><span>Quer aparecer aqui?</span><button class="primary" onclick="contaAbre()">👤 Entrar ou criar conta</button></div>`;
   else if(!d.minha)h+=`<p class="ctdica" style="text-align:center">Você ainda não pontuou ${RANK.periodo==='semana'?'nesta semana':'neste mês'}.</p>`;
   return h+`<p class="rkregra">Só contam as partidas <b>online</b> de quem tem conta. Fácil 1 ponto · Médio 2 · Difícil 3 · Impossível 5 · Vitória +10.</p>`;
+}
+// ----- amigos: ID de 8 números, pedidos com aceite, convites para a sala, quem está online, ranking e perfil -----
+const AMIGOS={dados:null,erro:'',ok:'',ocupado:false,busca:'',achado:null,ver:null,perfil:null,ptab:'perfil',remover:null,vistos:new Set()};
+const AMIGO_LINK=(URLP.get('amigo')||'').replace(/\D/g,'').slice(0,8);
+const fmtId=id=>{const d=String(id||'').replace(/\D/g,'').slice(0,8);return d.length>4?d.slice(0,4)+' '+d.slice(4):d};
+const idAm=id=>String(id||'').replace(/\D/g,'').slice(0,8),sSala=s=>String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+async function amigosApi(metodo,dados){
+  const tk=AUTH&&await AUTH.token();if(!tk)throw new Error('Entre na sua conta.');
+  const get=metodo==='GET';
+  const r=await fetch('/api/amigos'+(get?'?'+new URLSearchParams(dados).toString():''),{method:metodo,headers:Object.assign({authorization:'Bearer '+tk},get?{}:{'content-type':'application/json'}),body:get?undefined:JSON.stringify(dados)});
+  let j=null;try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error((j&&j.erro)||('Erro '+r.status));
+  return j;
+}
+function copia(t,msg){if(!t)return;try{navigator.clipboard.writeText(t).then(()=>toast(msg),()=>prompt('Copie:',t))}catch(e){prompt('Copie:',t)}}
+function meuIdAmigo(){return (AMIGOS.dados&&AMIGOS.dados.id)||(CONTA.perfil&&CONTA.perfil.id)||''}
+function amigosLink(){const id=meuIdAmigo();return id?location.origin+'/?amigo='+id:''}
+function amigosAberto(){const b=document.getElementById('amigosbox');return !!b&&b.style.display!=='none'}
+async function amigosCarrega(silencioso){
+  if(!CONTA.user||!contaEmailOk())return;
+  try{const j=await amigosApi('GET',{acao:'lista',sala:online()&&ROOM?ROOM:''});AMIGOS.dados=j;AMIGOS.erro='';amigosAvisos(j)}
+  catch(e){if(!silencioso)AMIGOS.erro=e.message}
+  amigosBadge();
+  const digitando=document.activeElement&&document.activeElement.id==='amgid';
+  if(amigosAberto()&&!(silencioso&&digitando)&&!AMIGOS.ver)amigosRender();
+}
+function amigosBadge(){const d=AMIGOS.dados,n=CONTA.user&&d?d.pedidos.length+d.convites.length:0;const el=document.getElementById('amigosn');if(el)el.textContent=n?(n>9?'9+':n):''}
+setInterval(()=>{if(CONTA.user&&document.visibilityState==='visible')amigosCarrega(true)},30000); // online e convites novos
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&CONTA.user)amigosCarrega(true)});
+// convite novo: aviso por cima da tela, com o botão Entrar
+function amigosAvisos(d){(d.convites||[]).forEach(c=>{const k=c.id+'|'+c.sala+'|'+c.quando;if(AMIGOS.vistos.has(k))return;AMIGOS.vistos.add(k);if(ROOM!==c.sala)conviteMostra(c)})}
+function conviteMostra(c){
+  const el=document.getElementById('convite');if(!el)return;
+  el.innerHTML=`<div class="convcard">${bolinha(c.f,c.cor||'#b0b8c4','convfoto')}<div class="convtxt"><b>${esc(c.nome)}</b> te chamou para jogar<small>Sala ${esc(sSala(c.sala))}</small></div><div class="convbts"><button class="small primary" onclick="conviteEntra('${idAm(c.id)}','${sSala(c.sala)}')">Entrar</button><button class="small" onclick="conviteFecha('${idAm(c.id)}')">Agora não</button></div></div>`;
+  el.style.display='';SFX.join&&SFX.join();
+}
+function conviteEsconde(){const el=document.getElementById('convite');if(el){el.style.display='none';el.innerHTML=''}}
+function conviteFecha(id){conviteEsconde();amigosApi('POST',{acao:'dispensar',id}).then(()=>amigosCarrega(true)).catch(()=>{})}
+function conviteEntra(id,sala){
+  conviteEsconde();amigosApi('POST',{acao:'dispensar',id}).catch(()=>{});
+  if(amigosAberto())amigosFecha();
+  if(ROOM===sala)return;
+  if(!precisaNome())return;
+  if(ROOM)leaveRoom();
+  enterRoom(sala,false);
+}
+function amigosAbre(){AMIGOS.erro='';AMIGOS.ok='';AMIGOS.ver=null;AMIGOS.remover=null;amigosRender();modalAbre('amigosbox');amigosCarrega()}
+function amigosFecha(){modalFecha('amigosbox')}
+function amigosRender(){const el=document.getElementById('amigoscorpo');if(!el)return;el.innerHTML=amigosHtml();const t=document.getElementById('amigostit');if(t)t.textContent=AMIGOS.ver?'👥 Perfil do amigo':'👥 Amigos'}
+function amigosMsgs(){return (AMIGOS.erro?`<div class="contaerro">${esc(AMIGOS.erro)}</div>`:'')+(AMIGOS.ok?`<div class="contaok">${esc(AMIGOS.ok)}</div>`:'')}
+function vistoTxt(ts){if(!ts)return 'Offline';const m=Math.round((Date.now()-ts)/60000);if(m<60)return 'Visto há '+Math.max(1,m)+' min';const h=Math.round(m/60);if(h<24)return 'Visto há '+h+' h';const d=Math.round(h/24);return 'Visto há '+d+(d===1?' dia':' dias')}
+function amigoStatus(a){
+  if(a.sala)return a.sala===ROOM?'<span class="amgst jogo">🎮 Na sua sala</span>':`<span class="amgst jogo">🎮 Numa sala · ${esc(sSala(a.sala))}</span>`;
+  return a.on?'<span class="amgst on">🟢 Online agora</span>':`<span class="amgst">${vistoTxt(a.visto)}</span>`;
+}
+function amigoBotoes(a,dis){
+  const id=idAm(a.id);
+  if(online()&&ROOM&&a.sala!==ROOM)return `<button class="small primary" ${dis} onclick="event.stopPropagation();amigoChama('${id}')">📣 Chamar</button>`;
+  if(a.sala&&a.sala!==ROOM)return `<button class="small" onclick="event.stopPropagation();conviteEntra('${id}','${sSala(a.sala)}')">Entrar na sala</button>`;
+  return '';
+}
+function amigosHtml(){
+  if(!CONTA.user)return `<div class="cthero"><div class="ctlogo">👥</div><h3>Jogue com seus amigos</h3><p>Com uma conta você ganha um <b>ID de 8 números</b> para adicionar amigos, ver quem está online e chamar a turma para a sua sala.</p></div><button class="primary" style="width:100%" onclick="contaAbre()">👤 Entrar ou criar conta</button>`;
+  if(!contaEmailOk())return `<div class="contaerro">📩 Confirme seu e-mail para usar os amigos.</div>`;
+  if(AMIGOS.ver)return amigoPerfilHtml();
+  const d=AMIGOS.dados,dis=AMIGOS.ocupado?'disabled':'',id=meuIdAmigo();
+  let h=`<div class="meuid"><small>Seu ID</small><b>${id?fmtId(id):'· · · ·'}</b>${id?`<div class="row"><button class="small primary" onclick="copia('${idAm(id)}','📋 ID copiado')">📋 Copiar ID</button><button class="small" onclick="copia(amigosLink(),'🔗 Link de amigo copiado')">🔗 Copiar link</button></div>`:''}<p>Mande esse número (ou o link) para quem você quer adicionar. Seu e-mail nunca aparece para ninguém.</p></div>`+amigosMsgs();
+  if(!d)return h+(AMIGOS.erro?'':`<p class="pvazio">Carregando…</p>`);
+  if(d.convites.length)h+=`<h4 class="ctsub">🎮 Te chamaram para jogar</h4>`+d.convites.map(c=>`<div class="amg">${bolinha(c.f,c.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(c.nome)}</b><small>Sala ${esc(sSala(c.sala))}</small></div><div class="amgbts"><button class="small primary" onclick="conviteEntra('${idAm(c.id)}','${sSala(c.sala)}')">Entrar</button><button class="small" title="Dispensar" onclick="conviteFecha('${idAm(c.id)}')">✕</button></div></div>`).join('');
+  if(d.pedidos.length)h+=`<h4 class="ctsub">📨 Pedidos de amizade</h4>`+d.pedidos.map(p=>`<div class="amg">${bolinha(p.f,p.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(p.nome)}${tituloChip(p.t)}</b><small>ID ${fmtId(p.id)} quer ser seu amigo</small></div><div class="amgbts"><button class="small primary" ${dis} onclick="amigoFaz('aceitar','${idAm(p.id)}')">Aceitar</button><button class="small" ${dis} onclick="amigoFaz('recusar','${idAm(p.id)}')">Recusar</button></div></div>`).join('');
+  const a=AMIGOS.achado;
+  h+=`<h4 class="ctsub">➕ Adicionar amigo</h4>
+  <form class="amgadd" onsubmit="event.preventDefault();amigoProcura()"><input id="amgid" inputmode="numeric" autocomplete="off" maxlength="9" placeholder="0000 0000" aria-label="ID do amigo" value="${fmtId(AMIGOS.busca)}" oninput="AMIGOS.busca=this.value.replace(/\\D/g,'').slice(0,8);this.value=fmtId(AMIGOS.busca);AMIGOS.achado=null"><button class="small primary" type="submit" ${dis}>Procurar</button></form>
+  <p class="amgdica">Você precisa do <b>ID de 8 números</b> do seu amigo. Ele encontra o dele tocando em <b>👥</b> no alto da tela, em <b>Seu ID</b>, e copia com o botão <b>📋</b>. Se ele te mandar o link de amigo, é só abrir.</p>`;
+  if(a)h+=`<div class="amg achado">${bolinha(a.f,a.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(a.nome)}${tituloChip(a.t)}</b><small>ID ${fmtId(a.id)}</small></div><div class="amgbts">${a.eu?'<small>É você 🙂</small>':a.amigo?'<small>Já é seu amigo</small>':a.pedido==='enviado'?'<small>Pedido enviado</small>':a.pedido==='recebido'?`<button class="small primary" ${dis} onclick="amigoFaz('aceitar','${idAm(a.id)}')">Aceitar pedido</button>`:`<button class="small primary" ${dis} onclick="amigoFaz('pedir','${idAm(a.id)}')">Enviar pedido</button>`}</div></div>`;
+  h+=`<h4 class="ctsub">👥 Seus amigos <span class="muted">(${d.amigos.length})</span></h4>`;
+  h+=d.amigos.length?d.amigos.map(x=>`<div class="amg clica" role="button" tabindex="0" title="Ver o perfil" onclick="amigoVer('${idAm(x.id)}')">${bolinha(x.f,x.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(x.nome)}${tituloChip(x.t)}</b>${amigoStatus(x)}</div><div class="amgbts">${amigoBotoes(x,dis)}</div></div>`).join(''):`<p class="pvazio">Você ainda não tem amigos aqui. Adicione alguém pelo ID! 🙌</p>`;
+  if(d.enviados.length)h+=`<h4 class="ctsub">⏳ Esperando resposta</h4>`+d.enviados.map(e=>`<div class="amg">${bolinha(e.f,e.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(e.nome)}</b><small>ID ${fmtId(e.id)}</small></div><div class="amgbts"><button class="small" ${dis} onclick="amigoFaz('cancelar','${idAm(e.id)}')">Cancelar</button></div></div>`).join('');
+  return h;
+}
+async function amigoProcura(){
+  const id=idAm(AMIGOS.busca);AMIGOS.erro='';AMIGOS.ok='';AMIGOS.achado=null;
+  if(id.length!==8){AMIGOS.erro='O ID tem 8 números. Confira e tente de novo.';amigosRender();return}
+  AMIGOS.ocupado=true;amigosRender();
+  try{AMIGOS.achado=await amigosApi('POST',{acao:'quem',id})}catch(e){AMIGOS.erro=e.message}
+  AMIGOS.ocupado=false;amigosRender();
+}
+const AMIGO_MSG={pedir:'Pedido enviado! Quando a pessoa aceitar, ela aparece na sua lista.',aceitar:'🎉 Agora vocês são amigos!',recusar:'Pedido recusado.',cancelar:'Pedido cancelado.',remover:'Amizade desfeita.'};
+async function amigoFaz(acao,id){
+  if(acao==='remover'&&AMIGOS.remover!==id){AMIGOS.remover=id;amigosRender();setTimeout(()=>{if(AMIGOS.remover===id){AMIGOS.remover=null;amigosRender()}},3000);return}
+  AMIGOS.ocupado=true;AMIGOS.erro='';AMIGOS.ok='';amigosRender();
+  try{const j=await amigosApi('POST',{acao,id});AMIGOS.ok=j&&j.estado==='amigos'?AMIGO_MSG.aceitar:AMIGO_MSG[acao]||'';if(acao==='pedir'||acao==='aceitar'){AMIGOS.achado=null;AMIGOS.busca=''}if(acao==='remover'){AMIGOS.ver=null;AMIGOS.remover=null}}
+  catch(e){AMIGOS.erro=e.message}
+  AMIGOS.ocupado=false;await amigosCarrega();amigosRender();
+}
+async function amigoChama(id){
+  if(!online()||!ROOM)return;
+  try{await amigosApi('POST',{acao:'convidar',id,sala:ROOM});toast('📣 Convite enviado! Vai aparecer um aviso na tela do seu amigo.')}catch(e){toast(e.message)}
+}
+async function amigoVer(id){
+  AMIGOS.ver=id;AMIGOS.perfil=null;AMIGOS.ptab='perfil';AMIGOS.erro='';AMIGOS.ok='';AMIGOS.remover=null;amigosRender();
+  try{AMIGOS.perfil=await amigosApi('GET',{acao:'perfil',id})}catch(e){AMIGOS.erro=e.message}
+  if(AMIGOS.ver===id)amigosRender();
+}
+function amigoPerfilHtml(){
+  const p=AMIGOS.perfil,id=idAm(AMIGOS.ver),dis=AMIGOS.ocupado?'disabled':'';
+  let h=`<button class="small" onclick="AMIGOS.ver=null;AMIGOS.erro='';amigosRender()">← Amigos</button>`+amigosMsgs();
+  if(!p)return h+(AMIGOS.erro?'':`<p class="pvazio">Carregando…</p>`);
+  const foto=fotoUrl(p.foto)||fotoUrl(p.f),cor=p.cor||'#b0b8c4';
+  h+=`<div class="ctbanner" style="--c:${cor};margin-top:10px"><span class="avatar ctav${foto?' temfoto':''}" style="--c:${cor}${foto?`;background:${cor} url(${foto}) center/cover`:''}"></span><div class="ctquem"><b>${esc(p.nome)}</b>${p.t?`<small>${tituloChip(p.t)}</small>`:''}<small>ID ${fmtId(p.id)}${p.desde?' · amigos desde '+new Date(p.desde).toLocaleDateString('pt-BR'):''}</small><small>${amigoStatus(p)}</small></div></div>`;
+  const bt=amigoBotoes(p,dis);if(bt)h+=`<div class="row" style="justify-content:center;margin-bottom:10px">${bt}</div>`;
+  h+=`<div class="abas ctabas">${[['perfil','📊 Estatísticas'],['conq','🏅 Conquistas']].map(([k,l])=>`<button class="small${AMIGOS.ptab===k?' on':''}" onclick="AMIGOS.ptab='${k}';amigosRender()">${l}</button>`).join('')}</div>`;
+  h+=AMIGOS.ptab==='conq'?conquistasHtml(p):statsHtml(p,true);
+  return h+`<div class="contapes"><button class="perigo" ${dis} onclick="amigoFaz('remover','${id}')">${AMIGOS.remover===id?'Clique de novo para desfazer a amizade':'Desfazer amizade'}</button></div>`;
+}
+// link de amigo (?amigo=12345678): depois de entrar na conta, abre a janela já procurando o ID
+function amigoLinkAbre(){
+  if(!AMIGO_LINK||amigoLinkAbre.feito)return;
+  if(!CONTA.user){if(CONTA.pronto&&!amigoLinkAbre.pediu){amigoLinkAbre.pediu=true;contaAbre();CONTA_UI.ok='Entre na sua conta para adicionar o amigo que te mandou o link.';contaRender()}return}
+  amigoLinkAbre.feito=true;
+  try{const u=new URL(location.href);u.searchParams.delete('amigo');history.replaceState(null,'',u.pathname+u.search)}catch(e){}
+  AMIGOS.busca=AMIGO_LINK;amigosAbre();amigoProcura();
 }
 // ----- histórico de perguntas na conta: o mesmo em qualquer aparelho em que a pessoa entrar -----
 var CONTA_HIST={ok:false,conhecidas:{},t:null}; // var: o persist() pode rodar antes desta linha
@@ -3054,7 +3214,7 @@ function lobbyHtml(){
   let h=`${amHost()?'<div class="prepgrid"><div class="pcol">':''}<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Sala <span class="code">${ROOM}</span></h2><button class="small" onclick="leaveRoom()">Sair</button></div>
   ${amHost()?'':(G.publica?'<p class="muted">🌍 Sala aberta a todos.</p>':'')}
   <p class="muted">Mande o link ou o código para quem vai jogar. Cada um entra pelo próprio celular.${amHost()&&G.publica?' <b>🌍 A sala também aparece em Salas para qualquer pessoa entrar.</b>':''}</p>
-  <div class="row"><button class="small primary" onclick="shareRoom()">📤 Compartilhar</button><button class="small" onclick="copyText('${link}')">📋 Copiar link</button></div>
+  <div class="row"><button class="small primary" onclick="shareRoom()">📤 Compartilhar</button><button class="small" onclick="copyText('${link}')">📋 Copiar link</button>${CONTA.user?'<button class="small" onclick="amigosAbre()">👥 Chamar amigos</button>':''}</div>
   <h2 style="margin-top:16px">Você</h2>
   <div class="setup-row"><button class="swatch${me.cor?'':' vazio'}" style="background:${me.cor||'#3a4054'}" title="Escolher a cor" onclick="G.pickColor=G.pickColor==='me'?null:'me';render()"></button><input id="meunome" value="${esc(me.nome||'')}" maxlength="16" placeholder="Seu nome" onchange="setMyName(this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
   ${G.pickColor==='me'||(!me.cor&&(me.nome||'').trim())?`<div class="pal-wrap"><span class="muted">Escolha sua cor:</span><div class="palette">${PALETA.map(([c,n])=>{const tomada=usadas.includes(c);return `<button class="swatch${c===me.cor?' on':''}${tomada?' taken':''}" style="background:${c}" title="${n}${tomada?' (já escolhida)':''}" ${tomada?'disabled':''} onclick="setMyColor('${c}')"></button>`}).join('')}</div></div>`:''}
