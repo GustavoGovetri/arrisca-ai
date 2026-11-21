@@ -7,7 +7,7 @@ const ST = require('./_stats');
 
 const TOP = 50;
 const fotoMini = f => typeof f === 'string' && f.length <= 12000 && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(f) ? f : null;
-const tituloOk = t => t && typeof t === 'object' && typeof t.x === 'string' ? { x: t.x.slice(0, 40), n: Math.max(1, Math.min(7, +t.n || 1)) } : null;
+const tituloOk = t => t && typeof t === 'object' && typeof t.x === 'string' ? { x: t.x.slice(0, 40), n: Math.max(1, Math.min(8, +t.n || 1)) } : null;
 let CACHE = {}; // período → { t, lista } (30 s)
 
 module.exports = async (req, res) => {

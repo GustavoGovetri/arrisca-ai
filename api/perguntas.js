@@ -10,7 +10,7 @@
 //   POST /api/perguntas?acao=nota       👍/👎 de quem jogou a pergunta (vai para o painel do dono)
 const crypto = require('crypto');
 
-const ORDER = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V'];
+const ORDER = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V', 'N']; // N: Natal (o site só oferece em dezembro)
 const LEVELS = { 1: 'fácil', 2: 'médio', 3: 'difícil', 4: 'impossível' };
 // Partida com os 6 temas clássicos: as perguntas dos outros 5 temas entram neles, por assunto.
 // (Variedades é só de múltipla escolha, então não recebe perguntas abertas.)
@@ -22,7 +22,7 @@ const ROTA = {
   GG: Object.fromEntries(['quadrinhos-herois', 'anime-populares', 'anime-2', 'anime-3', 'anime-e-manga', 'anime-variantes', 'cultura-geek', 'geek-britanico', 'tokusatsu', 'desenhos-dos-anos-80', 'personagens'].map(b => [b, 'AL']))
 };
 const destino = (t, b) => (ROTA[t] && ROTA[t][b]) || ROTA_PADRAO[t];
-const TEMA_N = { M: 'Mundo', H: 'História', AL: 'Artes e Literatura', MU: 'Música', CS: 'Cinema e Séries', S: 'Sociedade', CT: 'Ciência', TI: 'Tecnologia e Internet', ES: 'Esporte', GG: 'Games e Geek', V: 'Variedades' };
+const TEMA_N = { M: 'Mundo', H: 'História', AL: 'Artes e Literatura', MU: 'Música', CS: 'Cinema e Séries', S: 'Sociedade', CT: 'Ciência', TI: 'Tecnologia e Internet', ES: 'Esporte', GG: 'Games e Geek', V: 'Variedades', N: 'Natal' };
 
 const { cred, dbGet } = require('./_fb');
 const { freia } = require('./_limite');

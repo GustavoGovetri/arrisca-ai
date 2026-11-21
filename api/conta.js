@@ -11,7 +11,7 @@ const { limpa: semPalavrao, tem: temPalavrao } = require('./_palavrao');
 const { DEV, ler, grava, gravaVarios } = require('./_store');
 const ST = require('./_stats');
 const { freia } = require('./_limite');
-const temaOk = t => typeof t === 'string' && Object.prototype.hasOwnProperty.call(ST.TEMAS, t);
+const temaOk = t => typeof t === 'string' && (Object.prototype.hasOwnProperty.call(ST.TEMAS, t) || t === 'N'); // N: Natal
 
 const LIMITE_LISTA = 300, LIMITE_DIA = 400, HIST = 40;
 const txt = (x, n) => String(x == null ? '' : x).replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
@@ -96,6 +96,7 @@ async function eu(u) {
     stats: { p: s.p, a: s.a, e: s.e, v: s.v, np: s.np, maxSeq: s.maxSeq, seq: s.seq, tema: s.tema,
       semana: s.sem.id === per.semana ? s.sem.p : 0, mes: s.mes.id === per.mes ? s.mes.p : 0 },
     conquistas: ST.conquistasLista(s, conq || {}),
+    eventos: ST.eventosLista(s),
     historico: hist
   };
 }
@@ -139,7 +140,7 @@ async function resposta(u, body) {
   const agora = Date.now(), quando = new Date(agora).toISOString();
   const nivel = info.nivel;
   let part = part0 && typeof part0 === 'object' ? part0 : null;
-  if (!part) { s.np++; part = { sala, inicio: quando, a: 0, e: 0, p: 0, venceu: false, modo: txt(body.modo, 12), nj: Math.max(2, Math.min(10, +body.nj || 2)) } }
+  if (!part) { ST.novaPartida(s, agora); part = { sala, inicio: quando, a: 0, e: 0, p: 0, venceu: false, modo: txt(body.modo, 12), nj: Math.max(2, Math.min(10, +body.nj || 2)) } }
   const pts = ST.aplica(s, { ok, nivel, tema: info.t, fim, agora });
   if (ok) part.a++; else part.e++;
   part.p += pts; part.fim = quando; if (fim) part.venceu = true;

@@ -4,7 +4,7 @@
 // anda casas que não ganhou, troca o nível da pergunta ou finge que a turma aceitou a resposta.
 // Arquivo com "_" no começo: a Vercel não publica como rota.
 
-const TEMAS = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V'];
+const TEMAS = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V', 'N'];
 const TAMANHOS = { curto: 30, normal: 40, longo: 50 };
 const MODOS = ['classico', 'bonus', 'arriscado'];
 const MAXJ = 10;

@@ -20,6 +20,10 @@ function periodo(ts = Date.now()) {
   return { semana: ano + '-S' + String(n).padStart(2, '0'), mes, dia: d.toISOString().slice(0, 10), semanaTxt: dm(seg) + ' a ' + dm(dom) };
 }
 
+// eventos com título exclusivo: a contagem só vale no mês do evento, e o título fica para sempre
+const EVENTOS = [
+  { id: 'natal2026', mes: '2026-12', e: '🎄', ti: 'Natal 2026', n: 'Evento de Natal 2026', d: 'Jogue 5 partidas online com conta em dezembro de 2026', alvo: 5 }
+];
 const n5 = a => Array.from({ length: 5 }, (_, i) => Math.max(0, Math.floor(+((a || [])[i]) || 0)));
 function normaliza(s) {
   s = s && typeof s === 'object' ? s : {};
@@ -29,7 +33,8 @@ function normaliza(s) {
   return {
     p: Math.max(0, +s.p || 0), a: n5(s.a), e: n5(s.e), v: Math.max(0, +s.v || 0), np: Math.max(0, +s.np || 0),
     seq: Math.max(0, +s.seq || 0), maxSeq: Math.max(0, +s.maxSeq || 0), tema,
-    sem: per(s.sem), mes: per(s.mes), dia: { id: String((s.dia && s.dia.id) || ''), n: Math.max(0, +(s.dia && s.dia.n) || 0) }
+    sem: per(s.sem), mes: per(s.mes), dia: { id: String((s.dia && s.dia.id) || ''), n: Math.max(0, +(s.dia && s.dia.n) || 0) },
+    ev: Object.fromEntries(EVENTOS.map(e => [e.id, Math.max(0, Math.floor(+(s.ev && s.ev[e.id]) || 0))]).filter(([, n]) => n > 0))
   };
 }
 const soma = a => a.reduce((x, y) => x + y, 0);
@@ -64,8 +69,20 @@ function conquistasLista(s, tem) {
 function novas(s, tem) {
   tem = tem || {};
   const out = [];
+  EVENTOS.forEach(e => { if ((s.ev[e.id] || 0) >= e.alvo && !tem['ev-' + e.id]) out.push({ id: 'ev-' + e.id, e: e.e, n: e.e + ' ' + e.ti, nivel: 8 }) });
   CONQ.forEach(c => { const v = c.v(s); c.alvos.forEach((a, t) => { const id = c.id + '-' + (t + 1); if (v >= a && !tem[id]) out.push({ id, e: c.e, n: c.n + ' · ' + NIVEIS_CONQ[t], nivel: t + 1 }) }) });
   return out;
+}
+
+// primeira resposta de uma partida nova: conta a partida (e o evento do mês, se houver)
+function novaPartida(s, agora = Date.now()) {
+  s.np++;
+  const mes = periodo(agora).mes;
+  EVENTOS.forEach(e => { if (e.mes === mes) s.ev[e.id] = (s.ev[e.id] || 0) + 1 });
+}
+function eventosLista(s) {
+  s = normaliza(s);
+  return EVENTOS.map(e => ({ id: 'ev-' + e.id, e: e.e, ti: e.ti, n: e.n, d: e.d, mes: e.mes, alvo: e.alvo, prog: Math.min(e.alvo, s.ev[e.id] || 0), ok: (s.ev[e.id] || 0) >= e.alvo }));
 }
 
 // aplica uma resposta nas estatísticas; devolve os pontos ganhos
@@ -90,10 +107,12 @@ function aplica(s, { ok, nivel, tema, fim, agora = Date.now() }) {
 const TITULO_DONO = { id: 'dono', x: '👑 Dono do Jogo', n: 7 }; // só a conta do dono (conferida pelo uid)
 function titulo(id, s, uid) {
   if (id === 'dono') return uid && require('./_auth').ehAdmin({ uid }) ? Object.assign({}, TITULO_DONO) : null;
+  const ev = EVENTOS.find(e => 'ev-' + e.id === id);
+  if (ev) return (normaliza(s).ev[ev.id] || 0) >= ev.alvo ? { id, x: ev.e + ' ' + ev.ti, n: 8 } : null;
   const c = CONQ.find(x => x.id === id);
   if (!c) return null;
   const nivel = c.alvos.filter(a => c.v(normaliza(s)) >= a).length;
   return nivel ? { id: c.id, x: c.e + ' ' + c.ti, n: nivel } : null;
 }
 
-module.exports = { PONTOS, VITORIA, TEMAS, CONQ, NIVEIS_CONQ, periodo, normaliza, conquistasLista, novas, aplica, soma, titulo };
+module.exports = { PONTOS, VITORIA, TEMAS, CONQ, NIVEIS_CONQ, EVENTOS, periodo, normaliza, conquistasLista, eventosLista, novas, novaPartida, aplica, soma, titulo };
