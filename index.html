@@ -1903,7 +1903,7 @@ async function carregaUsadasSala(){
   if(!online()||!NET||!NET.getUsadas||!ROOM)return;
   try{
     const all=await NET.getUsadas(ROOM),m={};
-    Object.entries(all||{}).forEach(([d,o])=>{if(d===MYDEV||!o||typeof o!=='object')return;Object.entries(o).forEach(([k,txt])=>{if(!T[k]||typeof txt!=='string')return;const st=m[k]||(m[k]=new Set());txt.split(' ').forEach(id=>{if(ID_OK.test(id))st.add(id)})})});
+    Object.entries(all||{}).forEach(([d,o])=>{if(d===MYDEV||!o||typeof o!=='object')return;Object.entries(o).forEach(([k,txt])=>{if(!Object.prototype.hasOwnProperty.call(T,k)||typeof txt!=='string')return;const st=m[k]||(m[k]=new Set());txt.split(' ').forEach(id=>{if(ID_OK.test(id))st.add(id)})})});
     SALA_USADAS=m;
   }catch(e){console.warn(e)}
 }
@@ -3133,6 +3133,7 @@ function localNet(){
     vote:async(c,d,o)=>{const k='salas/'+c+'/votos';const all=rd(k)||{};all[d]=o;wr(k,all)},
     chat:async(c,m)=>{const k='salas/'+c+'/chat';const a=rd(k)||[];const ts=Math.round(performance.timeOrigin+performance.now()); /* simula a hora do servidor */a.push(Object.assign({id:ts.toString(36)+Math.random().toString(36).slice(2,6)},m,{ts}));wr(k,a.slice(-60))},
     setMe:async(c,d,o)=>{const k='salas/'+c+'/jogadores';const all=rd(k)||{};all[d]=Object.assign(all[d]||{},o);wr(k,all)},
+    marcaPedido:async(c,d,o)=>{const k='salas/'+c+'/jogadores';const all=rd(k)||{};if(all[d]){all[d]=Object.assign(all[d],o);wr(k,all)}},
     removePlayer:async(c,d)=>{const k='salas/'+c+'/jogadores';const all=rd(k)||{};delete all[d];wr(k,all)},
     setUsadas:async(c,d,o)=>{const k='salas/'+c+'/usadas';const all=rd(k)||{};all[d]=o;wr(k,all)},
     getUsadas:async c=>rd('salas/'+c+'/usadas')||{},
@@ -3289,10 +3290,12 @@ function aceitaEntrada(d){
   const usadas=new Set(G.players.map(p=>p.color));let c=COR_OK.test(l.cor||'')&&!usadas.has(l.cor)?l.cor:(PALETA.map(x=>x[0]).find(x=>!usadas.has(x))||PCOLORS[G.players.length%PCOLORS.length]);
   const nome=(l.nome||'').trim()||'Jogador '+(G.players.length+1);
   G.players.push({name:nome,color:c,pos:0,used:[],forced:null,aj:{pular:0,dica:0},dev:d});
-  NET.setMe(ROOM,d,{quer:0}).catch(()=>{});
+  marcaPedido(d,{quer:0});
   toast('🎉 '+nome+' entrou na partida! Começa na casa INÍCIO e joga depois do último da roda.');SFX.join&&SFX.join();render();
 }
-function recusaEntrada(d){if(!amHost()||!NET)return;NET.setMe(ROOM,d,{quer:0,rec:Date.now()}).catch(()=>{});if(LOBBY[d])LOBBY[d].quer=0;render()}
+// quem criou a sala responde ao pedido de outro aparelho (só mexe no pedido; o resto da entrada é de quem pediu)
+function marcaPedido(d,o){if(!NET)return;(NET.marcaPedido||NET.setMe)(ROOM,d,o).catch(()=>{})}
+function recusaEntrada(d){if(!amHost()||!NET)return;marcaPedido(d,{quer:0,rec:Date.now()});if(LOBBY[d])LOBBY[d].quer=0;render()}
 function entradaHtml(){
   if(!online()||!G.players)return '';
   let h='';
@@ -3431,7 +3434,7 @@ function chatViu(){CHAT.forEach(m=>CHAT_VISTAS.add(m.id))}
 function chatBadge(){const n=CHAT.filter(m=>!CHAT_VISTAS.has(m.id)&&m.dev!==MYDEV).length;const el=document.getElementById('chatn');if(el)el.textContent=n?(n>9?'9+':n):''}
 function chatPinta(){
   if(!CHAT_OPEN)return;const el=document.getElementById('chatlist');if(!el)return;
-  el.innerHTML=CHAT.length?CHAT.map(m=>{const emo=REACOES.includes(m.t),eu=m.dev===MYDEV,hr=horaChat(m.ts);return `<div class="cm${eu?' me':''}${emo?' emo':''}">${eu||emo?'':`<span class="cn" style="color:${corOk(m.c)}">${fotoDe(m.dev)?bolinha(fotoDe(m.dev),corOk(m.c),'chatfoto'):''}${esc(m.n||'Alguém')}</span>`}${esc(m.t)}${hr?`<span class="ch">${emo&&!eu?esc(m.n||'')+' · ':''}${hr}</span>`:''}</div>`}).join(''):'<p class="muted chatvazio">Nenhuma mensagem ainda. Mande um oi! 👋</p>';
+  el.innerHTML=CHAT.length?CHAT.map(m=>{const emo=REACOES.includes(m.t),eu=m.dev===MYDEV,hr=horaChat(m.ts);return `<div class="cm${eu?' me':''}${emo?' emo':''}">${eu||emo?'':`<span class="cn" style="color:${corOk(chatCor(m))}">${fotoDe(m.dev)?bolinha(fotoDe(m.dev),corOk(chatCor(m)),'chatfoto'):''}${esc(chatNome(m))}</span>`}${esc(m.t)}${hr?`<span class="ch">${emo&&!eu?esc(chatNome(m))+' · ':''}${hr}</span>`:''}</div>`}).join(''):'<p class="muted chatvazio">Nenhuma mensagem ainda. Mande um oi! 👋</p>';
   el.scrollTop=el.scrollHeight;
 }
 function chatRecebido(a){
@@ -3452,7 +3455,7 @@ function horaChat(ts){if(!ts)return '';try{return new Date(ts).toLocaleTimeStrin
 function chatPrevia(m){
   const el=document.getElementById('chatprev');if(!el)return;
   if(REACOES.includes(m.t))return;
-  el.innerHTML=`<b style="color:${corOk(m.c)}">${esc(m.n||'Alguém')}:</b> ${esc(m.t)}`;el.style.display='';
+  el.innerHTML=`<b style="color:${corOk(chatCor(m))}">${esc(chatNome(m))}:</b> ${esc(m.t)}`;el.style.display='';
   clearTimeout(el._h);el._h=setTimeout(()=>{el.style.display='none'},4000);
 }
 function emojiVoa(e){
@@ -3460,6 +3463,8 @@ function emojiVoa(e){
   d.style.left=(8+Math.random()*80)+'vw';document.body.appendChild(d);setTimeout(()=>d.remove(),2700);
 }
 function meuNomeCor(){const me=G.players&&G.players[myIdx()],l=LOBBY[MYDEV]||{};return {n:(me&&me.name)||(l.nome||'').trim()||myName()||'Alguém',c:(me&&me.color)||l.cor||myColor()||'#ffffff'}}
+function chatNome(m){const l=LOBBY[m.dev];return (l&&l.nome)||m.n||'Alguém'}
+function chatCor(m){const l=LOBBY[m.dev];return (l&&l.cor)||m.c}
 function chatManda(t){
   t=String(t||'').replace(/\s+/g,' ').trim().slice(0,200);if(!t||!online()||!NET)return;
   const nc=meuNomeCor(),m={dev:MYDEV,n:nc.n,c:nc.c,t,ts:Date.now()};

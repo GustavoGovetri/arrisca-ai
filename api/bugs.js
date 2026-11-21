@@ -3,6 +3,7 @@
 // Guarda em /bugs no Firebase, que só esta função escreve e ninguém de fora lê.
 // Para ler: console do Firebase → Realtime Database → Dados → bugs.
 const { dbReq } = require('./_fb');
+const { ip } = require('./_limite');
 
 const TIPOS = ['travou', 'visual', 'online', 'som', 'outro'];
 const DEV = !!process.env.ARRISCA_DEV_SALAS; // testes locais: guarda em memória
@@ -46,7 +47,7 @@ module.exports = async (req, res) => {
   }
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body) } catch (e) { body = {} } }
-  const quem = String((body && body.dev) || (req.headers && req.headers['x-forwarded-for']) || 'x').slice(0, 64);
+  const quem = DEV ? String((body && body.dev) || 'x').slice(0, 64) : ip(req);
   try { res.status(200).json(await handle(body || {}, quem)) }
   catch (e) { res.status(e.status || 500).json({ erro: e.message || 'Erro' }) }
 };

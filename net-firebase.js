@@ -8,9 +8,25 @@ if(cfg&&cfg.databaseURL&&!sim){
     const app=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
     const fbApp=app.initializeApp(cfg);
     carregaLogin(fbApp); // em paralelo: não atrasa o modo online
+    // As salas usam um segundo "app" com login anônimo (invisível, sem conta): cada aparelho ganha uma
+    // identidade própria e as regras do banco deixam cada um mexer só no que é dele (nome, presença, chat).
+    // Fica separado da conta do jogador, então entrar ou sair da conta não atrapalha a sala.
+    const salaApp=app.initializeApp(cfg,'sala');
     const d=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-database.js`);
-    const db=d.getDatabase(fbApp);
+    const db=d.getDatabase(salaApp);
     const R=p=>d.ref(db,p);
+    let UID=null;
+    const ANON=(async()=>{
+      try{
+        const a=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+        const au=a.getAuth(salaApp);
+        if(typeof au.authStateReady==='function')await au.authStateReady();
+        if(!au.currentUser)await a.signInAnonymously(au);
+        UID=au.currentUser?au.currentUser.uid:null;
+      }catch(e){console.warn('Sala sem identidade anônima:',(e&&e.code)||e)}
+      return UID;
+    })();
+    const comId=o=>UID?Object.assign({},o,{u:UID}):o; // marca o que este aparelho grava (as regras conferem)
     let OFF=0;d.onValue(R('.info/serverTimeOffset'),x=>{OFF=Number(x.val())||0}); // diferença entre o relógio do aparelho e o do servidor
     window.NET_IMPL={
       agora(){return Date.now()+OFF},
@@ -27,21 +43,23 @@ if(cfg&&cfg.databaseURL&&!sim){
         return ()=>u.forEach(f=>f());
       },
       async setMe(code,dev,obj){
+        await ANON;
         const r=R('salas/'+code+'/jogadores/'+dev);
-        await d.update(r,obj);
+        await d.update(r,comId(obj));
         d.onDisconnect(d.child(r,'on')).set(false);
       },
-      async removePlayer(code,dev){await d.remove(R('salas/'+code+'/jogadores/'+dev))},
+      async removePlayer(code,dev){await ANON;await d.remove(R('salas/'+code+'/jogadores/'+dev))},
+      async marcaPedido(code,dev,obj){await ANON;await d.update(R('salas/'+code+'/jogadores/'+dev),obj)}, // quem criou a sala responde a um pedido de entrada
       // histórico de perguntas de cada aparelho na sala: quem sorteia evita o que qualquer um ali já viu
-      async setUsadas(code,dev,obj){await d.set(R('salas/'+code+'/usadas/'+dev),obj)},
+      async setUsadas(code,dev,obj){await ANON;await d.set(R('salas/'+code+'/usadas/'+dev),comId(obj))},
       async getUsadas(code){return (await d.get(R('salas/'+code+'/usadas'))).val()||{}},
       async tx(code,base,val){
         const res=await d.runTransaction(R('salas/'+code+'/estado'),cur=>{const v=(cur&&cur.v)||0;if(v!==base)return;return val},{applyLocally:false});
         return res.committed;
       },
       async vote(code,dev,obj){await d.set(R('salas/'+code+'/votos/'+dev),obj)},
-      async chat(code,msg){await d.push(R('salas/'+code+'/chat'),Object.assign({},msg,{ts:d.serverTimestamp()}))}, // hora do servidor: a ordem não depende do relógio de cada aparelho
-      async report(r){await d.push(R('reportes'),r)},
+      async chat(code,msg){await ANON;await d.push(R('salas/'+code+'/chat'),comId(Object.assign({},msg,{ts:d.serverTimestamp()})))}, // hora do servidor: a ordem não depende do relógio de cada aparelho
+      async report(r){await ANON;await d.push(R('reportes'),comId(r))},
       onConnected(cb){d.onValue(R('.info/connected'),s=>cb(!!s.val()))}
     };
   }catch(e){console.warn('Modo online indisponível:',e)}

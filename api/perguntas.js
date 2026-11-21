@@ -24,6 +24,9 @@ const destino = (t, b) => (ROTA[t] && ROTA[t][b]) || ROTA_PADRAO[t];
 const TEMA_N = { M: 'Mundo', H: 'História', AL: 'Artes e Literatura', MU: 'Música', CS: 'Cinema e Séries', S: 'Sociedade', CT: 'Ciência', TI: 'Tecnologia e Internet', ES: 'Esporte', GG: 'Games e Geek', V: 'Variedades' };
 
 const { cred, dbGet } = require('./_fb');
+const { freia } = require('./_limite');
+// quantos pedidos cada endereço pode fazer a cada 10 minutos (folgado para uma família na mesma rede)
+const FREIO = { sortear: 300, resposta: 300, dica: 80, forma: 300, meta: 200, aquece: 200 };
 const b64u = b => Buffer.from(b).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 
 function chaveTk() { // chave para assinar os tokens de pergunta (derivada da credencial)
@@ -246,7 +249,8 @@ async function handle(acao, body) {
     throw Object.assign(new Error('Essa pergunta não tem desenho.'), { status: 404 });
   }
   if (acao === 'dica') {
-    if (t === 'V') { const erradas = q[1].filter((_, j) => j !== q[2]); return { elim: erradas[rnd(erradas.length)] } }
+    // a alternativa eliminada é sempre a mesma para a mesma pergunta: pedir de novo não vai tirando as erradas até sobrar a certa
+    if (t === 'V') { const erradas = q[1].filter((_, j) => j !== q[2]); const h = crypto.createHmac('sha256', chaveTk()).update('dica|' + body.tk).digest(); return { elim: erradas[h.readUInt32BE(0) % erradas.length] } }
     return mascara(q[1]);
   }
   throw Object.assign(new Error('Ação inválida'), { status: 400 });
@@ -257,6 +261,7 @@ module.exports = async (req, res) => {
   try {
     let body = req.body || {};
     if (typeof body === 'string') { try { body = JSON.parse(body) } catch (e) { body = {} } }
+    freia(req, 'p-' + (FREIO[acao] ? acao : 'outra'), FREIO[acao] || 60, 600e3);
     const out = await handle(acao, body);
     res.setHeader('Cache-Control', acao === 'meta' ? 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400' : 'no-store');
     res.status(200).json(out);

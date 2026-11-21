@@ -10,6 +10,8 @@ const crypto = require('crypto');
 const ST = require('./_store');
 const juiz = require('./_juiz');
 const STATS = require('./_stats');
+const { freia } = require('./_limite');
+const FREIO = { criar: 40, entrar: 200, jogada: 3000, votar: 1000, titulo: 200, lista: 400, anunciar: 400 };
 
 const MAX = 10;              // jogadores por partida
 const VIVA = 3 * 60 * 1000;  // sem notícia do dono por 3 minutos, a sala sai da lista
@@ -97,10 +99,11 @@ async function titulo(body) {
   const [meta, guardada] = await Promise.all([ST.ler('salas/' + code + '/meta'), ST.ler('srv/chaves/' + code + '/' + q.dev)]);
   if (!meta) throw erro(404, 'Sala não encontrada');
   await confereChave(code, q, guardada);
-  let t = null, foto = null;
+  let t = null, foto = null, uid = null;
   if (body.token) {
     const u = await require('./_auth').verifica(String(body.token).slice(0, 4000));
     if (u.provedor !== 'anonymous' && ID.test(u.uid) && (u.verificado || u.provedor === 'google.com')) {
+      uid = u.uid;
       const [p, st] = await Promise.all([ST.ler('usuarios/' + u.uid + '/perfil'), ST.ler('usuarios/' + u.uid + '/stats')]);
       t = p && p.titulo ? STATS.titulo(p.titulo, st, u.uid) : null;
       foto = p && typeof p.mini === 'string' && p.mini.length <= 12000 && /^data:image\/jpeg;base64,/.test(p.mini) ? p.mini : null;
@@ -108,7 +111,8 @@ async function titulo(body) {
   }
   // junto vai a foto pequena da conta (aparece ao lado do nome na sala)
   const v = (t || foto) ? Object.assign({}, t ? { x: t.x, n: t.n } : {}, foto ? { f: foto } : {}) : null;
-  await ST.grava('PUT', 'salas/' + code + '/titulos/' + q.dev, v);
+  // qual conta está neste aparelho (fechado para o público): só ela pode somar os pontos das respostas dele
+  await ST.gravaVarios({ ['salas/' + code + '/titulos/' + q.dev]: v, ['srv/contas/' + code + '/' + q.dev]: uid });
   return { titulo: v };
 }
 const liberou = g => !!(g && g.qid && g.tk && (g.resp || (g.chosen !== null && g.chosen !== undefined) || g.phase === 'result' || g.phase === 'won'));
@@ -210,6 +214,7 @@ module.exports = async (req, res) => {
   let body = req.body;
   if (typeof body === 'string') { try { body = JSON.parse(body) } catch (e) { body = {} } }
   try {
+    freia(req, 's-' + (FREIO[acao] ? acao : 'outra'), FREIO[acao] || 60, 600e3);
     const out = await handle(acao, body || {});
     res.setHeader('Cache-Control', 'no-store');
     res.status(200).json(out);

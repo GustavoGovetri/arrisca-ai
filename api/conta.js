@@ -9,6 +9,8 @@
 const { quemE, ehAdmin } = require('./_auth');
 const { DEV, ler, grava, gravaVarios } = require('./_store');
 const ST = require('./_stats');
+const { freia } = require('./_limite');
+const temaOk = t => typeof t === 'string' && Object.prototype.hasOwnProperty.call(ST.TEMAS, t);
 
 const LIMITE_LISTA = 300, LIMITE_DIA = 400, HIST = 40;
 const txt = (x, n) => String(x == null ? '' : x).replace(/[\u0000-\u001f\u007f<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, n);
@@ -108,10 +110,13 @@ async function resposta(u, body) {
   const jogo = String(body.jogo || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 24) || 'x';
   const ok = !!body.ok, dev = String(body.dev || '').slice(0, 40);
   const base = 'usuarios/' + u.uid, regC = 'srv/reg/' + sala + '/' + info.qid, chave = sala + '_' + jogo;
-  const [reg, st, conq, part0, perfil, estado, jogadores, rr] = await Promise.all([
+  const [dono, reg, st, conq, part0, perfil, estado, jogadores, rr] = await Promise.all([
+    ler('srv/contas/' + sala + '/' + dev),
     ler(regC), ler(base + '/stats'), ler(base + '/conquistas'), ler(base + '/partidas/' + chave), ler(base + '/perfil'),
     DEV ? null : ler('salas/' + sala + '/estado'), DEV ? null : ler('salas/' + sala + '/jogadores'), ler('srv/resp/' + sala + '/' + info.qid)
   ]);
+  // a resposta tem que ser do aparelho em que esta conta está (gravado pelo servidor quando ela entrou na sala)
+  if (dono !== u.uid) throw falha(403, 'Essa resposta é de outro jogador.');
   if (reg) return { ja: true };
   if (!perfil) throw falha(404, 'Conta não encontrada. Entre de novo.');
   let fim = !!body.fim && ok;
@@ -158,7 +163,7 @@ async function usadas(u, body, get) {
   const mapa = {};
   const add = body.add && typeof body.add === 'object' ? body.add : {};
   Object.entries(add).forEach(([t, ids]) => {
-    if (!ST.TEMAS[t] || !Array.isArray(ids)) return;
+    if (!temaOk(t) || !Array.isArray(ids)) return;
     const st = new Set(String(atual[t] || '').split(' ').filter(Boolean));
     const antes = st.size;
     ids.slice(0, MAX_T).forEach(id => { if (typeof id === 'string' && ID_Q.test(id)) st.add(id) });
@@ -166,7 +171,7 @@ async function usadas(u, body, get) {
   });
   // liberar um tema (quando as perguntas dele acabaram e a pessoa aprovou começar de novo)
   (Array.isArray(body.limpa) ? body.limpa : []).forEach(t => {
-    if (!ST.TEMAS[t]) return;
+    if (!temaOk(t)) return;
     const tira = Array.isArray(body.tira && body.tira[t]) ? new Set(body.tira[t]) : null;
     if (!tira) { mapa[base + '/' + t] = null; return }
     mapa[base + '/' + t] = String(atual[t] || '').split(' ').filter(id => id && !tira.has(id)).join(' ') || null;
@@ -209,6 +214,7 @@ async function resolver(body) {
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   try {
+    freia(req, 'conta', 600, 600e3);
     const u = await quemE(req);
     if (!idOk(u.uid)) throw falha(400, 'Conta inválida.');
     if (!emailOk(u)) throw falha(403, 'Confirme seu e-mail para entrar na conta.');
