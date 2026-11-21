@@ -2634,6 +2634,8 @@ async function amigosApi(metodo,dados){
 function copia(t,msg){if(!t)return;try{navigator.clipboard.writeText(t).then(()=>toast(msg),()=>prompt('Copie:',t))}catch(e){prompt('Copie:',t)}}
 function meuIdAmigo(){return (AMIGOS.dados&&AMIGOS.dados.id)||(CONTA.perfil&&CONTA.perfil.id)||''}
 function amigosLink(){const id=meuIdAmigo();return id?location.origin+'/?amigo='+id:''}
+function textoAmigo(){return `Me adiciona no Arrisca Aí! 👥\nÉ só abrir este link: ${amigosLink()}\nOu procure meu ID em 👥 Amigos: ${fmtId(meuIdAmigo())}`}
+function mandaAmigo(){const t=textoAmigo();if(navigator.share)navigator.share({title:'Arrisca Aí',text:t}).catch(()=>{});else copia(t,'🔗 Convite copiado com o link. É só colar na conversa!')}
 function amigosAberto(){const b=document.getElementById('amigosbox');return !!b&&b.style.display!=='none'}
 async function amigosCarrega(silencioso){
   if(!CONTA.user||!contaEmailOk())return;
@@ -2683,7 +2685,7 @@ function amigosHtml(){
   if(!contaEmailOk())return `<div class="contaerro">📩 Confirme seu e-mail para usar os amigos.</div>`;
   if(AMIGOS.ver)return amigoPerfilHtml();
   const d=AMIGOS.dados,dis=AMIGOS.ocupado?'disabled':'',id=meuIdAmigo();
-  let h=`<div class="meuid"><small>Seu ID</small><b>${id?fmtId(id):'· · · ·'}</b>${id?`<div class="row"><button class="small primary" onclick="copia('${idAm(id)}','📋 ID copiado')">📋 Copiar ID</button><button class="small" onclick="copia(amigosLink(),'🔗 Link de amigo copiado')">🔗 Copiar link</button></div>`:''}<p>Mande esse número (ou o link) para quem você quer adicionar. Seu e-mail nunca aparece para ninguém.</p></div>`+amigosMsgs();
+  let h=`<div class="meuid"><small>Seu ID</small><b>${id?fmtId(id):'· · · ·'}</b>${id?`<div class="row"><button class="small primary" onclick="copia('${idAm(id)}','📋 ID copiado')">📋 Copiar ID</button><button class="small" onclick="copia(textoAmigo(),'🔗 Convite copiado com o link. É só colar na conversa!')">🔗 Copiar link</button>${navigator.share?'<button class="small" onclick="mandaAmigo()">📤 Compartilhar</button>':''}</div>`:''}<p>Mande esse número (ou o link) para quem você quer adicionar. Seu e-mail nunca aparece para ninguém.</p></div>`+amigosMsgs();
   if(!d)return h+(AMIGOS.erro?'':`<p class="pvazio">Carregando…</p>`);
   if(d.convites.length)h+=`<h4 class="ctsub">🎮 Te chamaram para jogar</h4>`+d.convites.map(c=>`<div class="amg">${bolinha(c.f,c.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(c.nome)}</b><small>Sala ${esc(sSala(c.sala))}</small></div><div class="amgbts"><button class="small primary" onclick="conviteEntra('${idAm(c.id)}','${sSala(c.sala)}')">Entrar</button><button class="small" title="Dispensar" onclick="conviteFecha('${idAm(c.id)}')">✕</button></div></div>`).join('');
   if(d.pedidos.length)h+=`<h4 class="ctsub">📨 Pedidos de amizade</h4>`+d.pedidos.map(p=>`<div class="amg">${bolinha(p.f,p.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(p.nome)}${tituloChip(p.t)}</b><small>ID ${fmtId(p.id)} quer ser seu amigo</small></div><div class="amgbts"><button class="small primary" ${dis} onclick="amigoFaz('aceitar','${idAm(p.id)}')">Aceitar</button><button class="small" ${dis} onclick="amigoFaz('recusar','${idAm(p.id)}')">Recusar</button></div></div>`).join('');
@@ -3214,7 +3216,7 @@ function lobbyHtml(){
   let h=`${amHost()?'<div class="prepgrid"><div class="pcol">':''}<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Sala <span class="code">${ROOM}</span></h2><button class="small" onclick="leaveRoom()">Sair</button></div>
   ${amHost()?'':(G.publica?'<p class="muted">🌍 Sala aberta a todos.</p>':'')}
   <p class="muted">Mande o link ou o código para quem vai jogar. Cada um entra pelo próprio celular.${amHost()&&G.publica?' <b>🌍 A sala também aparece em Salas para qualquer pessoa entrar.</b>':''}</p>
-  <div class="row"><button class="small primary" onclick="shareRoom()">📤 Compartilhar</button><button class="small" onclick="copyText('${link}')">📋 Copiar link</button>${CONTA.user?'<button class="small" onclick="amigosAbre()">👥 Chamar amigos</button>':''}</div>
+  <div class="row"><button class="small primary" onclick="shareRoom()">📤 Compartilhar</button><button class="small" onclick="copyText(textoSala())">📋 Copiar link</button>${CONTA.user?'<button class="small" onclick="amigosAbre()">👥 Chamar amigos</button>':''}</div>
   <h2 style="margin-top:16px">Você</h2>
   <div class="setup-row"><button class="swatch${me.cor?'':' vazio'}" style="background:${me.cor||'#3a4054'}" title="Escolher a cor" onclick="G.pickColor=G.pickColor==='me'?null:'me';render()"></button><input id="meunome" value="${esc(me.nome||'')}" maxlength="16" placeholder="Seu nome" onchange="setMyName(this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
   ${G.pickColor==='me'||(!me.cor&&(me.nome||'').trim())?`<div class="pal-wrap"><span class="muted">Escolha sua cor:</span><div class="palette">${PALETA.map(([c,n])=>{const tomada=usadas.includes(c);return `<button class="swatch${c===me.cor?' on':''}${tomada?' taken':''}" style="background:${c}" title="${n}${tomada?' (já escolhida)':''}" ${tomada?'disabled':''} onclick="setMyColor('${c}')"></button>`}).join('')}</div></div>`:''}
@@ -3244,8 +3246,11 @@ function setMyName(v){v=String(v||'').trim().slice(0,16);try{localStorage.setIte
 function setMyColor(c){try{localStorage.setItem('arrisca-cor',c)}catch(e){}G.pickColor=null;if(NET&&ROOM)NET.setMe(ROOM,MYDEV,{cor:c}).catch(()=>{});render()}
 function kick(d){if(!amHost()||!NET)return;NET.removePlayer(ROOM,d).catch(()=>{});G.ordem=(G.ordem||[]).filter(x=>x!==d);render()}
 function shuffleLobby(){const a=lobbyOrder();for(let i=a.length-1;i>0;i--){const j=rndInt(i+1);[a[i],a[j]]=[a[j],a[i]]}G.ordem=a;render();toast('🔀 Ordem sorteada')}
-function shareRoom(){const link=location.origin+location.pathname+'?sala='+ROOM;const txt='Bora jogar Arrisca Aí! Entra na sala '+ROOM+':';if(navigator.share)navigator.share({title:'Arrisca Aí',text:txt,url:link}).catch(()=>{});else copyText(link)}
-function copyText(t){try{navigator.clipboard.writeText(t).then(()=>toast('📋 Link copiado'),()=>prompt('Copie o link:',t))}catch(e){prompt('Copie o link:',t)}}
+// convite pronto para mandar: o texto já vai junto do link (o link vai dentro do texto, para não sair repetido no WhatsApp)
+function linkSala(){return location.origin+location.pathname+'?sala='+ROOM}
+function textoSala(){return `Bora jogar Arrisca Aí? 🎲\nEntra na minha sala por aqui: ${linkSala()}\nSe preferir, digite o código ${ROOM} na tela inicial do site.`}
+function shareRoom(){const t=textoSala();if(navigator.share)navigator.share({title:'Arrisca Aí',text:t}).catch(()=>{});else copyText(t)}
+function copyText(t,msg){try{navigator.clipboard.writeText(t).then(()=>toast(msg||'📋 Convite copiado com o link. É só colar na conversa!'),()=>prompt('Copie:',t))}catch(e){prompt('Copie:',t)}}
 function lobbyPlayers(){
   const usados=new Set();
   return lobbyOrder().map((d,i)=>{const l=LOBBY[d];let c=l.cor;if(!c||usados.has(c))c=PALETA.map(x=>x[0]).find(x=>!usados.has(x))||PCOLORS[i%PCOLORS.length];usados.add(c);
