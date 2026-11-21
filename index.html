@@ -894,7 +894,9 @@ html.parado #fundo .holofote,html.parado #fundo .ficha,html.parado #fundo .raios
 details ul{margin-top:4px}
 
 .sp .lb .ics{display:flex;align-items:center;justify-content:center;font-size:calc(var(--sp,8.4cqw)*.42);line-height:1;filter:drop-shadow(0 .2cqw 0 rgba(0,0,0,.45));text-shadow:none}
-.sp .lb .ics.dois{font-size:calc(var(--sp,8.4cqw)*.3)}
+.sp .lb .ics.dois{font-size:calc(var(--sp,8.4cqw)*.3);display:grid;grid-template-columns:1fr 1fr;width:calc(var(--sp,8.4cqw)*.84);margin-top:calc(var(--sp,8.4cqw)*.04)}
+.sp .lb .ics.dois i{font-style:normal;display:flex;align-items:center;justify-content:center}
+.sp .lb .fimico{display:block;font-size:1.9em;line-height:1;margin-bottom:.06em;filter:drop-shadow(0 .2cqw 0 rgba(0,0,0,.3))}
 .badge.tico{font-size:18px;min-width:34px;justify-content:center}
 .tic{font-size:1.1em}
 /* ===================== estilos do site (o jogador escolhe) ===================== */
@@ -1441,7 +1443,7 @@ let G={phase:'setup',count:4,fichas:5,names:['Jogador 1','Jogador 2','Jogador 3'
 function spStyle(s){
   if(s.type!=='normal')return '';
   if(s.themes.length===1)return `background:${T[s.themes[0]].c}`;
-  return `background:linear-gradient(135deg,${T[s.themes[0]].c} 50%,${T[s.themes[1]].c} 50%)`;
+  return `background:linear-gradient(90deg,${T[s.themes[0]].c} 50%,${T[s.themes[1]].c} 50%)`; // metade de cada cor, lado a lado
 }
 function targetPos(){
   if(G.phase!=='question'||!G.players)return -1;
@@ -1463,7 +1465,7 @@ function renderBoard(){
     SQ=board.map((s,i)=>{const a=(-90+(i+1)*360/(N+1))*Math.PI/180,x=50+R*Math.cos(a),y=50+R*Math.sin(a);return {x,y,dx:x,dy:y,ds:1}});FOCO=null;
     h+=`<div class="arrow">sentido horário ↻</div>`; // dentro da roda, logo abaixo de INÍCIO e FIM
     board.forEach((s,i)=>{
-      const lb=s.type==='start'?'INÍCIO':s.type==='final'?'🏁<br>FIM':`<span class="ics${s.themes.length>1?' dois':''}">${s.themes.map(ic).join('')}</span>`;
+      const lb=s.type==='start'?'INÍCIO':s.type==='final'?'<span class="fimico">🏆</span>FIM':s.themes.length>1?`<span class="ics dois">${s.themes.map(t=>`<i>${ic(t)}</i>`).join('')}</span>`:`<span class="ics">${ic(s.themes[0])}</span>`;
       h+=`<div class="sp ${s.type}" style="left:${SQ[i].x}%;top:${SQ[i].y}%;${spStyle(s)}" title="${i===0?'Início':i===FINAL?'Última casa':'Casa '+i+' — '+s.themes.map(t=>T[t].n).join(' ou ')}"><div class="lb">${lb}</div>${s.type==='normal'?`<div class="n">${i}</div>`:''}</div>`;
     });
     h+='<div class="center" id="center"></div><div class="pl-layer" id="pawns"></div><div class="focolbl" id="focolbl" style="opacity:0"></div>';
@@ -3497,7 +3499,7 @@ function aplicaFoco(alvo){ // alvo = índice da casa, ou null
   const lb=document.getElementById('focolbl');
   if(lb){
     if(alvo!=null){const s=board[alvo],q=SQ[alvo];
-      lb.textContent=alvo===0?'Início':alvo===FINAL?'🏁 Última casa':`Casa ${alvo} · ${s.themes.map(t=>T[t].n).join(' ou ')}`;
+      lb.textContent=alvo===0?'Início':alvo===FINAL?'🏆 Última casa':`Casa ${alvo} · ${s.themes.map(t=>T[t].n).join(' ou ')}`;
       const vx=q.dx-50,vy=q.dy-50,vl=Math.hypot(vx,vy)||1,rr=vl-SZ*q.ds*.5-6; // a legenda fica do lado de dentro do anel
       lb.style.left=Math.max(24,Math.min(76,50+vx/vl*rr))+'%';lb.style.top=(50+vy/vl*rr)+'%';lb.style.opacity='1'}
     else lb.style.opacity='0';
