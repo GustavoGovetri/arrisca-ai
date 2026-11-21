@@ -310,6 +310,18 @@ body{font-family:'Fredoka',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 .qtext{font-size:23px;font-weight:700;line-height:1.3;text-shadow:0 2px 0 rgba(42,4,16,.6)}
 details summary{font-family:'Lilita One',sans-serif;font-weight:400;font-size:19px;color:var(--amarelo);text-shadow:var(--txt-contorno)}
 details ul{color:#ffe9ee}
+/* preparar a partida: bloco "Avançado" fechado com o resumo das escolhas */
+.avanc{margin-top:16px;border:3px solid var(--k);border-radius:16px;background:rgba(0,0,0,.18)}
+.avanc>summary{list-style:none;display:flex;flex-direction:column;gap:3px;padding:11px 14px 11px 38px;position:relative;border-radius:13px}
+.avanc>summary::-webkit-details-marker{display:none}
+.avanc>summary::before{content:'▸';position:absolute;left:14px;top:9px;font-size:20px;transition:transform .15s}
+.avanc[open]>summary::before{transform:rotate(90deg)}
+.avanc>summary:hover{background:rgba(255,255,255,.05)}
+.avanc>summary small{font-family:'Fredoka',sans-serif;font-weight:500;font-size:13px;color:var(--suave);text-shadow:none;line-height:1.35}
+.avanc[open]>summary small{display:none}
+.avcorpo{padding:2px 14px 14px}
+.avtit{font-family:'Lilita One',sans-serif;font-weight:400;font-size:17px;letter-spacing:.3px;color:var(--amarelo);text-shadow:var(--txt-contorno);margin:16px 0 8px}
+.avtit .muted{font-family:'Fredoka',sans-serif;font-weight:600;text-shadow:none;font-size:13px}
 
 /* botões grossos, com contorno e "degrau" */
 button{font-family:inherit;font-weight:600;background:var(--btn);color:#fff;border:3px solid var(--k);border-radius:14px;
@@ -994,7 +1006,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
       <h4 class="regsub">A partida</h4>
       <ul>
         <li>2 a 10 jogadores. Cada um tem 5, 6 ou 7 fichas (de 1 até o número escolhido na preparação). Com mais fichas, a partida fica mais rápida.</li>
-        <li>Antes de começar, escolham os temas (mínimo 3), o tamanho do tabuleiro, as dificuldades que entram (fácil, médio, difícil e impossível, quantas quiser) e o modo de jogo. As casas são divididas entre os temas escolhidos. Sem difícil nem impossível, o jogo fica no modo Tradicional.</li>
+        <li>Antes de começar, escolham o modo de jogo. Em <b>⚙️ Avançado</b> ficam os temas (mínimo 3), o tamanho do tabuleiro, as fichas e as dificuldades que entram (fácil, médio, difícil e impossível, quantas quiser). Se ninguém mexer, vale tudo: todos os temas e todas as dificuldades. As casas são divididas entre os temas escolhidos. Sem difícil nem impossível, o jogo fica no modo Tradicional.</li>
         <li>Os peões andam no sentido horário. Na casa INÍCIO, o jogador escolhe o tema. Nas outras, o tema é o da casa; nas casas com dois temas, ele escolhe um.</li>
         <li><b>Antes de ver a pergunta</b>, quem está na vez escolhe uma ficha. Se acertar, anda aquele número de casas (a casa de destino brilha no tabuleiro).</li>
         <li>A ficha usada fica de lado até todas serem usadas; aí o jogador recupera todas.</li>
@@ -1012,7 +1024,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
       </ul>
       <h4 class="regsub">Sala online</h4>
       <ul>
-        <li>Quem cria a sala manda o link ou o código, e cada um entra pelo próprio celular com nome e cor. Quem criou escolhe temas, tabuleiro, fichas e modo.</li>
+        <li>Quem cria a sala manda o link ou o código, e cada um entra pelo próprio celular com nome e cor. Quem criou escolhe o modo e, em <b>⚙️ Avançado</b>, temas, tabuleiro, fichas e dificuldades.</li>
         <li>Todos tocam em <b>✋ Estou pronto</b>; só então dá para começar. A partida abre com a contagem 3, 2, 1.</li>
         <li>Na sua vez, você aposta e tem <b>30 segundos</b> para responder (o tempo aparece para todos). Quando acaba, vale o que estiver escrito; sem nada escrito, ou na múltipla escolha, conta como erro.</li>
         <li>Você <b>digita a resposta</b>. Se escrever igual à oficial, vale direto. Se não, os outros veem a sua resposta e a oficial e votam se vale: ganha a maioria; no empate, decide o próximo da roda.</li>
@@ -1022,7 +1034,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
         <li>Cada jogada é conferida pelo servidor: jogada fora das regras não vale e a tela volta para o que vale na sala.</li>
         <li>Quem sai da aba ou do jogo aparece com 👀 ou “offline” na lista, e o pessoal é avisado (dá para desligar esses avisos em 🔊). Se você sair da aba, o título dela pisca quando é a sua vez ou o seu voto.</li>
         <li>Se a página recarregar, você volta direto para a partida, do ponto em que parou.</li>
-        <li><b>Salas abertas:</b> quem cria pode deixar a sala <b>aberta a todos</b>. Ela aparece em <b>Salas</b> enquanto a partida não começa. O botão <b>Jogar</b> entra na sala aberta com mais gente; se não houver nenhuma, abre uma nova.</li>
+        <li><b>Salas abertas:</b> quem cria pode deixar a sala <b>aberta a todos</b> (em ⚙️ Avançado). Ela aparece em <b>Salas</b> enquanto a partida não começa. O botão <b>Jogar</b> entra na sala aberta com mais gente; se não houver nenhuma, abre uma nova.</li>
         <li>Tem também um chat (💬) para conversar.</li>
       </ul>
       <h4 class="regsub">Num aparelho só</h4>
@@ -1546,7 +1558,7 @@ function renderPanel(){
   if(MODE==='online'&&G.phase==='setup'){el.innerHTML=lobbyHtml();return}
   if(G.phase==='setup'){
     const total=Q?G.selThemes.reduce((s,k)=>s+QNj(k,G.selThemes),0):0;
-    let h=`<div class="prepgrid"><div class="pcol"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">Novo jogo</h2><button class="small" onclick="goHome()">${ICON_CASA}Início</button></div><div class="setup-row"><label style="flex:none">Jogadores:</label><select onchange="G.count=+this.value;G.pickColor=null;render()">${[2,3,4,5,6,7,8,9,10].map(n=>`<option ${n===G.count?'selected':''}>${n}</option>`).join('')}</select><label style="flex:none;margin-left:6px">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>`;
+    let h=`<div class="prepgrid"><div class="pcol"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">Novo jogo</h2><button class="small" onclick="goHome()">${ICON_CASA}Início</button></div><div class="setup-row"><label style="flex:none">Jogadores:</label><select onchange="G.count=+this.value;G.pickColor=null;render()">${[2,3,4,5,6,7,8,9,10].map(n=>`<option ${n===G.count?'selected':''}>${n}</option>`).join('')}</select></div>`;
     padPlayers();
     h+='<div class="plist">';
     for(let i=0;i<G.count;i++){
@@ -1554,14 +1566,13 @@ function renderPanel(){
     }
     h+='</div>';
     if(G.pickColor!=null&&G.pickColor<G.count)h+=`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.names[G.pickColor]||'Jogador '+(G.pickColor+1))}</b>:</span>${paletaHtml(G.colors[G.pickColor],`setupColor(${G.pickColor},'#C')`,G.colors.slice(0,G.count))}</div>`;
-    h+=`<div class="row" style="margin:-2px 0 10px"><button class="small" onclick="shuffleSetup()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem; quem está em 1º começa. Toque na bolinha para trocar a cor.</span></div>`;
-    h+=`<div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
-    ${niveisHtml(true)}`;
-    h+=`</div><div class="pcol"><h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].n+': '+T[k].d+(chipInfo(k,G.selThemes,true)?' ('+chipInfo(k,G.selThemes,true)+')':''))}"><span class="tdot"></span><span class="tnome">${ic(k)} ${T[k].n}</span><small>${chipConta(k,G.selThemes,true)}</small></button>`}).join('')}</div>
-    <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>${juntaNota(G.selThemes)}
-    ${modosHtml(true)}
-    ${G.selThemes.length<3?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Escolha pelo menos 3 temas.</p>':''}</div></div>`;
-    h+=`<div class="prepfoot"><p class="muted">${Q?(()=>{const u=G.selThemes.reduce((s,k)=>s+usedJ(k,G.selThemes),0);return total.toLocaleString('pt-BR')+' perguntas no baralho'+(u?`, ${(total-u).toLocaleString('pt-BR')} ainda não saíram`:'')+'. '})():'Carregando perguntas… '}A pessoa seguinte na roda lê a pergunta e confere a resposta.</p><button class="primary" ${Q?'':'disabled'} ${G.selThemes.length<3?'disabled':''} onclick="startGame()">Começar</button></div>`;
+    h+=`<p class="muted" style="margin:-2px 0 4px">Quem está em 1º começa. Toque na bolinha para trocar a cor.</p>`;
+    h+=`</div><div class="pcol">${modosHtml(true)}${avancadoHtml(`
+    <div class="row" style="margin:0 0 10px"><button class="small" onclick="shuffleSetup()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">ou arraste pelo ⠿ na lista</span></div>
+    <div class="setup-row"><label style="flex:none">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
+    <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
+    ${niveisHtml(true)}${temasHtml(true)}`,false)}</div></div>`;
+    h+=`<div class="prepfoot">${G.selThemes.length<3?POUCOS_TEMAS:''}<p class="muted">${Q?(()=>{const u=G.selThemes.reduce((s,k)=>s+usedJ(k,G.selThemes),0);return total.toLocaleString('pt-BR')+' perguntas no baralho'+(u?`, ${(total-u).toLocaleString('pt-BR')} ainda não saíram`:'')+'. '})():'Carregando perguntas… '}A pessoa seguinte na roda lê a pergunta e confere a resposta.</p><button class="primary" ${Q?'':'disabled'} ${G.selThemes.length<3?'disabled':''} onclick="startGame()">Começar</button></div>`;
     el.innerHTML=h;return;
   }
   const p=G.players[G.cur];
@@ -1831,6 +1842,20 @@ function niveisHtml(contar){
   const sel=niveisSel();
   return `<div class="setup-row niveis"><label style="flex:none">Dificuldades:</label><div class="nivchips">${[[1,'Fácil'],[2,'Médio'],[3,'Difícil'],[4,'Impossível']].map(([l,n])=>`<button class="nivchip${sel.includes(l)?' on':''}" onclick="trocaNivel(${l})" aria-pressed="${sel.includes(l)}">${sel.includes(l)?'✓ ':''}${n}${contar&&Q?`<small>${lvCount(l).toLocaleString('pt-BR')}</small>`:''}</button>`).join('')}</div></div>`;
 }
+// ---------- preparar a partida: o básico fica à vista, o resto vai para "Avançado" ----------
+let AV_ABERTO=false; // fica fora do G: é só desta tela, não vai para a sala
+function resumoNiveis(){const s=niveisSel();if(s.length===4)return 'todas as dificuldades';const n=s.map(l=>LEVELS[l].toLowerCase());return n.length===1?'só '+n[0]:n.slice(0,-1).join(', ')+' e '+n[n.length-1]}
+function resumoTemas(){const a=G.selThemes||[];if(a.length===ORDER.length)return 'todos os temas';if(a.length===CLASSIC.length&&CLASSIC.every(k=>a.includes(k)))return '6 temas clássicos';return a.length+(a.length===1?' tema':' temas')}
+function resumoPartida(sala){return [sala?(G.publica?'🌍 aberta a todos':'🔒 só com código'):'',resumoTemas(),(SIZES[G.size]||SIZES.normal).n+' casas',NF()+' fichas',resumoNiveis()].filter(Boolean).join(' · ')}
+function temasHtml(soma){
+  return `<h3 class="avtit">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h3><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].n+': '+T[k].d+(chipInfo(k,G.selThemes,soma)?' ('+chipInfo(k,G.selThemes,soma)+')':''))}"><span class="tdot"></span><span class="tnome">${ic(k)} ${T[k].n}</span><small>${chipConta(k,G.selThemes,soma)}</small></button>`}).join('')}</div>
+  <div class="row" style="margin:8px 0 4px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>${juntaNota(G.selThemes)}`;
+}
+function avancadoHtml(corpo,sala){
+  const atual=document.querySelector('#panel .avanc');if(atual)AV_ABERTO=atual.open; // redesenhar não fecha o que a pessoa abriu
+  return `<details class="avanc" ${AV_ABERTO?'open':''} ontoggle="AV_ABERTO=this.open"><summary><span class="avnome">⚙️ Avançado</span><small>${resumoPartida(sala)}</small></summary><div class="avcorpo">${corpo}</div></details>`;
+}
+const POUCOS_TEMAS='<p class="note2" style="background:#3a2a12;color:#ffd79a">Escolha pelo menos 3 temas em ⚙️ Avançado.</p>';
 function modo(){if(!temDificeis())return 'classico';return G.modo==='semdo'?'arriscado':MODOS[G.modo]?G.modo:'classico'} // o Sem dó saiu: sala antiga nele segue como Arriscado
 function regra(r){const m=modo();return r==='bonus'?m!=='classico':r==='dobro'?m==='arriscado':false}
 function modosHtml(pode){
@@ -2933,7 +2958,7 @@ function limpaEstado(o){
   g.rasteira=o.rasteira==='pendente'?'pendente':(o.rasteira==null?null:sInt(o.rasteira,0,9,null));
   g.aba=o.aba&&typeof o.aba==='object'?{n:sInt(o.aba.n,0,999,0),ms:sInt(o.aba.ms,0,1e8,0),desde:Number.isFinite(o.aba.desde)?o.aba.desde:null,colou:!!o.aba.colou}:null;
   g.fichas=sInt(o.fichas,5,7,5);g.size=Object.prototype.hasOwnProperty.call(SIZES,o.size)?o.size:'normal';
-  g.level=['misto','1','2','3','4'].includes(String(o.level))?String(o.level):'misto';
+  g.level=nivelNorm(o.level); // aceita várias dificuldades juntas ('34', '12'...)
   g.modo=o.modo==='semdo'?'arriscado':Object.prototype.hasOwnProperty.call(MODOS,o.modo)?o.modo:'classico';
   g.jogo=sId(o.jogo);
   const ul=o.ult;g.ult=ul&&typeof ul==='object'&&sId(ul.q)?{q:ul.q,ok:!!ul.ok,d:sId(ul.d),tk:typeof ul.tk==='string'&&/^[A-Za-z0-9._-]{1,800}$/.test(ul.tk)?ul.tk:null,fim:!!ul.fim}:null;
@@ -3025,8 +3050,8 @@ function lobbyHtml(){
   const me=LOBBY[MYDEV]||{};
   const usadas=ord.filter(d=>d!==MYDEV).map(d=>LOBBY[d].cor).filter(Boolean);
   let h=`${amHost()?'<div class="prepgrid"><div class="pcol">':''}<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Sala <span class="code">${ROOM}</span></h2><button class="small" onclick="leaveRoom()">Sair</button></div>
-  ${amHost()?`<div class="visib"><button class="${G.publica?'':'on'}" onclick="G.publica=false;render()">🔒 Só com código</button><button class="${G.publica?'on':''}" onclick="G.publica=true;render()">🌍 Aberta a todos</button></div><p class="muted">${G.publica?'A sala aparece em <b>Salas</b> para qualquer pessoa entrar enquanto vocês esperam. Quando a partida começa, ela sai da lista.':'Só entra quem tiver o link ou o código.'}</p>`:(G.publica?'<p class="muted">🌍 Sala aberta a todos.</p>':'')}
-  <p class="muted">Mande o link ou o código para quem vai jogar. Cada um entra pelo próprio celular.</p>
+  ${amHost()?'':(G.publica?'<p class="muted">🌍 Sala aberta a todos.</p>':'')}
+  <p class="muted">Mande o link ou o código para quem vai jogar. Cada um entra pelo próprio celular.${amHost()&&G.publica?' <b>🌍 A sala também aparece em Salas para qualquer pessoa entrar.</b>':''}</p>
   <div class="row"><button class="small primary" onclick="shareRoom()">📤 Compartilhar</button><button class="small" onclick="copyText('${link}')">📋 Copiar link</button></div>
   <h2 style="margin-top:16px">Você</h2>
   <div class="setup-row"><button class="swatch${me.cor?'':' vazio'}" style="background:${me.cor||'#3a4054'}" title="Escolher a cor" onclick="G.pickColor=G.pickColor==='me'?null:'me';render()"></button><input id="meunome" value="${esc(me.nome||'')}" maxlength="16" placeholder="Seu nome" onchange="setMyName(this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
@@ -3037,20 +3062,19 @@ function lobbyHtml(){
   h+='</div>';
   if(amHost()){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
-    h+=`<div class="row" style="margin:6px 0 4px"><button class="small" onclick="shuffleLobby()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">Arraste pelo ⠿ para mudar a ordem. Quem está em 1º começa.</span></div>
+    h+=`${ord.length>1?'<p class="muted" style="margin:-2px 0 4px">Quem está em 1º começa.</p>':''}</div><div class="pcol">${modosHtml(true)}${avancadoHtml(`
+    <h3 class="avtit" style="margin-top:0">Quem pode entrar</h3><div class="visib"><button class="${G.publica?'':'on'}" onclick="G.publica=false;render()">🔒 Só com código</button><button class="${G.publica?'on':''}" onclick="G.publica=true;render()">🌍 Aberta a todos</button></div><p class="muted">${G.publica?'A sala aparece em <b>Salas</b> para qualquer pessoa entrar enquanto vocês esperam. Quando a partida começa, ela sai da lista.':'Só entra quem tiver o link ou o código.'}</p>
+    <h3 class="avtit">Partida</h3>
+    <div class="row" style="margin:0 0 10px"><button class="small" onclick="shuffleLobby()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">ou arraste pelo ⠿ na lista</span></div>
     <div class="setup-row"><label style="flex:none">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
     <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;G.previewBoard=null;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
-    ${niveisHtml(false)}
-    </div><div class="pcol"><h2 style="margin-top:16px">Temas da partida <span class="muted">(${G.selThemes.length} de ${ORDER.length})</span></h2><div class="tsel">${ORDER.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].n+': '+T[k].d+(chipInfo(k,G.selThemes,false)?' ('+chipInfo(k,G.selThemes,false)+')':''))}"><span class="tdot"></span><span class="tnome">${ic(k)} ${T[k].n}</span><small>${chipConta(k,G.selThemes,false)}</small></button>`}).join('')}</div>
-    <div class="row" style="margin:8px 0 12px"><button class="small" onclick="G.selThemes=[...ORDER];render()">Todos</button><button class="small" onclick="G.selThemes=[...CLASSIC];render()">Clássico (6 temas)</button></div>${juntaNota(G.selThemes)}
-    ${modosHtml(true)}
-    ${G.selThemes.length<3?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Escolha pelo menos 3 temas.</p>':''}
-    </div></div><div class="prepfoot">${semNome?'<p class="muted">Quem ficar sem nome entra como "Jogador" com o número da vez.</p>':''}
+    ${niveisHtml(false)}${temasHtml(false)}`,true)}
+    </div></div><div class="prepfoot">${G.selThemes.length<3?POUCOS_TEMAS:''}${semNome?'<p class="muted">Quem ficar sem nome entra como "Jogador" com o número da vez.</p>':''}
     ${ord.length>=2&&faltaPronto().length?`<p class="muted">⏳ Esperando confirmar: <b>${faltaPronto().map(d=>esc(nomeLobby(d))).join(', ')}</b></p>`:''}
     <button class="primary" ${Q&&G.selThemes.length>=3&&ord.length>=2&&ord.length<=MAXJ&&!faltaPronto().length?'':'disabled'} onclick="lobbyStart()">Começar</button>${ord.length<2?'<p class="muted">Precisa de pelo menos 2 jogadores na sala.</p>':ord.length>MAXJ?`<p class="muted">No máximo ${MAXJ} jogadores.</p>`:''}</div>`;
   }else{
     const hn=HOST&&LOBBY[HOST]&&(LOBBY[HOST].nome||'').trim()?esc(LOBBY[HOST].nome):'quem criou a sala';
-    h+=`<p class="muted" style="margin-top:12px">Modo: <b>${MODOS[modo()].e} ${MODOS[modo()].n}</b> — ${MODOS[modo()].d}<br>Temas: ${(G.selThemes||[]).map(k=>`<b style="color:${T[k].c}">${T[k].n}</b>`).join(', ')} · ${SIZES[G.size]?SIZES[G.size].l:''} · ${NF()} fichas · dificuldade ${G.level==='misto'?'misturada':(LEVELS[G.level]||'').toLowerCase()}</p>${me.pronto?`<button class="pronto on" onclick="marcaPronto(false)">✅ Você está pronto! <small>toque para desfazer</small></button><p class="wait">⏳ Aguardando ${hn} começar a partida…</p>`:`<button class="pronto" onclick="marcaPronto(true)">✋ Estou pronto!</button><p class="muted" style="text-align:center">A partida só começa quando todo mundo confirmar.</p>`}`;
+    h+=`<p class="muted" style="margin-top:12px">Modo: <b>${MODOS[modo()].e} ${MODOS[modo()].n}</b> — ${MODOS[modo()].d}<br>Temas: ${(G.selThemes||[]).map(k=>`<b style="color:${T[k].c}">${T[k].n}</b>`).join(', ')} · ${SIZES[G.size]?SIZES[G.size].l:''} · ${NF()} fichas · ${resumoNiveis()}</p>${me.pronto?`<button class="pronto on" onclick="marcaPronto(false)">✅ Você está pronto! <small>toque para desfazer</small></button><p class="wait">⏳ Aguardando ${hn} começar a partida…</p>`:`<button class="pronto" onclick="marcaPronto(true)">✋ Estou pronto!</button><p class="muted" style="text-align:center">A partida só começa quando todo mundo confirmar.</p>`}`;
   }
   return h;
 }
