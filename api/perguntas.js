@@ -27,7 +27,7 @@ const TEMA_N = { M: 'Mundo', H: 'História', AL: 'Artes e Literatura', MU: 'Mús
 const { cred, dbGet } = require('./_fb');
 const { freia } = require('./_limite');
 // quantos pedidos cada endereço pode fazer a cada 10 minutos (folgado para uma família na mesma rede)
-const FREIO = { sortear: 300, resposta: 300, dica: 80, forma: 300, meta: 200, aquece: 200, nota: 120 };
+const FREIO = { sortear: 300, resposta: 300, dica: 80, forma: 300, meta: 200, aquece: 200, nota: 120, desafio: 100, desafioResp: 200 };
 const ST = require('./_store');
 const b64u = b => Buffer.from(b).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 
@@ -181,6 +181,28 @@ function sortear(B, t, nivel, usadas, vistas, junta) {
 }
 
 // ---------------------------------------------------------------- token da pergunta (quem sorteou, em que sala)
+// ---------------------------------------------------------------- desafio do dia
+const DSF = require('./_desafio');
+const FX = { qDiff, bucketOf, resposta, textoQ, tipoDe };
+const DSF_MEM = new Map();
+async function desafioDoDia(B, pedido) {
+  const P = require('./_stats').periodo, hoje = P().dia, ontem = P(Date.now() - 864e5).dia;
+  const dia = pedido === undefined || pedido === null || pedido === '' ? hoje : String(pedido);
+  if (dia !== hoje && dia !== ontem) throw Object.assign(new Error('Esse desafio já acabou.'), { status: 400 });
+  const k = B.v + '|' + dia;
+  if (DSF_MEM.has(k)) return DSF_MEM.get(k);
+  // o desafio de cada dia fica guardado: se o banco mudar no meio do dia, as perguntas continuam as mesmas
+  let d = await ST.ler('desafio/' + dia).catch(() => null);
+  if (!d || !Array.isArray(d.itens) || !d.itens.length) {
+    const temas = ORDER.filter(t => t !== 'N').concat(dia.slice(5, 7) === '12' ? ['N'] : []);
+    d = DSF.monta(B, FX, dia, temas);
+    await ST.grava('PUT', 'desafio/' + dia, d).catch(() => {});
+  }
+  if (DSF_MEM.size > 6) DSF_MEM.clear();
+  DSF_MEM.set(k, d);
+  return d;
+}
+
 function assina(obj) { const p = b64u(JSON.stringify(obj)); return p + '.' + b64u(crypto.createHmac('sha256', chaveTk()).update(p).digest()) }
 function confere(tk) {
   const [p, s] = String(tk || '').split('.');
@@ -220,6 +242,15 @@ async function handle(acao, body) {
     const n = {}, lv = {};
     ORDER.forEach(t => { n[t] = B.temas[t].items.length; lv[t] = B.temas[t].lv });
     return { v: B.v, n, lv, rotas: B.rotas };
+  }
+  if (acao === 'desafio') { // as 10 perguntas do dia, sem a resposta
+    const d = await desafioDoDia(B, body.dia);
+    return { dia: d.dia, n: d.n, itens: d.itens.map(x => ({ t: x.t, q: x.q, o: x.o, nv: x.nv })) };
+  }
+  if (acao === 'desafioResp') { // a certa de uma pergunta do desafio, depois que a pessoa escolheu
+    const d = await desafioDoDia(B, body.dia), x = d.itens[+body.i];
+    if (!x) throw Object.assign(new Error('Pergunta inválida'), { status: 400 });
+    return { c: x.c };
   }
   const t = body.t;
   if (!B.temas[t]) throw Object.assign(new Error('Tema inválido'), { status: 400 });
@@ -311,3 +342,7 @@ module.exports._pergId = async (t, id) => {
   const q = T.items[i];
   return { q: textoQ(q[0]), a: resposta(t, q), nivel: Math.min(4, Math.max(1, +qDiff(t, q) || 2)), assunto: bucketOf(t, q), tema: TEMA_N[t] || t };
 };
+// para conferir o desafio nos testes
+module.exports._desafioTeste = async (dia, temas) => { const B = await banco(); return DSF.monta(B, FX, dia, temas || ORDER.filter(t => t !== 'N')) };
+module.exports._erradasTeste = async (n) => { const B = await banco(); const out = []; for (const t of ORDER) { if (t === 'V') continue; const T = B.temas[t]; for (let i = 0; i < T.items.length && out.length < n * 12; i += 37) { const e = DSF.erradas(B, FX, t, i); if (e) out.push([t, T.items[i][0], resposta(t, T.items[i]), e]) } } return out };
+module.exports._poolsTeste = async () => { const B = await banco(); const o = {}; ORDER.forEach(t => { o[t] = [1, 2, 3, 4].map(nv => DSF.pool(B, FX, t, nv).length + '/' + B.temas[t].lv[nv]) }); return o };
