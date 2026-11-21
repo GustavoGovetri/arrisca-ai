@@ -210,6 +210,15 @@ button:active:not(:disabled){transform:scale(.94)}
 .chatreac button{background:none;font-size:24px;padding:4px 6px}
 .chatform{display:flex;gap:6px;padding:8px}
 .chatform input{flex:1}
+.notarow{display:flex;align-items:center;gap:6px;margin-top:10px;flex-wrap:wrap}
+.notarow .muted{margin-right:2px}
+.notarow button{font-size:18px;min-width:44px}
+.notarow button.on{background:var(--amarelo,#ffd23f);color:#111}
+.qtext .falabtn{margin-left:8px;vertical-align:middle;font-size:15px;min-height:0;height:30px;padding:0 9px;line-height:1;border-radius:999px}
+.mudorow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.mudorow .cn{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chatbox.mudos .chatreac,.chatbox.mudos .chatform{display:none}
+#chatmudobtn.on{background:rgba(255,255,255,.18)}
 .chatprev{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:27;background:#2e3342;border-radius:12px;padding:8px 12px;max-width:min(260px,60vw);font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.5);cursor:pointer;animation:prevIn .3s ease-out;word-break:break-word}
 @keyframes prevIn{from{opacity:0;transform:translate(-50%,-12px)}to{opacity:1;transform:translate(-50%,0)}}
 .emojivoa{position:fixed;bottom:90px;z-index:29;font-size:46px;pointer-events:none;animation:voa 2.6s ease-out forwards}
@@ -1063,7 +1072,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
         <li>Quem sai da aba ou do jogo aparece com 👀 ou “offline” na lista, e o pessoal é avisado (dá para desligar esses avisos em 🔊). Se você sair da aba, o título dela pisca quando é a sua vez ou o seu voto.</li>
         <li>Se a página recarregar, você volta direto para a partida, do ponto em que parou.</li>
         <li><b>Salas abertas:</b> quem cria pode deixar a sala <b>aberta a todos</b> (em ⚙️ Avançado). Ela aparece em <b>Salas</b> enquanto a partida não começa. O botão <b>Jogar</b> entra na sala aberta com mais gente; se não houver nenhuma, abre uma nova.</li>
-        <li>Tem também um chat (💬) para conversar.</li>
+        <li>Tem também um chat (💬) para conversar. Palavrão vira bolinhas, e no 🔇 do chat dá para silenciar quem estiver enchendo.</li>
       </ul>
       <h4 class="regsub">Num aparelho só</h4>
       <ul>
@@ -1107,8 +1116,20 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
 <div id="sombox" class="chatbox modal sombox" style="display:none"><div class="chathead"><b>🔊 Sons e avisos</b><button class="small" onclick="modalFecha('sombox')">✕</button></div><div id="somcorpo" class="histcorpo"></div></div>
 <div id="bugbox" class="chatbox histbox bugbox" style="display:none"><div class="chathead"><b>🐞 Reportar um problema</b><button class="small" onclick="bugFecha()">✕</button></div><div id="bugcorpo" class="histcorpo"></div></div>
 <div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
-<div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b>💬 Chat da sala</b><button class="small" onclick="chatFecha()">✕</button></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
+<div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b id="chattit">💬 Chat da sala</b><div class="row"><button class="small" id="chatmudobtn" title="Silenciar alguém" onclick="chatMudosTroca()">🔇</button><button class="small" onclick="chatFecha()">✕</button></div></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
 <script>
+// ----- filtro de palavrão (o mesmo do servidor, em api/_palavrao.js) -----
+// Confere palavra por palavra, sem acento, com números no lugar de letras (p0rr4) e letras repetidas (porraaa).
+const PAL_EXATO=new Set('cu cus cuzinho cuzao cuzona cuzoes fdp vsf vtnc tnc tmnc pqp pnc crl cct prr poha pora poras porinha krl kct karai karaio puta putas puto putos putinha putinho putao viado viados viadinho viadao bicha bichas boiola baitola traveco sapatao corno cornos cornao vadia vadias otario otaria otarios otarias babaca babacas retardado retardada retardados mongoloide bosta bostas merda merdas cacete cacetes carai caraio xota xotas xereca shit shits shity cunt cunts dick dicks pusy ashole whore whores slut sluts fag fags fagot niga nigas'.split(' '));
+const PAL_INICIO=['caralh', 'karalh', 'cralh', 'bucet', 'bocet', 'arombad', 'merd', 'fod', 'fude', 'fudi', 'punhet', 'siriric', 'boquet', 'piroc', 'piroq',  'xoxot', 'escrot', 'vagabund', 'putari', 'puteir', 'fuck', 'bitch', 'cacet'];
+const PAL_CONTEM=['fuck', 'caralh', 'bucet', 'bocet', 'arombad', 'putari', 'punhet', 'siriric'];
+const PAL_CRU=new Set(['nigger', 'niggers', 'nigga', 'niggas', 'faggot', 'faggots', 'pussy']);
+const PAL_LEET={0:'o',1:'i',3:'e',4:'a',5:'s',7:'t','@':'a',$:'s'};
+function palFeia(w){if(w==='Cu')return false;const cru=String(w).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[013457@$]/g,c=>PAL_LEET[c]).replace(/[^a-z]/g,'');if(!cru)return false;if(PAL_CRU.has(cru))return true;const n=cru.replace(/(.)\1+/g,'$1');return PAL_EXATO.has(n)||PAL_INICIO.some(p=>n.startsWith(p))||PAL_CONTEM.some(p=>n.includes(p))}
+const PAL_PEDACO=/[\p{L}\p{N}@$]+/gu;
+function temPalavrao(t){return (String(t||'').match(PAL_PEDACO)||[]).some(palFeia)}
+function semPalavrao(t){return String(t||'').replace(PAL_PEDACO,w=>palFeia(w)?w[0]+'•'.repeat(Math.max(2,[...w].length-1)):w)}
+
 const EFX_KEY='arrisca-efeitos';
 function efeitosLeves(){let s=null;try{s=localStorage.getItem(EFX_KEY)}catch(e){}if(s)return s==='leve';return /firefox|fxios/i.test(navigator.userAgent)}
 document.documentElement.classList.toggle('leve',efeitosLeves());
@@ -1622,7 +1643,7 @@ function renderPanel(){
   }
   if(G.phase==='won'){
     const ub=undoBtn();
-    el.innerHTML=`<div class="fimbox"><div class="win">🏆 ${esc(p.name)} venceu!</div><p class="msg" style="text-align:center">Chegou à última casa e acertou a pergunta final.</p>${reiHtml()}<div class="answer"><div class="muted">${esc(G.q[0])}</div>${esc(answerText())}</div>${silhuetaHtml(true)}${reportHtml()}<div class="fimacoes">${wonBtns()}${ub}</div></div>`;
+    el.innerHTML=`<div class="fimbox"><div class="win">🏆 ${esc(p.name)} venceu!</div><p class="msg" style="text-align:center">Chegou à última casa e acertou a pergunta final.</p>${reiHtml()}<div class="answer"><div class="muted">${esc(G.q[0])}</div>${esc(answerText())}</div>${silhuetaHtml(true)}${notaHtml()}${reportHtml()}<div class="fimacoes">${wonBtns()}${ub}</div></div>`;
     return;
   }
   const isFinal=p.pos===FINAL, isV=G.theme==='V';
@@ -1635,7 +1656,7 @@ function renderPanel(){
   if(canAnswer){
     if(G.resetNote&&G.phase==='question')h+=`<div class="note2">${G.resetNote}</div>`;
     if(G.lvNote&&G.phase==='question')h+=`<div class="note2">${G.lvNote}</div>`;
-  h+=`${online()?'':`<p class="muted" style="margin-top:10px">📖 Quem lê: <b style="color:${reader.color}">${esc(reader.name)}</b></p>`}<div class="qtext">${esc(G.q[0])}</div>${silhuetaHtml(respostaTxt()!=null&&(G.phase==='result'||!!G.revealed))}`;
+  h+=`${online()?'':`<p class="muted" style="margin-top:10px">📖 Quem lê: <b style="color:${reader.color}">${esc(reader.name)}</b></p>`}<div class="qtext">${esc(G.q[0])}${VOZ_OK?'<button type="button" class="small falabtn" title="Ler a pergunta em voz alta" aria-label="Ler a pergunta em voz alta" onclick="falaPergunta()">🔊</button>':''}</div>${silhuetaHtml(respostaTxt()!=null&&(G.phase==='result'||!!G.revealed))}`;
     if(G.phase==='question'&&online())h+=timerOnlineHtml();
     else if(G.phase==='question'&&can('reader'))h+=`<div class="timerbox"><button onclick="startTimer()">⏱ ${G.timerLeft!=null?'Reiniciar timer':'Timer de 10 s'}</button><div id="timer" class="timer${G.timerLeft===0?' done':G.timerLeft!=null&&G.timerLeft<=3?' low':''}" style="${G.timerLeft==null?'display:none':''}">${G.timerLeft===0?'⏰ 0':G.timerLeft??''}</div><span id="timermsg" class="muted">${G.timerLeft===0?'Tempo esgotado!':''}</span></div>`;
     if(online()&&((G.phase==='question'&&!G.resp)||G.phase==='result'))h+=abaTxt(G.phase==='question');
@@ -1645,7 +1666,7 @@ function renderPanel(){
   if(G.phase==='result'){
     if(isV)h+=optsHtml(true);
     else h+=(G.resp?respBox():'')+`<div class="answer"><div class="muted">${G.resp?'Resposta oficial':'Resposta'}</div>${esc(respostaTxt()??'carregando…')}</div>`;
-    h+=`<p class="msg">${G.msg}</p>${resultBtns()}`+reportHtml();
+    h+=`<p class="msg">${G.msg}</p>${resultBtns()}`+notaHtml()+reportHtml();
   }else if(canAnswer){
     h+=dobroHtml();
     if(isV)h+=optsHtml(false)+(online()&&!can('cur')?waitHtml('cur','escolher a alternativa'):'');
@@ -1786,6 +1807,20 @@ const MOT_NIVEL=3;
 function isReported(){return REPORTS.some(r=>r.id===G.qid&&r.t===(G.qt||G.theme))}
 function nivelAtual(){const q=G.q||[];return G.theme==='V'?q[4]:q[3]}
 function motivoMudou(){const sel=document.querySelector('input[name="motivo"]:checked');const box=document.getElementById('repnivel');if(box)box.style.display=(sel&&+sel.value===MOT_NIVEL)?'':'none'}
+// ----- 👍/👎 em cada pergunta (vai para o painel do dono; uma nota por aparelho) -----
+let NOTAS={};try{NOTAS=JSON.parse(localStorage.getItem('arrisca-notas')||'{}')||{}}catch(e){}
+function notasSalva(){const k=Object.keys(NOTAS);if(k.length>400)k.slice(0,k.length-400).forEach(x=>delete NOTAS[x]);try{localStorage.setItem('arrisca-notas',JSON.stringify(NOTAS))}catch(e){}}
+function notaHtml(){
+  if(!G.qid||!G.tk)return '';
+  const v=NOTAS[G.qid];
+  return `<div class="notarow"><span class="muted">${v?'Valeu pela nota!':'Gostou da pergunta?'}</span><button type="button" class="small${v===1?' on':''}" aria-label="Gostei" title="Gostei" onclick="notaDa(1)">👍</button><button type="button" class="small${v===-1?' on':''}" aria-label="Não gostei" title="Não gostei" onclick="notaDa(-1)">👎</button></div>${v===-1&&!isReported()?'<p class="muted" style="margin:2px 0 0;font-size:12.5px">Tem algo errado nela? Use o ⚑ Reportar pergunta.</p>':''}`;
+}
+async function notaDa(v){
+  const id=G.qid,t=G.qt||G.theme,tk=G.tk;if(!id||!tk)return;
+  if(NOTAS[id]===v)v=0; // tocar de novo tira a nota
+  const antes=NOTAS[id];if(v)NOTAS[id]=v;else delete NOTAS[id];notasSalva();renderPanel();
+  try{await api('nota',{id,t,tk,v:v||null,dev:MYDEV})}catch(e){if(antes)NOTAS[id]=antes;else delete NOTAS[id];notasSalva();renderPanel();toast('Não consegui mandar a nota: '+e.message)}
+}
 function reportHtml(){
   if(!G.qid)return '';
   if(isReported())return `<p class="muted" style="margin-top:8px">⚑ Pergunta reportada. Obrigado!</p>`;
@@ -2820,7 +2855,7 @@ function contaEmail(){
   const email=((document.getElementById('ctemail')||{}).value||'').trim(),senha=(document.getElementById('ctsenha')||{}).value||'';
   const nome=criar?((document.getElementById('ctnome')||{}).value||'').trim().slice(0,16):'';
   CONTA_UI.email=email;
-  const falta=criar&&!nome?'Escolha um nome para o jogo.':!email?'Digite o e-mail.':!senha?'Digite a senha.':criar?senhaFraca(senha,email,nome):'';
+  const falta=criar&&!nome?'Escolha um nome para o jogo.':criar&&temPalavrao(nome)?'Esse nome não pode. Escolha outro.':!email?'Digite o e-mail.':!senha?'Digite a senha.':criar?senhaFraca(senha,email,nome):'';
   if(falta){CONTA_UI.erro=falta;CONTA_UI.ok='';contaRender();return}
   CONTA_UI.esperando=!criar;CONTA_UI.naoConf=false;
   return contaFaz(async()=>{
@@ -2851,7 +2886,7 @@ function tituloEscolhaHtml(d,p){ // títulos liberados pelas conquistas (a cor a
 }
 function contaSalva(){
   const nome=((document.getElementById('ctnome2')||{}).value||'').trim().slice(0,16),cor=CONTA_UI.pcor;
-  if(!nome){CONTA_UI.erro='Escolha um nome para o jogo.';contaRender();return}
+  if(!nome){CONTA_UI.erro='Escolha um nome para o jogo.';contaRender();return}if(temPalavrao(nome)){CONTA_UI.erro='Esse nome não pode. Escolha outro.';contaRender();return}
   return contaFaz(async()=>{
     const d={acao:'perfil',nome};if(cor)d.cor=cor;const mudouTit=CONTA_UI.ptit!=null&&CONTA_UI.ptit!==((CONTA.perfil||{}).titulo||'');if(mudouTit)d.titulo=CONTA_UI.ptit;
     const j=await contaApi('POST',d);CONTA_UI.pnome=null;CONTA_UI.pcor=null;CONTA_UI.ptit=null;contaAplica(j.perfil);CONTA_UI.ok='Salvo!';
@@ -2879,9 +2914,10 @@ function painelRender(){const el=document.getElementById('painelcorpo');if(el)el
 async function painelCarrega(){PAINEL.erro='';PAINEL.dados=null;painelRender();try{PAINEL.dados=await contaApi('GET',{acao:'painel'})}catch(e){PAINEL.erro=e.message}painelRender()}
 function painelHtml(){
   const d=PAINEL.dados,abertos=k=>d?d[k].filter(x=>!x.resolvido).length:0;
-  let h=`<div class="pfiltro"><div class="abas" style="margin:0;flex:1 1 260px"><button class="small${PAINEL.aba==='bugs'?' on':''}" onclick="PAINEL.aba='bugs';painelRender()">🐞 Bugs${d?' ('+abertos('bugs')+')':''}</button><button class="small${PAINEL.aba==='reportes'?' on':''}" onclick="PAINEL.aba='reportes';painelRender()">⚑ Perguntas${d?' ('+abertos('reportes')+')':''}</button></div><label><input type="checkbox" ${PAINEL.resolvidos?'checked':''} onchange="PAINEL.resolvidos=this.checked;painelRender()"> Mostrar resolvidos</label></div>`;
+  let h=`<div class="pfiltro"><div class="abas" style="margin:0;flex:1 1 260px"><button class="small${PAINEL.aba==='bugs'?' on':''}" onclick="PAINEL.aba='bugs';painelRender()">🐞 Bugs${d?' ('+abertos('bugs')+')':''}</button><button class="small${PAINEL.aba==='reportes'?' on':''}" onclick="PAINEL.aba='reportes';painelRender()">⚑ Perguntas${d?' ('+abertos('reportes')+')':''}</button><button class="small${PAINEL.aba==='notas'?' on':''}" onclick="PAINEL.aba='notas';painelRender()">👎 Notas${d&&d.notas?' ('+d.notas.lista.length+')':''}</button></div><label><input type="checkbox" ${PAINEL.resolvidos?'checked':''} onchange="PAINEL.resolvidos=this.checked;painelRender()"> Mostrar resolvidos</label></div>`;
   if(PAINEL.erro)return h+`<div class="contaerro">${esc(PAINEL.erro)}</div>`;
   if(!d)return h+`<p class="pvazio">Carregando…</p>`;
+  if(PAINEL.aba==='notas')return h+notasPainelHtml(d.notas);
   const lista=d[PAINEL.aba].filter(x=>PAINEL.resolvidos||!x.resolvido);
   if(!lista.length)return h+`<p class="pvazio">${PAINEL.aba==='bugs'?'Nenhum bug em aberto. 🎉':'Nenhuma pergunta reportada em aberto. 🎉'}</p>`;
   return h+lista.map(x=>PAINEL.aba==='bugs'?bugItemHtml(x):repItemHtml(x)).join('');
@@ -2896,6 +2932,19 @@ function repItemHtml(x){
   return `<div class="pitem${x.resolvido?' feito':''}"><div class="phead"><b>${esc(x.motivo||'Reporte')}</b><span>${esc(tema)}</span><span>${quandoTxt(x.quando)}</span>${x.id?`<span>id ${esc(x.id)}</span>`:''}</div>
   <div class="ptexto pq">${esc(x.q||'')}</div><div class="ptexto">Resposta: ${esc(x.a||'')}</div>
   ${x.nivelAtual||x.nivelCerto?`<div class="ptexto">Nível: ${esc(x.nivelAtual||'?')} → ${esc(x.nivelCerto||'?')}</div>`:''}${x.nota?`<div class="ptexto">💬 ${esc(x.nota)}</div>`:''}${painelBtn('reportes',x)}</div>`;
+}
+function notasPainelHtml(n){
+  if(!n)return `<p class="pvazio">Sem notas ainda.</p>`;
+  let h=`<p class="muted" style="margin:4px 0 8px">${n.votos.toLocaleString('pt-BR')} notas no total, ${n.votos?Math.round(n.bons*100/n.votos):0}% de 👍. Aqui ficam as perguntas que levaram 👎, das piores para as melhores.</p>`;
+  if(!n.lista.length)return h+`<p class="pvazio">Nenhuma pergunta levou 👎. 🎉</p>`;
+  return h+n.lista.map(x=>{const k=esc(x.t+'|'+x.id).replace(/'/g,'');return `<div class="pitem"><div class="phead"><b>👎 ${x.r} · 👍 ${x.b}</b><span>${esc(x.tema||x.t)}</span>${x.nivel?`<span>${esc(LEVELS[x.nivel]||'')}</span>`:''}<span>id ${esc(x.id)}</span></div>
+  ${x.sumiu?'<div class="ptexto muted">Essa pergunta não está mais no banco.</div>':`<div class="ptexto pq">${esc(x.q||'')}</div><div class="ptexto">Resposta: ${esc(x.a||'')}</div>`}
+  <div class="row"><button class="small" onclick="notaZera('${k}')">✔ Já arrumei (zerar as notas)</button></div></div>`}).join('');
+}
+async function notaZera(k){
+  const n=PAINEL.dados&&PAINEL.dados.notas;if(!n)return;const i=n.lista.findIndex(x=>x.t+'|'+x.id===k);if(i<0)return;
+  const [x]=n.lista.splice(i,1);painelRender();
+  try{await contaApi('POST',{acao:'resolver',lista:'notas',id:k})}catch(e){n.lista.splice(i,0,x);painelRender();toast('Não consegui salvar: '+e.message)}
 }
 async function painelResolve(lista,id,val){
   const x=PAINEL.dados&&PAINEL.dados[lista].find(i=>i._id===id);if(!x)return;
@@ -3093,7 +3142,7 @@ function sHtml(x,max){
 function sJogador(p,i){
   p=p&&typeof p==='object'?p:{};
   const aj=p.aj&&typeof p.aj==='object'?p.aj:{};
-  return {name:sStr(p.name,16).trim()||'Jogador '+(i+1),color:sCor(p.color,PCOLORS[i%PCOLORS.length]),pos:sInt(p.pos,0,200,0),
+  return {name:semPalavrao(sStr(p.name,16).trim())||'Jogador '+(i+1),color:sCor(p.color,PCOLORS[i%PCOLORS.length]),pos:sInt(p.pos,0,200,0),
     used:Array.isArray(p.used)?p.used.map(v=>sInt(v,1,9,0)).filter(Boolean).slice(0,9):[],forced:sTema(p.forced),
     aj:{pular:aj.pular?1:0,dica:aj.dica?1:0},dev:sId(p.dev)||undefined,estrelas:sInt(p.estrelas,0,999,0)};
 }
@@ -3129,13 +3178,13 @@ function limpaEstado(o){
   g.board=Array.isArray(o.board)?o.board.slice(0,80).map(sCasa):null;
   g.previewBoard=Array.isArray(o.previewBoard)?o.previewBoard.slice(0,80).map(sCasa):null;
   g.ordem=Array.isArray(o.ordem)?o.ordem.map(sId).filter(Boolean).slice(0,30):[];
-  const ex=o.expulsar;g.expulsar=ex&&typeof ex==='object'&&sId(ex.id)&&sId(ex.dev)&&sId(ex.alvo)?{id:ex.id,dev:ex.dev,alvo:ex.alvo,nome:sStr(ex.nome,16),nomeAlvo:sStr(ex.nomeAlvo,16),ate:Number(ex.ate)||0}:null;
-  const dz=o.desfazer;g.desfazer=dz&&typeof dz==='object'&&sId(dz.id)&&sId(dz.dev)?{id:dz.id,dev:dz.dev,nome:sStr(dz.nome,16),label:sStr(dz.label,40),ate:Number(dz.ate)||0}:null;
+  const ex=o.expulsar;g.expulsar=ex&&typeof ex==='object'&&sId(ex.id)&&sId(ex.dev)&&sId(ex.alvo)?{id:ex.id,dev:ex.dev,alvo:ex.alvo,nome:semPalavrao(sStr(ex.nome,16)),nomeAlvo:semPalavrao(sStr(ex.nomeAlvo,16)),ate:Number(ex.ate)||0}:null;
+  const dz=o.desfazer;g.desfazer=dz&&typeof dz==='object'&&sId(dz.id)&&sId(dz.dev)?{id:dz.id,dev:dz.dev,nome:semPalavrao(sStr(dz.nome,16)),label:sStr(dz.label,40),ate:Number(dz.ate)||0}:null;
   return g;
 }
 function limpaLobby(l){ // nomes e cores de quem está na sala
   const out={};if(!l||typeof l!=='object')return out;
-  Object.keys(l).slice(0,40).forEach(d=>{if(!sId(d))return;const x=l[d]||{};out[d]={nome:sStr(x.nome,16),cor:COR_OK.test(String(x.cor||''))?x.cor:'',on:x.on!==false,ts:Number(x.ts)||0,fora:!!x.fora,pronto:!!x.pronto,quer:Number(x.quer)||0,rec:Number(x.rec)||0}});
+  Object.keys(l).slice(0,40).forEach(d=>{if(!sId(d))return;const x=l[d]||{};out[d]={nome:semPalavrao(sStr(x.nome,16)),cor:COR_OK.test(String(x.cor||''))?x.cor:'',on:x.on!==false,ts:Number(x.ts)||0,fora:!!x.fora,pronto:!!x.pronto,quer:Number(x.quer)||0,rec:Number(x.rec)||0}});
   return out;
 }
 function applyRemote(d){
@@ -3242,7 +3291,7 @@ function lobbyHtml(){
   }
   return h;
 }
-function setMyName(v){v=String(v||'').trim().slice(0,16);try{localStorage.setItem('arrisca-nome',v)}catch(e){}if(NET&&ROOM)NET.setMe(ROOM,MYDEV,{nome:v}).catch(()=>{})}
+function setMyName(v){v=semPalavrao(String(v||'').trim().slice(0,16));try{localStorage.setItem('arrisca-nome',v)}catch(e){}if(NET&&ROOM)NET.setMe(ROOM,MYDEV,{nome:v}).catch(()=>{})}
 function setMyColor(c){try{localStorage.setItem('arrisca-cor',c)}catch(e){}G.pickColor=null;if(NET&&ROOM)NET.setMe(ROOM,MYDEV,{cor:c}).catch(()=>{});render()}
 function kick(d){if(!amHost()||!NET)return;NET.removePlayer(ROOM,d).catch(()=>{});G.ordem=(G.ordem||[]).filter(x=>x!==d);render()}
 function shuffleLobby(){const a=lobbyOrder();for(let i=a.length-1;i>0;i--){const j=rndInt(i+1);[a[i],a[j]]=[a[j],a[i]]}G.ordem=a;render();toast('🔀 Ordem sorteada')}
@@ -3586,30 +3635,47 @@ function tempoAcabou(){
 // ----- chat da sala -----
 function corOk(c){return /^#[0-9a-fA-F]{3,8}$/.test(String(c||''))?c:'#ffffff'}
 const REACOES=['😂','👏','😱','🤔','🔥','🙈','😭','🎉'];
-let CHAT=[],CHAT_OPEN=false,CHAT_INIT=false,CHAT_VISTAS=new Set(),CHAT_CONHECE=new Set();
-function chatZera(){CHAT=[];CHAT_OPEN=false;CHAT_INIT=false;CHAT_VISTAS=new Set();CHAT_CONHECE=new Set();const pv=document.getElementById('chatprev');if(pv)pv.style.display='none';chatBadge();chatVis()}
+let CHAT=[],CHAT_OPEN=false,CHAT_INIT=false,CHAT_VISTAS=new Set(),CHAT_CONHECE=new Set(),CHAT_MUDOS_VER=false,CHAT_ENVIOS=[];
+// quem você silenciou some do seu chat (só para você; fica guardado neste aparelho)
+let MUDOS=new Set();try{MUDOS=new Set((JSON.parse(localStorage.getItem('arrisca-mudos')||'[]')||[]).filter(x=>sId(x)))}catch(e){}
+function mudo(dev){return !!dev&&MUDOS.has(dev)}
+function mudoTroca(dev){if(!sId(dev)||dev===MYDEV)return;if(MUDOS.has(dev))MUDOS.delete(dev);else MUDOS.add(dev);try{localStorage.setItem('arrisca-mudos',JSON.stringify([...MUDOS].slice(-200)))}catch(e){}chatBadge();chatPinta()}
+function chatMudosTroca(){CHAT_MUDOS_VER=!CHAT_MUDOS_VER;chatPinta()}
+function chatMudosHtml(){
+  const outros=Object.entries(LOBBY).filter(([d])=>d!==MYDEV);
+  let h=`<p class="muted" style="margin:0 0 6px;font-size:13px">Quem você silenciar some do seu chat, junto com as reações. Só você deixa de ver, e a pessoa não fica sabendo.</p>`;
+  h+=outros.length?outros.map(([d,l])=>`<div class="mudorow"><span class="cn" style="color:${corOk(l.cor)}">${esc(l.nome||'Sem nome')}</span><button type="button" class="small${mudo(d)?' primary':''}" onclick="mudoTroca('${d}')">${mudo(d)?'🔊 Voltar a ouvir':'🔇 Silenciar'}</button></div>`).join(''):'<p class="muted chatvazio">Ainda não tem mais ninguém na sala.</p>';
+  return h+`<button type="button" class="small" style="margin-top:8px;align-self:flex-start" onclick="chatMudosTroca()">← Voltar ao chat</button>`;
+}
+function chatZera(){CHAT=[];CHAT_OPEN=false;CHAT_INIT=false;CHAT_MUDOS_VER=false;CHAT_VISTAS=new Set();CHAT_CONHECE=new Set();const pv=document.getElementById('chatprev');if(pv)pv.style.display='none';chatBadge();chatVis()}
 function chatVis(){
   const b=document.getElementById('chatbtn'),x=document.getElementById('chatbox');if(!b||!x)return;
   const on=online();b.style.display=on?'':'none';x.style.display=on&&CHAT_OPEN?'':'none';
   const r=document.getElementById('chatreac');if(r&&!r.childElementCount)r.innerHTML=REACOES.map(e=>`<button type="button" onclick="chatManda('${e}')">${e}</button>`).join('');
 }
 function chatAbre(){CHAT_OPEN=true;chatViu();const pv=document.getElementById('chatprev');if(pv)pv.style.display='none';chatBadge();chatVis();chatPinta();setTimeout(()=>{const i=document.getElementById('chatin');if(i&&matchMedia('(pointer:fine)').matches)i.focus()},60)}
-function chatFecha(){CHAT_OPEN=false;chatViu();chatBadge();chatVis()}
+function chatFecha(){CHAT_OPEN=false;CHAT_MUDOS_VER=false;chatViu();chatBadge();chatVis()}
 function chatViu(){CHAT.forEach(m=>CHAT_VISTAS.add(m.id))}
-function chatBadge(){const n=CHAT.filter(m=>!CHAT_VISTAS.has(m.id)&&m.dev!==MYDEV).length;const el=document.getElementById('chatn');if(el)el.textContent=n?(n>9?'9+':n):''}
+function chatBadge(){const n=CHAT.filter(m=>!CHAT_VISTAS.has(m.id)&&m.dev!==MYDEV&&!mudo(m.dev)).length;const el=document.getElementById('chatn');if(el)el.textContent=n?(n>9?'9+':n):''}
 function chatPinta(){
   if(!CHAT_OPEN)return;const el=document.getElementById('chatlist');if(!el)return;
-  el.innerHTML=CHAT.length?CHAT.map(m=>{const emo=REACOES.includes(m.t),eu=m.dev===MYDEV,hr=horaChat(m.ts);return `<div class="cm${eu?' me':''}${emo?' emo':''}">${eu||emo?'':`<span class="cn" style="color:${corOk(chatCor(m))}">${fotoDe(m.dev)?bolinha(fotoDe(m.dev),corOk(chatCor(m)),'chatfoto'):''}${esc(chatNome(m))}</span>`}${esc(m.t)}${hr?`<span class="ch">${emo&&!eu?esc(chatNome(m))+' · ':''}${hr}</span>`:''}</div>`}).join(''):'<p class="muted chatvazio">Nenhuma mensagem ainda. Mande um oi! 👋</p>';
+  const bx=document.getElementById('chatbox');if(bx)bx.classList.toggle('mudos',CHAT_MUDOS_VER);
+  const tt=document.getElementById('chattit');if(tt)tt.textContent=CHAT_MUDOS_VER?'🔇 Silenciar alguém':'💬 Chat da sala';
+  const mb=document.getElementById('chatmudobtn');if(mb)mb.classList.toggle('on',CHAT_MUDOS_VER);
+  if(CHAT_MUDOS_VER){el.innerHTML=chatMudosHtml();return}
+  const vis=CHAT.filter(m=>!mudo(m.dev));
+  el.innerHTML=vis.length?vis.map(m=>{const emo=REACOES.includes(m.t),eu=m.dev===MYDEV,hr=horaChat(m.ts);return `<div class="cm${eu?' me':''}${emo?' emo':''}">${eu||emo?'':`<span class="cn" style="color:${corOk(chatCor(m))}">${fotoDe(m.dev)?bolinha(fotoDe(m.dev),corOk(chatCor(m)),'chatfoto'):''}${esc(chatNome(m))}</span>`}${esc(m.t)}${hr?`<span class="ch">${emo&&!eu?esc(chatNome(m))+' · ':''}${hr}</span>`:''}</div>`}).join(''):'<p class="muted chatvazio">Nenhuma mensagem ainda. Mande um oi! 👋</p>';
   el.scrollTop=el.scrollHeight;
 }
 function chatRecebido(a){
   // mensagens conferidas e em ordem pela hora do servidor (o relógio de cada aparelho pode estar adiantado ou atrasado)
   CHAT=(Array.isArray(a)?a:Object.values(a||{})).filter(m=>m&&typeof m.t==='string'&&m.t).map((m,i)=>({
-    id:String(m.id||('m'+i)).slice(0,40),dev:sId(m.dev)||'',n:sStr(m.n,16),c:m.c,t:sStr(m.t,200),ts:Number(m.ts)||0
+    id:String(m.id||('m'+i)).slice(0,40),dev:sId(m.dev)||'',n:semPalavrao(sStr(m.n,16)),c:m.c,t:semPalavrao(sStr(m.t,200)),ts:Number(m.ts)||0
   })).sort((x,y)=>(x.ts-y.ts)||(x.id<y.id?-1:x.id>y.id?1:0));
+  const por={};CHAT=CHAT.filter(m=>{const a=por[m.dev]||(por[m.dev]=[]);while(a.length&&m.ts-a[0]>10000)a.shift();a.push(m.ts);return a.length<=6}); // quem manda mensagem demais seguida não enche a tela
   if(!CHAT_INIT){CHAT_INIT=true;CHAT.forEach(m=>{CHAT_CONHECE.add(m.id);CHAT_VISTAS.add(m.id)})}
   else{
-    const novos=CHAT.filter(m=>!CHAT_CONHECE.has(m.id)&&m.dev!==MYDEV);
+    const novos=CHAT.filter(m=>!CHAT_CONHECE.has(m.id)&&m.dev!==MYDEV&&!mudo(m.dev));
     CHAT.forEach(m=>CHAT_CONHECE.add(m.id));
     if(novos.length){SFX.msg();novos.forEach(m=>{if(REACOES.includes(m.t))emojiVoa(m.t)});if(!CHAT_OPEN)chatPrevia(novos[novos.length-1])}
   }
@@ -3631,12 +3697,15 @@ function meuNomeCor(){const me=G.players&&G.players[myIdx()],l=LOBBY[MYDEV]||{};
 function chatNome(m){const l=LOBBY[m.dev];return (l&&l.nome)||m.n||'Alguém'}
 function chatCor(m){const l=LOBBY[m.dev];return (l&&l.cor)||m.c}
 function chatManda(t){
-  t=String(t||'').replace(/\s+/g,' ').trim().slice(0,200);if(!t||!online()||!NET)return;
+  t=String(t||'').replace(/\s+/g,' ').trim().slice(0,200);if(!t||!online()||!NET)return false;
+  const agora=Date.now();CHAT_ENVIOS=CHAT_ENVIOS.filter(x=>agora-x<10000);
+  if(CHAT_ENVIOS.length>=5){toast('Calma! Espere uns segundos para mandar outra.');return false}
+  CHAT_ENVIOS.push(agora);t=semPalavrao(t);
   const nc=meuNomeCor(),m={dev:MYDEV,n:nc.n,c:nc.c,t,ts:Date.now()};
   if(REACOES.includes(t))emojiVoa(t);
   NET.chat(ROOM,m).catch(()=>toast('Sem conexão: a mensagem não foi enviada.'));
 }
-function chatEnvia(ev){ev.preventDefault();const i=document.getElementById('chatin');if(!i)return;chatManda(i.value);i.value=''}
+function chatEnvia(ev){ev.preventDefault();const i=document.getElementById('chatin');if(!i)return;if(chatManda(i.value)!==false)i.value=''}
 
 // ----- lupa do tabuleiro -----
 // Só a casa que está debaixo do mouse (ou que foi tocada) cresce; as vizinhas se afastam para dar espaço.
@@ -3712,9 +3781,24 @@ if(URLP.get('sons')!==null)setTimeout(painelSons,300);
 // preferências deste aparelho: quais sons tocam, volume e quais avisos aparecem
 const PREF=(()=>{
   let o={};try{o=JSON.parse(localStorage.getItem('arrisca-prefs')||'{}')||{}}catch(e){}
-  return {sonsOff:new Set(Array.isArray(o.sonsOff)?o.sonsOff:[]),avisoAba:o.avisoAba!==false,avisoSaiu:o.avisoSaiu!==false,vol:typeof o.vol==='number'&&o.vol>=0&&o.vol<=1?o.vol:1};
+  return {sonsOff:new Set(Array.isArray(o.sonsOff)?o.sonsOff:[]),avisoAba:o.avisoAba!==false,avisoSaiu:o.avisoSaiu!==false,voz:o.voz===true,vol:typeof o.vol==='number'&&o.vol>=0&&o.vol<=1?o.vol:1};
 })();
-function prefSalva(){try{localStorage.setItem('arrisca-prefs',JSON.stringify({sonsOff:[...PREF.sonsOff],avisoAba:PREF.avisoAba,avisoSaiu:PREF.avisoSaiu,vol:PREF.vol}))}catch(e){}}
+function prefSalva(){try{localStorage.setItem('arrisca-prefs',JSON.stringify({sonsOff:[...PREF.sonsOff],avisoAba:PREF.avisoAba,avisoSaiu:PREF.avisoSaiu,voz:PREF.voz,vol:PREF.vol}))}catch(e){}}
+// ----- leitura da pergunta em voz alta (voz do próprio navegador, em português) -----
+const VOZ_OK=typeof speechSynthesis!=='undefined'&&typeof SpeechSynthesisUtterance!=='undefined';
+let VOZ=null;
+function vozEscolhe(){if(!VOZ_OK)return;const v=speechSynthesis.getVoices().filter(x=>/^pt/i.test(x.lang||''));const br=v.filter(x=>/^pt[-_]BR/i.test(x.lang));const boa=l=>l.find(x=>/natural|online|google|luciana|francisca|felipe/i.test(x.name))||l[0];VOZ=boa(br)||boa(v)||null}
+if(VOZ_OK){vozEscolhe();try{speechSynthesis.addEventListener('voiceschanged',vozEscolhe)}catch(e){}}
+function falaTexto(t){
+  if(!VOZ_OK||!t)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang=(VOZ&&VOZ.lang)||'pt-BR';if(VOZ)u.voice=VOZ;u.rate=.95;u.volume=Math.max(.2,PREF.vol);speechSynthesis.speak(u)}catch(e){}
+}
+function falaPara(){if(VOZ_OK)try{speechSynthesis.cancel()}catch(e){}}
+function falaPergunta(){
+  if(!G.q||!G.q[0])return;
+  let t=String(G.q[0]);
+  if(G.theme==='V'&&Array.isArray(G.q[1]))t+='. As alternativas são: '+G.q[1].map((o,i)=>'ABCDEF'[i]+'. '+o).join('. ')+'.';
+  falaTexto(t);
+}
 const SFX=(()=>{
   let A=null,M=null,NB=null,on=true;
   try{on=localStorage.getItem('arrisca-som')!=='0'}catch(e){}
@@ -3828,6 +3912,7 @@ function somRender(){
     <h4 class="ctsub">Avisos na tela</h4>
     ${ck('avaba',PREF.avisoAba,'👀 Quando alguém sai da aba','Desligando, o som desse aviso também para. O “fora da aba” continua aparecendo na lista de jogadores.','somAviso(\'avisoAba\',this.checked)')}
     ${ck('avsaiu',PREF.avisoSaiu,'🚪 Quando alguém sai do jogo','Quando alguém fecha o jogo ou perde a conexão (e quando volta). Desligando, o som desse aviso também para.','somAviso(\'avisoSaiu\',this.checked)')}
+    ${VOZ_OK?`<h4 class="ctsub">Leitura em voz alta</h4>${ck('avvoz',PREF.voz,'🗣 Ler a pergunta sozinho quando ela aparecer','Bom para criança pequena e para quem enxerga pouco. Se todo mundo joga no mesmo lugar, deixe ligado em um aparelho só. O botão 🔊 ao lado da pergunta lê a qualquer momento.','PREF.voz=this.checked;prefSalva();if(this.checked)falaTexto(\'Pronto! Vou ler as perguntas em voz alta.\')')}`:''}
     <h4 class="ctsub">Quais sons tocam</h4><div class="somlista${SFX.on?'':' somoff'}">`;
   if(!SFX.on)h+=`<p class="muted" style="text-align:center;margin:0 0 6px">O som está desligado. Ligue lá em cima para ouvir.</p>`;
   SONS.forEach(([g,l])=>{
@@ -3909,7 +3994,7 @@ function fx(){
   const panel=document.getElementById('panel');
   const nova=s.mode!==a.mode||s.phase!==a.phase||s.qid!==a.qid||s.cur!==a.cur||s.pl!==a.pl;
   if(nova)pinAnim(panel);
-  if(s.mode!==a.mode)return;
+  if(s.mode!==a.mode){falaPara();return}
   if(!G.players||s.phase==='setup')return;
   const p=G.players[G.cur];
   if(a.phase==='setup'){largada();return}
@@ -3919,8 +4004,10 @@ function fx(){
   if(s.phase==='question'&&s.vis&&(!a.vis||s.qid!==a.qid)){
     setTimeout(SFX.whoosh,s.tok&&!a.tok?120:0);
     const q=panel.querySelector('.qtext');if(q)q.classList.add('reveal');
+    if(PREF.voz&&SFX.on)setTimeout(falaPergunta,s.tok&&!a.tok?450:250);
     const op=panel.querySelector('.opts');if(op&&!nova)op.classList.add('reveal');
   }
+  if(a.phase==='question'&&s.phase!=='question')falaPara();
   if(s.rev&&!a.rev&&s.phase==='question'){SFX.flip();const an=panel.querySelector('.answer');if(an)an.classList.add('reveal')}
   if(s.hint&&!a.hint)SFX.magic();
   if(online()&&myIdx()!==G.cur&&s.qid===a.qid&&G.players&&((s.abaN>a.abaN)||(s.colou&&!a.colou))){const colou=s.colou&&!a.colou;if(colou||PREF.avisoAba){toast(colou?`👀 ${G.players[G.cur].name} colou um texto na resposta`:`👀 ${G.players[G.cur].name} saiu da aba!`);SFX.fora()}}

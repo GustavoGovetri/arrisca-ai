@@ -4,9 +4,10 @@
 //   POST {acao:'perfil', nome, cor}      → muda nome e cor (no ranking também)
 //   POST {acao:'resposta', sala, jogo, dev, tk, ok, fim, modo, nj} → registra uma resposta de partida online
 //   POST {acao:'apagar'}                 → apaga os dados da conta guardados no banco
-//   GET  ?acao=painel                    → (só o dono) bugs e perguntas reportadas
+//   GET  ?acao=painel                    → (só o dono) bugs, perguntas reportadas e perguntas com mais 👎
 //   POST {acao:'resolver', lista, id, resolvido} → (só o dono) marca um aviso como resolvido
 const { quemE, ehAdmin } = require('./_auth');
+const { limpa: semPalavrao, tem: temPalavrao } = require('./_palavrao');
 const { DEV, ler, grava, gravaVarios } = require('./_store');
 const ST = require('./_stats');
 const { freia } = require('./_limite');
@@ -39,7 +40,7 @@ async function entrar(u, body) {
   const caminho = 'usuarios/' + u.uid + '/perfil';
   let p = await ler(caminho);
   if (!p || typeof p !== 'object') {
-    const nome = txt(body.nome, 16) || txt(u.nome, 16) || txt((u.email || '').split('@')[0], 16) || 'Jogador';
+    const nome = semPalavrao(txt(body.nome, 16) || txt(u.nome, 16) || txt((u.email || '').split('@')[0], 16) || 'Jogador');
     p = { nome, cor: corOk(body.cor), criado: new Date().toISOString(), provedor: txt(u.provedor, 20) };
     await grava('PUT', caminho, p);
   }
@@ -51,7 +52,7 @@ async function entrar(u, body) {
 async function mudaPerfil(u, body) {
   const base = 'usuarios/' + u.uid;
   const muda = {};
-  if (body.nome !== undefined) { const n = txt(body.nome, 16); if (!n) throw falha(400, 'Escolha um nome.'); muda.nome = n }
+  if (body.nome !== undefined) { const n = txt(body.nome, 16); if (!n) throw falha(400, 'Escolha um nome.'); if (temPalavrao(n)) throw falha(400, 'Esse nome não pode. Escolha outro.'); muda.nome = n }
   if (body.cor !== undefined) { const c = corOk(body.cor); if (c) muda.cor = c }
   if (body.titulo !== undefined) muda.titulo = body.titulo ? String(body.titulo).slice(0, 30) : null;
   if (!Object.keys(muda).length) throw falha(400, 'Nada para mudar.');
@@ -196,10 +197,31 @@ function lista(obj) {
 }
 async function painel() {
   const q = 'orderBy=' + encodeURIComponent('"$key"') + '&limitToLast=' + LIMITE_LISTA;
-  const [bugs, reportes] = await Promise.all([DEV ? bugsDev() : ler('bugs', q), ler('reportes', DEV ? '' : q)]);
-  return { bugs: lista(bugs), reportes: lista(reportes) };
+  const [bugs, reportes, notas] = await Promise.all([DEV ? bugsDev() : ler('bugs', q), ler('reportes', DEV ? '' : q), ler('notas')]);
+  return { bugs: lista(bugs), reportes: lista(reportes), notas: await notasPiores(notas) };
+}
+// 👍/👎 das perguntas: as que mais levaram 👎 primeiro (só as que têm pelo menos um 👎)
+async function notasPiores(notas) {
+  const P = require('./perguntas.js'), out = [];
+  let votos = 0, bons = 0;
+  Object.entries(notas || {}).forEach(([t, porId]) => Object.entries(porId || {}).forEach(([id, vs]) => {
+    let b = 0, r = 0;
+    Object.values(vs || {}).forEach(v => { if (v === 1) b++; else if (v === -1) r++ });
+    votos += b + r; bons += b;
+    if (r) out.push({ t, id, b, r });
+  }));
+  out.sort((x, y) => (y.r - y.b) - (x.r - x.b) || y.r - x.r);
+  const top = out.slice(0, 60);
+  await Promise.all(top.map(async x => { try { Object.assign(x, await P._pergId(x.t, x.id) || { sumiu: true }) } catch (e) { x.sumiu = true } }));
+  return { votos, bons, lista: top };
 }
 async function resolver(body) {
+  if (body.lista === 'notas') { // pergunta arrumada: zera as notas dela
+    const [t, id] = String(body.id || '').split('|');
+    if (!/^[A-Z]{1,3}$/.test(t || '') || !/^[a-z0-9]{1,20}$/.test(id || '')) throw falha(400, 'Pergunta inválida.');
+    await grava('PUT', 'notas/' + t + '/' + id, null);
+    return { ok: true };
+  }
   const qual = body.lista === 'bugs' ? 'bugs' : body.lista === 'reportes' ? 'reportes' : null;
   if (!qual || !idOk(body.id)) throw falha(400, 'Aviso inválido.');
   if (DEV && qual === 'bugs') {

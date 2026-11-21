@@ -10,6 +10,7 @@
 //   GET  ?acao=ranking&periodo=semana|mes   ranking só com você e seus amigos
 // Tudo fica em /usuarios e /ids, que só o servidor lê e grava.
 const crypto = require('crypto');
+const { limpa: semPalavrao } = require('./_palavrao');
 const { quemE } = require('./_auth');
 const { ler, gravaVarios } = require('./_store');
 const ST = require('./_stats');
@@ -49,7 +50,7 @@ async function publico(uid, comVisto) {
   const [p, st, visto] = await Promise.all([ler('usuarios/' + uid + '/perfil'), ler('usuarios/' + uid + '/stats'), comVisto ? ler('usuarios/' + uid + '/visto') : null]);
   if (!p) return null;
   const t = p.titulo ? ST.titulo(p.titulo, st, uid) : null;
-  const o = { id: ID_RE.test(p.id || '') ? p.id : null, nome: String(p.nome || 'Jogador').slice(0, 16), cor: corOk(p.cor), f: fotoMini(p.mini), t: t ? { x: t.x, n: t.n } : null };
+  const o = { id: ID_RE.test(p.id || '') ? p.id : null, nome: semPalavrao(String(p.nome || 'Jogador').slice(0, 16)), cor: corOk(p.cor), f: fotoMini(p.mini), t: t ? { x: t.x, n: t.n } : null };
   if (comVisto) {
     const ts = visto && +visto.ts || 0, on = Date.now() - ts < ONLINE;
     o.on = on; o.visto = ts || null;
@@ -170,7 +171,7 @@ async function ranking(u, q) {
     if (!p) return null;
     const s = ST.normaliza(st), pts = periodo === 'semana' ? (s.sem.id === per.semana ? s.sem.p : 0) : (s.mes.id === per.mes ? s.mes.p : 0);
     const t = p.titulo ? ST.titulo(p.titulo, s, uid) : null;
-    return { id: ID_RE.test(p.id || '') ? p.id : null, n: String(p.nome || 'Jogador').slice(0, 16), c: corOk(p.cor), f: fotoMini(p.mini), t: t ? { x: t.x, n: t.n } : null, p: Math.floor(pts), eu: uid === u.uid };
+    return { id: ID_RE.test(p.id || '') ? p.id : null, n: semPalavrao(String(p.nome || 'Jogador').slice(0, 16)), c: corOk(p.cor), f: fotoMini(p.mini), t: t ? { x: t.x, n: t.n } : null, p: Math.floor(pts), eu: uid === u.uid };
   }));
   const l = linhas.filter(Boolean).sort((a, b) => b.p - a.p || a.n.localeCompare(b.n));
   let pos = 0;

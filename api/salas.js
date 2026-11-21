@@ -6,6 +6,7 @@
 // aberta pelo dono, ainda na sala de espera, com o dono presente e com vaga. O índice fica em /publicas,
 // que só esta função lê e escreve (fechado para o público).
 const { dbGet, dbReq } = require('./_fb');
+const { limpa: semPalavrao } = require('./_palavrao');
 const crypto = require('crypto');
 const ST = require('./_store');
 const juiz = require('./_juiz');
@@ -32,7 +33,7 @@ function resumo(meta, g, jog) {
   if (n < 1 || n >= MAX) return null;
   const temas = Array.isArray(g.selThemes) ? g.selThemes.filter(t => typeof t === 'string').slice(0, 20) : [];
   return {
-    dono: String(dono.nome || '').trim().slice(0, 16) || 'Sem nome',
+    dono: semPalavrao(String(dono.nome || '').trim().slice(0, 16)) || 'Sem nome',
     cor: COR.test(dono.cor || '') ? dono.cor : '#ffd23f',
     n, max: MAX,
     modo: String(g.modo || 'classico').slice(0, 12),

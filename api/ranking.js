@@ -1,6 +1,7 @@
 // Ranking da semana e do mês (público). Com o login no cabeçalho, também diz a posição de quem pediu.
 //   GET ?periodo=semana|mes
 const { verifica } = require('./_auth');
+const { limpa: semPalavrao } = require('./_palavrao');
 const { ler } = require('./_store');
 const ST = require('./_stats');
 
@@ -17,7 +18,7 @@ module.exports = async (req, res) => {
     if (!c || Date.now() - c.t > 30000) {
       const dados = await ler('ranking/' + periodo + '/' + id);
       const lista = Object.entries(dados || {}).filter(([, v]) => v && +v.p > 0)
-        .map(([uid, v]) => ({ uid, p: Math.floor(+v.p), n: String(v.n || 'Jogador').slice(0, 16), c: /^#[0-9a-f]{6}$/i.test(v.c || '') ? v.c : null, t: tituloOk(v.t), f: fotoMini(v.f) }))
+        .map(([uid, v]) => ({ uid, p: Math.floor(+v.p), n: semPalavrao(String(v.n || 'Jogador').slice(0, 16)), c: /^#[0-9a-f]{6}$/i.test(v.c || '') ? v.c : null, t: tituloOk(v.t), f: fotoMini(v.f) }))
         .sort((a, b) => b.p - a.p || a.n.localeCompare(b.n));
       c = CACHE[periodo + id] = { t: Date.now(), lista };
     }

@@ -7,6 +7,7 @@
 //   POST /api/perguntas?acao=resposta   devolve a resposta, só depois que a pessoa respondeu
 //   POST /api/perguntas?acao=dica       dica (primeira letra e tamanho, ou uma alternativa errada)
 //   POST /api/perguntas?acao=forma      desenho da pergunta de silhueta (contorno do país)
+//   POST /api/perguntas?acao=nota       👍/👎 de quem jogou a pergunta (vai para o painel do dono)
 const crypto = require('crypto');
 
 const ORDER = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V'];
@@ -26,7 +27,8 @@ const TEMA_N = { M: 'Mundo', H: 'História', AL: 'Artes e Literatura', MU: 'Mús
 const { cred, dbGet } = require('./_fb');
 const { freia } = require('./_limite');
 // quantos pedidos cada endereço pode fazer a cada 10 minutos (folgado para uma família na mesma rede)
-const FREIO = { sortear: 300, resposta: 300, dica: 80, forma: 300, meta: 200, aquece: 200 };
+const FREIO = { sortear: 300, resposta: 300, dica: 80, forma: 300, meta: 200, aquece: 200, nota: 120 };
+const ST = require('./_store');
 const b64u = b => Buffer.from(b).toString('base64').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
 
 function chaveTk() { // chave para assinar os tokens de pergunta (derivada da credencial)
@@ -242,6 +244,13 @@ async function handle(acao, body) {
     const f = formaDe(q);
     return f ? { a: resposta(t, q), m: B.mapa[f] || null } : { a: resposta(t, q) };
   }
+  if (acao === 'nota') { // uma nota por aparelho e por pergunta sorteada; tocar de novo troca ou tira
+    const v = body.v === 1 ? 1 : body.v === -1 ? -1 : null;
+    const dev = typeof body.dev === 'string' && /^[A-Za-z0-9_-]{4,40}$/.test(body.dev) ? body.dev : '';
+    const h = b64u(crypto.createHmac('sha256', chaveTk()).update('nota|' + body.tk + '|' + dev).digest()).slice(0, 16);
+    await ST.grava('PUT', 'notas/' + t + '/' + tk.i + '/' + h, v);
+    return { ok: true };
+  }
   if (acao === 'forma') { // o desenho da silhueta ou a bandeira (é a própria pergunta, então sai junto com ela)
     const f = formaDe(q), tipo = tipoDe(q);
     if (tipo === 'b' && B.bandeiras && B.bandeiras[f]) return { img: B.bandeiras[f] };
@@ -292,4 +301,13 @@ module.exports._pergTk = async tk => {
   const q = T.items[i];
   return { qid: x.i, t: x.t, m: x.m, s: x.s || null, e: +x.e || 0, nivel: Math.min(4, Math.max(1, +qDiff(x.t, q) || 2)),
     q: textoQ(q[0]), a: resposta(x.t, q), opts: x.t === 'V' ? q[1].slice() : null, mapa: formaDe(q) ? B.mapa[formaDe(q)] || null : null };
+};
+// para o painel do dono: texto, resposta e nível de uma pergunta pelo tema e id
+module.exports._pergId = async (t, id) => {
+  const B = await banco(), T = B.temas[t];
+  if (!T) return null;
+  const i = T.idx.get(id);
+  if (i === undefined) return null;
+  const q = T.items[i];
+  return { q: textoQ(q[0]), a: resposta(t, q), nivel: Math.min(4, Math.max(1, +qDiff(t, q) || 2)), assunto: bucketOf(t, q), tema: TEMA_N[t] || t };
 };
