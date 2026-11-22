@@ -10,6 +10,12 @@ const crypto = require('crypto');
 const INICIO = Date.UTC(2026, 10, 21);           // dia 1 do desafio (lançado em 21/11/2026)
 const NIVEIS = [1, 1, 2, 2, 2, 2, 3, 3, 3, 4];   // do mais fácil ao mais difícil
 const MIN_MOLDE = 6;                             // um molde precisa de pelo menos 6 perguntas
+const MIN_NIVEL = 25;                            // nível com menos perguntas que isso fica de fora (repetiria demais)
+// moldes que não servem: o Pokémon pode ter dois tipos, e a alternativa "errada" pode ser o outro
+const FORA = [/\btipo\b.*\bpokemon\b|\bpokemon\b.*\btipo\b/];
+const VAZIAS = new Set('o a os as um uma de do da dos das em no na nos nas que qual quais quem como e para por com se ao pelo pela foi era tem nome'.split(' '));
+const palavrasQ = q => new Set(norm(String(q).replace(/\s*⟦.*?⟧/g, '')).split(' ').filter(w => w.length > 2 && !VAZIAS.has(w)));
+const parecidas = (a, b) => { let n = 0; a.forEach(w => { if (b.has(w)) n++ }); return n / (a.size + b.size - n || 1) };
 
 const h32 = s => crypto.createHash('sha1').update(String(s)).digest().readUInt32BE(0);
 const norm = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9#]+/g, ' ').trim();
@@ -97,7 +103,7 @@ function erradas(B, fx, t, i, so) {
   const f = forma(a), k = chave(q[0]), semente = B.temas[t].ids[i];
   if (f === 'lista') return nao;
   if (f === 'ano' || f === 'num') { const r = (k === 'ano' || k === 'num' || f === 'ano') ? numeros(a, f, semente) : null; return so ? !!r : r }
-  const X = indice(B, fx), m = molde(q[0]), irmas = m && X.moldes.get(t + '|' + m);
+  const X = indice(B, fx), m = molde(q[0]), irmas = m && !FORA.some(re => re.test(norm(q[0]))) && X.moldes.get(t + '|' + m);
   if (!irmas) return nao;
   const proibidas = new Set(alternativas(resp)), na = norm(a), b = String(fx.bucketOf(t, q));
   const tok = new Set(na.split(' ').filter(w => w.length >= 4)), nq = ' ' + norm(q[0]) + ' ';
@@ -115,37 +121,86 @@ function erradas(B, fx, t, i, so) {
   return (melhores.length >= 3 ? melhores : cand).slice(0, 3).map(r => r.a);
 }
 
-// perguntas que podem entrar no desafio, por tema e nível, numa ordem fixa embaralhada
-function pool(B, fx, t, nv) {
-  const X = indice(B, fx), c = t + '|' + nv;
-  if (X.pools[c]) return X.pools[c];
-  const T = B.temas[t], l = [];
+const respostaDe = (B, fx, t, i) => { const q = B.temas[t].items[i]; return norm(t === 'V' ? q[1][q[2]] : principal(fx.resposta(t, q))) };
+// todas as perguntas do tema que servem, sem as quase repetidas (mesma resposta e texto parecido)
+function doTema(B, fx, t) {
+  const X = indice(B, fx);
+  if (X.pools['*' + t]) return X.pools['*' + t];
+  const T = B.temas[t], l = [], porResp = new Map();
+  if (!X.donos) { // a mesma pergunta pode estar em dois temas: vale só a primeira
+    X.donos = new Map();
+    Object.entries(B.temas).forEach(([tt, TT]) => TT.items.forEach((q, i) => { const k = norm(q[0]); if (!X.donos.has(k)) X.donos.set(k, tt + '|' + i) }));
+  }
   T.items.forEach((q, i) => {
-    if (fx.qDiff(t, q) !== nv) return;
-    if (t === 'V') { if (Array.isArray(q[1]) && q[1].length === 4) l.push(i); return }
-    if (erradas(B, fx, t, i, true)) l.push(i);
+    if (X.donos.get(norm(q[0])) !== t + '|' + i) return;
+    const ok = t === 'V' ? Array.isArray(q[1]) && q[1].length === 4 : erradas(B, fx, t, i, true);
+    if (!ok) return;
+    const r = respostaDe(B, fx, t, i), w = palavrasQ(q[0]), ja = porResp.get(r) || [];
+    if (ja.some(o => parecidas(o, w) >= 0.4)) return;
+    ja.push(w); porResp.set(r, ja); l.push(i);
   });
   l.sort((x, y) => h32('ordem|' + T.ids[x]) - h32('ordem|' + T.ids[y]));
-  return (X.pools[c] = l);
+  return (X.pools['*' + t] = l);
+}
+// as do tema num nível, numa ordem fixa embaralhada
+function pool(B, fx, t, nv) {
+  const X = indice(B, fx), c = t + '|' + nv;
+  if (!X.pools[c]) X.pools[c] = doTema(B, fx, t).filter(i => fx.qDiff(t, B.temas[t].items[i]) === nv);
+  return X.pools[c];
 }
 
 const diaN = dia => Math.round((Date.UTC(+dia.slice(0, 4), +dia.slice(5, 7) - 1, +dia.slice(8, 10)) - INICIO) / 864e5) + 1;
 function embaralha(a, semente) { return a.map(x => [h32(semente + '|' + x), x]).sort((x, y) => x[0] - y[0]).map(x => x[1]) }
 
+// os planos dos dias, em sequência a partir do dia 1: quais temas entram, em qual nível, e qual pergunta da
+// fila daquele tema/nível é a da vez. Cada nível vai para o tema que menos gastou a sua fila, então as perguntas
+// só se repetem quando a fila inteira já saiu.
+const diaDe = d => new Date(INICIO + (d - 1) * 864e5).toISOString().slice(0, 10);
+function plano(B, fx, n, temas) {
+  const X = indice(B, fx);
+  if (!X.pl) X.pl = { dias: [], cont: new Map() };
+  const st = X.pl, lista = temas.filter(t => t !== 'N' && B.temas[t] && B.temas[t].items.length);
+  while (st.dias.length < Math.max(1, n)) {
+    const d = st.dias.length + 1, dia = diaDe(d), sem = 'dia|' + dia;
+    // Natal: em dezembro, uma pergunta dia sim, dia não (1, 3, 5... até o dia 25), sem repetir
+    const natal = dia.slice(5, 7) === '12' && B.temas.N ? doTema(B, fx, 'N') : [], dd = +dia.slice(8, 10), posN = (dd - 1) / 2;
+    const comNatal = dd % 2 === 1 && posN < natal.length;
+    const niveis = comNatal ? [1, 1, 2, 2, 2, 3, 3, 3, 4] : NIVEIS;
+    const sobra = embaralha(lista, sem + '|ordem'), out = [];
+    const gasto = (t, nv) => (st.cont.get(t + '|' + nv) || 0) / pool(B, fx, t, nv).length;
+    for (const nv of niveis) {
+      let achou = null;
+      for (const alt of [nv, nv + 1, nv - 1, nv + 2, nv - 2]) {
+        if (alt < 1 || alt > 4) continue;
+        const c = sobra.filter(x => pool(B, fx, x, alt).length >= MIN_NIVEL);
+        if (!c.length) continue;
+        c.sort((x, y) => gasto(x, alt) - gasto(y, alt)); // a ordem do dia desempata
+        achou = [c[0], alt]; break;
+      }
+      if (!achou) break;
+      const [t, alt] = achou, k = t + '|' + alt, usado = st.cont.get(k) || 0;
+      sobra.splice(sobra.indexOf(t), 1);
+      out.push([t, alt, usado % pool(B, fx, t, alt).length]);
+      st.cont.set(k, usado + 1);
+    }
+    if (comNatal) out.push(['N', 0, posN]);
+    st.dias.push(out);
+  }
+  return st.dias[Math.max(1, n) - 1];
+}
+
 // monta o desafio de um dia: [{t, id, q, o: [4 alternativas], c: índice da certa, nv}]
 function monta(B, fx, dia, temas) {
   const n = diaN(dia), sem = 'dia|' + dia;
-  let lista = temas.filter(t => B.temas[t] && B.temas[t].items.length);
-  const fixos = lista.filter(t => t === 'N');   // no Natal, o tema de Natal sempre entra
-  const resto = embaralha(lista.filter(t => t !== 'N'), sem + '|tema');
-  lista = embaralha([...fixos, ...resto], sem + '|ordem');
-  const itens = [];
-  for (const t of lista) {
-    if (itens.length >= NIVEIS.length) break;
-    let nv = NIVEIS[itens.length], P = pool(B, fx, t, nv);
-    for (const alt of [nv - 1, nv + 1, nv - 2, nv + 2]) { if (P.length) break; if (alt >= 1 && alt <= 4) { nv = alt; P = pool(B, fx, t, nv) } }
-    if (!P.length) continue;   // tema sem pergunta que sirva: passa para o próximo
-    const i = P[((n - 1) % P.length + P.length) % P.length], q = B.temas[t].items[i], id = B.temas[t].ids[i];
+  const itens = [], respostas = new Set();
+  for (const [t, nvP, pos] of plano(B, fx, n, temas)) {
+    const P = t === 'N' ? doTema(B, fx, 'N') : pool(B, fx, t, nvP);
+    // no mesmo dia, nada de duas perguntas com a mesma resposta (pula para outra mais adiante na fila)
+    let i = P[pos];
+    for (let k = 1; k < P.length && respostas.has(respostaDe(B, fx, t, i)); k++) i = P[(pos + k * 13) % P.length];
+    if (respostas.has(respostaDe(B, fx, t, i))) continue;
+    respostas.add(respostaDe(B, fx, t, i));
+    const q = B.temas[t].items[i], id = B.temas[t].ids[i], nv = fx.qDiff(t, q);
     let certa, ops;
     if (t === 'V') { certa = q[1][q[2]]; ops = q[1].slice() }
     else { certa = principal(fx.resposta(t, q)); ops = [certa, ...erradas(B, fx, t, i)] }
