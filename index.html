@@ -1096,7 +1096,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
       </ul>
       <h4 class="regsub">Extras</h4>
       <ul>
-        <li><b>📅 Desafio do dia:</b> 10 perguntas de múltipla escolha, as mesmas para todo mundo. Mantenha a sequência e mande o resultado no grupo.</li>
+        <li><b>📅 Desafio do dia:</b> 10 perguntas de múltipla escolha, as mesmas para todo mundo. Mantenha a sequência e mande o resultado no grupo. Com conta, vale em qualquer aparelho.</li>
         <li><b>🎄 Natal:</b> em dezembro tem tema de Natal, e quem jogar 5 partidas online com conta ganha o título <span class="titulo tn8">🎄 Natal 2026</span>.</li>
         <li>As perguntas que já saíram não voltam a cair (veja no 📜).</li>
         <li>Pergunta errada? Use ⚑ Reportar pergunta. Problema no site? Use o botão <b>!</b> no canto da tela.</li>
@@ -1853,8 +1853,34 @@ function dsfResumo(){ // linha embaixo do botão na tela inicial
   if(st&&st.dia===hoje&&st.resp.length)return `Continue de onde parou: ${st.resp.length} de ${st.itens.length}`;
   const {seq}=dsfSeq();return seq?`10 perguntas · 🔥 ${seq} ${seq===1?'dia':'dias seguidos'}`:'10 perguntas novas todo dia';
 }
-function desafioAbre(){
+// com conta, o desafio vale em qualquer aparelho: junta o que está na conta com o que está aqui
+function dsfEnvia(){
+  if(!CONTA.user)return;const st=dsfLe(),d={acao:'desafio',hist:dsfHist()};
+  if(st){d.dia=st.dia;d.resp=st.resp.map(r=>[r.o,r.c]);d.fim=!!st.fim}
+  contaApi('POST',d).catch(e=>console.warn('desafio na conta:',e.message));
+}
+async function dsfConta(){
+  if(!CONTA.user)return;
+  const j=await contaApi('GET',{acao:'desafio'});
+  const h=dsfHist();let mh=false;
+  Object.entries(j.hist||{}).forEach(([k,v])=>{if(/^\d{4}-\d{2}-\d{2}$/.test(k)&&!(k in h)&&Number.isFinite(+v)){h[k]=+v;mh=true}});
+  if(mh)dsfHistSalva(h);
+  const hoje=j.hoje||diaBrasilia(),srv=j.dias&&j.dias[hoje],par=String(srv&&srv.r||'').match(/[0-3]{2}/g)||[];
+  let st=dsfLe();if(st&&st.dia!==hoje)st=null;
+  if(par.length&&(!st||par.length>st.resp.length||(srv.fim&&!st.fim))){ // jogou (mais) em outro aparelho
+    if(!st){const r=await api('desafio',{});if(!r||r.dia!==hoje||!Array.isArray(r.itens))return;st={dia:r.dia,n:r.n,itens:r.itens,resp:[],fim:false}}
+    st.resp=par.slice(0,st.itens.length).map(x=>({o:+x[0],c:+x[1]}));st.fim=!!srv.fim||st.resp.length>=st.itens.length;
+    DSF.st=st;dsfSalva();
+    if(st.fim){const h2=dsfHist();h2[st.dia]=dsfAcertos(st);dsfHistSalva(h2)}
+  }
+  // o que este aparelho tem a mais vai para a conta
+  const h3=dsfHist(),st2=dsfLe(),jh=j.hist||{};
+  if(Object.keys(h3).some(k=>!(k in jh))||(st2&&st2.dia===hoje&&(st2.resp.length>par.length||(st2.fim&&!(srv&&srv.fim)))))dsfEnvia();
+  const e=document.getElementById('dsfsub');if(e)e.textContent=dsfResumo();
+}
+async function desafioAbre(){
   modalAbre('desafiobox');DSF.erro='';
+  if(CONTA.user){DSF.carregando=true;desafioRender();try{await dsfConta()}catch(e){console.warn(e)}DSF.carregando=false}
   const st=dsfLe();
   if(st&&st.dia===diaBrasilia()){DSF.st=st;dsfPosiciona();desafioRender()}else{DSF.st=null;dsfCarrega()}
 }
@@ -1878,7 +1904,7 @@ async function dsfEscolhe(k){
   DSF.esperando=k;desafioRender();
   try{
     const r=await api('desafioResp',{dia:st.dia,i,o:k});
-    st.resp[i]={o:k,c:+r.c};dsfSalva();
+    st.resp[i]={o:k,c:+r.c};dsfSalva();dsfEnvia();
     if(k===+r.c){SFX.correct&&SFX.correct();vib(30)}else{SFX.wrong&&SFX.wrong();vib([60,40,60])}
   }catch(e){toast('Não consegui conferir: '+e.message)}
   DSF.esperando=false;desafioRender();
@@ -1891,7 +1917,7 @@ function dsfProxima(){
 }
 function dsfTermina(quieto){
   const st=DSF.st;st.fim=true;dsfSalva();
-  const h=dsfHist();h[st.dia]=dsfAcertos(st);dsfHistSalva(h);
+  const h=dsfHist();h[st.dia]=dsfAcertos(st);dsfHistSalva(h);dsfEnvia();
   desafioRender();
   if(!quieto){const ac=dsfAcertos(st);if(ac>=8){SFX.win&&SFX.win();const el=document.querySelector('.dsfnota');if(el){const [x,y]=centro(el);CONF.burst(ac===10?160:90,x,y)}}}
 }
@@ -1925,7 +1951,7 @@ function dsfFimHtml(){
   return `<div class="dsffim"><div class="dsfnota">${ac}<small>/${tot}</small></div><p class="dsffrase">${frase}</p>
   <p class="dsfseq">🔥 <b>${seq}</b> ${seq===1?'dia':'dias seguidos'}${rec>seq?` · recorde: ${rec}`:''}</p>
   <div class="row" style="justify-content:center"><button class="primary" onclick="dsfCompartilha()">📤 Compartilhar</button><button onclick="copyText(dsfTexto(),'📋 Resultado copiado')">📋 Copiar</button></div>
-  <p class="muted dsfvolta">Amanhã tem outro. Faltam <b id="dsfconta">${faltaTxt()}</b>.</p>
+  <p class="muted dsfvolta">Amanhã tem outro. Faltam <b id="dsfconta">${faltaTxt()}</b>.</p>${CONTA.user?'':'<p class="muted dsfvolta" style="font-size:13px">Sem conta, a sequência fica só neste aparelho. <button type="button" class="small" onclick="desafioFecha();contaAbre()">Entrar</button></p>'}
   <details class="dsfrev"><summary>Ver as respostas</summary>${rev}</details></div>`;
 }
 
@@ -2639,7 +2665,7 @@ function contaInicia(){
     if(u){
       try{const j=await contaApi('POST',{acao:'entrar',nome:myName(),cor:myColor()});contaAplica(j.perfil);CONTA.admin=!!j.admin}
       catch(e){console.warn(e);CONTA_UI.erro='Você entrou, mas não consegui carregar o perfil agora: '+e.message}
-      contaResumo();contaHistInicia();if(ROOM)tituloSala();amigosCarrega(true).then(amigoLinkAbre);
+      contaResumo();contaHistInicia();if(ROOM)tituloSala();amigosCarrega(true).then(amigoLinkAbre);dsfConta().catch(e=>console.warn(e));
       CONTA_UI.aba='entrar'; // quando sair, a janela volta na aba Entrar
       if(CONTA_UI.esperando){CONTA_UI.esperando=false;toast('✔ Você entrou'+(CONTA.perfil?' como '+CONTA.perfil.nome:'')+'!')}
     }

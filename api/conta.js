@@ -4,6 +4,7 @@
 //   POST {acao:'perfil', nome, cor}      → muda nome e cor (no ranking também)
 //   POST {acao:'resposta', sala, jogo, dev, tk, ok, fim, modo, nj} → registra uma resposta de partida online
 //   POST {acao:'apagar'}                 → apaga os dados da conta guardados no banco
+//   GET  ?acao=desafio / POST {acao:'desafio', dia, resp, fim, hist} → desafio do dia guardado na conta
 //   GET  ?acao=painel                    → (só o dono) bugs, perguntas reportadas e perguntas com mais 👎
 //   POST {acao:'resolver', lista, id, resolvido} → (só o dono) marca um aviso como resolvido
 const { quemE, ehAdmin } = require('./_auth');
@@ -184,6 +185,42 @@ async function usadas(u, body, get) {
   return { ok: true, mudou: Object.keys(mapa).length };
 }
 
+// desafio do dia na conta, para valer em qualquer aparelho: o progresso de hoje (e de ontem, para quem
+// começou antes da meia-noite) e quantas acertou em cada dia, para a sequência. Sem ranking: o que vem do
+// aparelho só é conferido no formato. Resposta já dada não muda: fica a que chegou primeiro.
+const DIA_OK = /^\d{4}-\d{2}-\d{2}$/;
+const parDe = s => String(s || '').match(/[0-3]{2}/g) || [];
+async function desafio(u, body, get) {
+  const base = 'usuarios/' + u.uid + '/desafio';
+  const atual = (await ler(base)) || {};
+  const hist = atual.hist && typeof atual.hist === 'object' ? atual.hist : {};
+  const dias = atual.dias && typeof atual.dias === 'object' ? atual.dias : {};
+  const hoje = ST.periodo().dia, ontem = ST.periodo(Date.now() - 864e5).dia;
+  if (get) return { hist, dias, hoje };
+  const mapa = {};
+  const d = body.dia;
+  if ((d === hoje || d === ontem) && Array.isArray(body.resp) && body.resp.length <= 12) {
+    const novas = body.resp.map(r => Array.isArray(r) && r.length === 2 && [0, 1, 2, 3].includes(r[0]) && [0, 1, 2, 3].includes(r[1]) ? '' + r[0] + r[1] : null);
+    if (novas.every(Boolean)) {
+      const ant = parDe(dias[d] && dias[d].r), r = ant.concat(novas.slice(ant.length)), fim = !!(dias[d] && dias[d].fim) || body.fim === true;
+      if (r.length !== ant.length || fim !== !!(dias[d] && dias[d].fim)) {
+        dias[d] = { r: r.join(''), fim };
+        mapa[base + '/dias/' + d] = dias[d];
+      }
+      if (fim) { const ac = r.filter(x => x[0] === x[1]).length; if (hist[d] !== ac) { hist[d] = ac; mapa[base + '/hist/' + d] = ac } }
+    }
+  }
+  // dias jogados em outro aparelho, antes de entrar na conta
+  if (body.hist && typeof body.hist === 'object') Object.entries(body.hist).slice(-400).forEach(([k, v]) => {
+    const n = Math.floor(+v);
+    if (!DIA_OK.test(k) || k > hoje || !(n >= 0 && n <= 12) || k in hist) return;
+    hist[k] = n; mapa[base + '/hist/' + k] = n;
+  });
+  Object.keys(dias).forEach(k => { if (k < ontem) { delete dias[k]; mapa[base + '/dias/' + k] = null } }); // só hoje e ontem
+  if (Object.keys(mapa).length) await gravaVarios(mapa);
+  return { hist, dias, hoje };
+}
+
 async function apagar(u) {
   const base = 'usuarios/' + u.uid;
   const rk = await ler(base + '/rk');
@@ -255,6 +292,7 @@ module.exports = async (req, res) => {
     else if (!get && acao === 'foto') r = await mudaFoto(u, body);
     else if (!get && acao === 'resposta') r = await resposta(u, body);
     else if (acao === 'usadas') r = await usadas(u, body, get);
+    else if (acao === 'desafio') r = await desafio(u, body, get);
     else if (!get && acao === 'apagar') { await apagar(u); r = { ok: true } }
     else if (!get && acao === 'resolver') { if (!ehAdmin(u)) throw falha(403, 'Só o dono do jogo pode fazer isso.'); r = await resolver(body) }
     else throw falha(400, 'Ação desconhecida.');
