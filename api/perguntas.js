@@ -192,11 +192,11 @@ async function desafioDoDia(B, pedido) {
   const k = B.v + '|' + dia;
   if (DSF_MEM.has(k)) return DSF_MEM.get(k);
   // o desafio de cada dia fica guardado: se o banco mudar no meio do dia, as perguntas continuam as mesmas
-  let d = await ST.ler('desafio/' + dia).catch(() => null);
+  let d = await ST.ler('desafio2/' + dia).catch(() => null); // desafio2: alternativas só de perguntas do mesmo molde
   if (!d || !Array.isArray(d.itens) || !d.itens.length) {
     const temas = ORDER.filter(t => t !== 'N').concat(dia.slice(5, 7) === '12' ? ['N'] : []);
     d = DSF.monta(B, FX, dia, temas);
-    await ST.grava('PUT', 'desafio/' + dia, d).catch(() => {});
+    await ST.grava('PUT', 'desafio2/' + dia, d).catch(() => {});
   }
   if (DSF_MEM.size > 6) DSF_MEM.clear();
   DSF_MEM.set(k, d);
