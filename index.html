@@ -1081,7 +1081,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
         <li>Quando as fichas acabam, você recebe todas de volta.</li>
         <li>O tema é o da casa. No INÍCIO e nas casas com dois temas, você escolhe.</li>
         <li>Na última casa, os outros escolhem o tema. Acertou a pergunta final, venceu.</li>
-        <li><b>Modos:</b> 🎲 Tradicional; ⭐ Bônus (difícil +1 casa, impossível +2); 🔥 Arriscado (na difícil e na impossível dá para apostar o dobro).</li>
+        <li><b>Modos:</b> 🎲 Tradicional; ⭐ Bônus (difícil +1 casa, impossível +2); 🔥 Arriscado (na difícil e na impossível dá para apostar o dobro; se errar, volta o valor da ficha e joga o tema da casa nova).</li>
         <li><b>Ajudas</b>, uma vez por partida: ⏭ Pular troca a pergunta e 💡 Dica mostra a primeira letra (ou tira uma alternativa errada).</li>
       </ul>
       <h4 class="regsub">Online</h4>
@@ -2247,7 +2247,8 @@ function resolve(ok,snapped,pre){
   }else{ // errou (inclusive a impossível): perde a ficha e repete o tema
     p.forced=G.theme;
     let volta=0;if(dobro){const de=p.pos;p.pos=Math.max(0,p.pos-tok);volta=de-p.pos}
-    msg=`✘ Errou! ${name} `+(volta?`volta ${volta} casa${volta>1?'s':''} (arriscou o dobro)`:'fica na mesma casa')+(isFinal?'':` e perde a ficha ${tok}`)+`. Na próxima rodada, responde outra pergunta de <b>${T[G.theme].n}</b>.`;
+    if(volta)p.forced=null; // voltou de casa: o tema da próxima vez é o da casa nova, não repete
+    msg=`✘ Errou! ${name} `+(volta?`volta ${volta} casa${volta>1?'s':''} (arriscou o dobro)`:'fica na mesma casa')+(isFinal?'':` e perde a ficha ${tok}`)+(volta?'. Na próxima rodada, o tema é o da casa nova.':`. Na próxima rodada, responde outra pergunta de <b>${T[G.theme].n}</b>.`);
   }
   if(p.used.length>=NF()){p.used=[];msg+=` Todas as fichas foram usadas: as ${NF()} voltam para a mão.`}
   G.token=null;G.lastTok=tok;G.msg=(pre||'')+msg;G.phase="result";render();

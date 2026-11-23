@@ -218,7 +218,8 @@ function depois(base, ok, nivel) {
     p.pos = Math.min(FIN, p.pos + (tok || 0) * (dobro ? 2 : 1) + bonus);
   } else {
     p.forced = base.theme || null;
-    if (dobro && tok) p.pos = Math.max(0, p.pos - tok);
+    // errou com o dobro e voltou de casa: o tema da próxima vez é o da casa nova, não repete
+    if (dobro && tok) { const de = p.pos; p.pos = Math.max(0, p.pos - tok); if (p.pos !== de) p.forced = null }
   }
   if (p.used.length >= nf(base)) p.used = [];
   return { p, fase };
