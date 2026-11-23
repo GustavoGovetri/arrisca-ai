@@ -294,6 +294,7 @@ module.exports = async (req, res) => {
     else if (acao === 'usadas') r = await usadas(u, body, get);
     else if (acao === 'desafio') r = await desafio(u, body, get);
     else if (!get && acao === 'apagar') { await apagar(u); r = { ok: true } }
+    else if (!get && acao === 'revisao') { if (!ehAdmin(u)) throw falha(403, 'Só o dono do jogo pode fazer isso.'); r = await require('./_revisao').revisa() }
     else if (!get && acao === 'resolver') { if (!ehAdmin(u)) throw falha(403, 'Só o dono do jogo pode fazer isso.'); r = await resolver(body) }
     else throw falha(400, 'Ação desconhecida.');
     res.status(200).json(r);
@@ -301,3 +302,4 @@ module.exports = async (req, res) => {
     res.status(e.status || 500).json({ erro: e.message || 'Erro' });
   }
 };
+module.exports.notasPiores = notasPiores; // a cópia para revisão (_revisao.js) usa a mesma lista do painel

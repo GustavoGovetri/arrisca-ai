@@ -39,5 +39,11 @@
       "source": "/__/firebase/:path*",
       "destination": "https://arrisca-ai.firebaseapp.com/__/firebase/:path*"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/revisao",
+      "schedule": "0 9 * * *"
+    }
   ]
 }

@@ -1119,7 +1119,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
 <div id="desafiobox" class="chatbox modal desafiobox" style="display:none"><div class="chathead"><b>📅 Desafio do dia</b><button class="small" onclick="desafioFecha()">✕</button></div><div id="desafiocorpo" class="histcorpo"></div></div>
 <div id="amigosbox" class="chatbox modal amigosbox" style="display:none"><div class="chathead"><b id="amigostit">👥 Amigos</b><div class="row"><button class="small" title="Atualizar" onclick="amigosCarrega()">↻</button><button class="small" onclick="amigosFecha()">✕</button></div></div><div id="amigoscorpo" class="histcorpo"></div></div>
 <div id="convite" class="convite" style="display:none" role="alert"></div>
-<div id="painelbox" class="chatbox modal largo painelbox" style="display:none"><div class="chathead"><b>🛠 Painel</b><div class="row"><button class="small" title="Atualizar" onclick="painelCarrega()">↻</button><button class="small" onclick="painelFecha()">✕</button></div></div><div id="painelcorpo" class="histcorpo"></div></div>
+<div id="painelbox" class="chatbox modal largo painelbox" style="display:none"><div class="chathead"><b>🛠 Painel</b><div class="row"><button class="small" id="revisaobtn" title="Mandar os reportes abertos para o Claude revisar" onclick="painelRevisao()">📤 Revisão</button><button class="small" title="Atualizar" onclick="painelCarrega()">↻</button><button class="small" onclick="painelFecha()">✕</button></div></div><div id="painelcorpo" class="histcorpo"></div></div>
 <div id="visualbox" class="chatbox modal" style="display:none"><div class="chathead"><b>🎨 Visual</b><button class="small" onclick="modalFecha('visualbox')">✕</button></div><div id="visualcorpo" class="histcorpo"></div></div>
 <div id="sombox" class="chatbox modal sombox" style="display:none"><div class="chathead"><b>🔊 Sons e avisos</b><button class="small" onclick="modalFecha('sombox')">✕</button></div><div id="somcorpo" class="histcorpo"></div></div>
 <div id="bugbox" class="chatbox histbox bugbox" style="display:none"><div class="chathead"><b>🐞 Reportar um problema</b><button class="small" onclick="bugFecha()">✕</button></div><div id="bugcorpo" class="histcorpo"></div></div>
@@ -3111,6 +3111,15 @@ function painelAbre(){painelRender();modalAbre('painelbox');painelCarrega()}
 function painelFecha(){modalFecha('painelbox')}
 function painelRender(){const el=document.getElementById('painelcorpo');if(el)el.innerHTML=painelHtml()}
 async function painelCarrega(){PAINEL.erro='';PAINEL.dados=null;painelRender();try{PAINEL.dados=await contaApi('GET',{acao:'painel'})}catch(e){PAINEL.erro=e.message}painelRender()}
+// manda os reportes abertos para o repositório de perguntas, para o Claude revisar (a Vercel também faz isso uma vez por dia)
+async function painelRevisao(){
+  const b=document.getElementById('revisaobtn');if(b){b.disabled=true;b.textContent='Enviando…'}
+  try{const r=await contaApi('POST',{acao:'revisao'});
+    toast(`📤 Enviado para revisão: ${r.bugs} bug${r.bugs===1?'':'s'}, ${r.perguntas} pergunta${r.perguntas===1?'':'s'} e ${r.notas} com 👎${r.aplicadas?` · ${r.aplicadas} aprovado${r.aplicadas===1?'':'s'} marcado${r.aplicadas===1?'':'s'} como resolvido${r.aplicadas===1?'':'s'}`:''}.`);
+    if(r.aplicadas)painelCarrega()}
+  catch(e){toast('Não consegui mandar para revisão: '+e.message)}
+  if(b){b.disabled=false;b.textContent='📤 Revisão'}
+}
 function painelHtml(){
   const d=PAINEL.dados,abertos=k=>d?d[k].filter(x=>!x.resolvido).length:0;
   let h=`<div class="pfiltro"><div class="abas" style="margin:0;flex:1 1 260px"><button class="small${PAINEL.aba==='bugs'?' on':''}" onclick="PAINEL.aba='bugs';painelRender()">🐞 Bugs${d?' ('+abertos('bugs')+')':''}</button><button class="small${PAINEL.aba==='reportes'?' on':''}" onclick="PAINEL.aba='reportes';painelRender()">⚑ Perguntas${d?' ('+abertos('reportes')+')':''}</button><button class="small${PAINEL.aba==='notas'?' on':''}" onclick="PAINEL.aba='notas';painelRender()">👎 Notas${d&&d.notas?' ('+d.notas.lista.length+')':''}</button></div><label><input type="checkbox" ${PAINEL.resolvidos?'checked':''} onchange="PAINEL.resolvidos=this.checked;painelRender()"> Mostrar resolvidos</label></div>`;
