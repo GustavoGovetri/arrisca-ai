@@ -195,6 +195,10 @@ button:active:not(:disabled){transform:scale(.94)}
 .votos{margin:6px 0}
 .votos button{flex:1;font-size:17px;padding:12px}
 .votos button.on{outline:3px solid #fff;outline-offset:2px}
+.vtopts button.on{outline:3px solid #fff;outline-offset:2px}
+.vtopts button{position:relative}
+.vtn{display:inline-block;min-width:22px;margin-left:6px;padding:0 6px;border-radius:11px;background:rgba(0,0,0,.45);color:#fff;font-size:13px;line-height:22px;text-align:center}
+.vtopts button:disabled{opacity:.85}
 .chatn{position:absolute;top:-4px;right:-4px;background:#e23b3b;color:#fff;border-radius:12px;font-size:12px;min-width:22px;height:22px;line-height:22px;padding:0 6px;font-weight:800}
 .chatn:empty{display:none}
 .chatbox{position:fixed;right:16px;bottom:16px;z-index:26;width:min(360px,calc(100vw - 24px));height:min(480px,70vh);background:#1d2029;border:1px solid #2f3442;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.6);display:flex;flex-direction:column;overflow:hidden;animation:pin .25s ease-out}
@@ -1082,7 +1086,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
         <li>Na sua vez, escolha uma ficha <b>antes</b> de ver a pergunta. Acertou: anda o número da ficha. Errou: fica onde está, perde a ficha e repete o tema na próxima vez.</li>
         <li>Quando as fichas acabam, você recebe todas de volta.</li>
         <li>O tema é o da casa. No INÍCIO e nas casas com dois temas, você escolhe.</li>
-        <li>Na última casa, os outros escolhem o tema. Acertou a pergunta final, venceu.</li>
+        <li>Na última casa, os outros votam no tema. Acertou a pergunta final, venceu.</li>
         <li><b>Modos:</b> 🎲 Tradicional; ⭐ Bônus (difícil +1 casa, impossível +2); 🔥 Arriscado (na difícil e na impossível dá para apostar o dobro; se errar, volta o valor da ficha e joga o tema da casa nova).</li>
         <li><b>Ajudas</b>, uma vez por partida: ⏭ Pular troca a pergunta e 💡 Dica mostra a primeira letra (ou tira uma alternativa errada).</li>
       </ul>
@@ -1621,7 +1625,7 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${online()?tituloChip(TITULOS[p.dev]):''}${expulsarBtn(p)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE||!!ENTRANDO);document.body.classList.toggle('prep',!!MODE&&!ENTRANDO&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
+function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE||!!ENTRANDO);document.body.classList.toggle('prep',!!MODE&&!ENTRANDO&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(online()&&G.phase==='theme'&&G.vt)setTimeout(vtConfere,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
 
 function renderPanel(){
   const el=document.getElementById('panel');
@@ -1654,9 +1658,10 @@ function renderPanel(){
   if(G.phase==='exhausted'){
     const t=G.exTheme,outros=activeThemes().some(k=>k!==t&&!themeDone(k));
     if(!can('cur')){el.innerHTML=head+waitHtml('cur','decidir: as perguntas de '+T[t].n+' acabaram');return}
-    el.innerHTML=head+`<p class="msg">Todas as <b>${QNj(t,activeThemes()).toLocaleString('pt-BR')}</b> perguntas de <b style="color:${T[t].c}">${T[t].n}</b> já saíram.</p><p class="msg">Quer liberar as perguntas desse tema para que voltem a cair?</p><div class="row"><button class="primary" onclick="approveReset()">Sim, liberar ${T[t].n}</button>${outros?'<button onclick="otherTheme()">Não, sortear de outro tema</button>':''}</div>`;
+    el.innerHTML=head+`<p class="msg">Todas as <b>${QNj(t,activeThemes()).toLocaleString('pt-BR')}</b> perguntas de <b style="color:${T[t].c}">${T[t].n}</b> já saíram.</p><p class="msg">Quer liberar as perguntas desse tema para que voltem a cair?</p><div class="row"><button class="primary" onclick="approveReset()">Sim, liberar ${T[t].n}</button>${outros?`<button onclick="otherTheme()">${vtFinal()?'Não, votar outro tema':'Não, sortear de outro tema'}</button>`:''}</div>`;
     return;
   }
+  if(G.phase==='theme'&&votandoTema()){el.innerHTML=head+vtHtml();return}
   if(G.phase==='theme'){
     el.innerHTML=head+`<p class="msg">${G.themeLabel}</p><div class="opts${G.themeOptions.length>4?' optsgrade':''}">${G.themeOptions.map(k=>`<button style="background:${T[k].c}" ${canTheme()?'':'disabled'} onclick="pickTheme('${k}')"><span class="tic">${ic(k)}</span> ${T[k].n}</button>`).join('')}</div>${canTheme()?'':waitThemeHtml()}`;
     return;
@@ -2141,11 +2146,11 @@ function reiHtml(){
 function startTurn(){
   stopTimer();
   const p=G.players[G.cur];
-  G.token=null;G.lastTok=null;G.chosen=null;G.revealed=false;G.forcedNow=false;G.msg='';G.theme=null;G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;G.dobro=false;G.rasteira=null;G.aba=null;
+  G.token=null;G.lastTok=null;G.chosen=null;G.revealed=false;G.forcedNow=false;G.msg='';G.theme=null;G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;G.dobro=false;G.rasteira=null;G.aba=null;G.vt=null;
   if(p.forced){G.forcedNow=true;pickTheme(p.forced);return}
   const s=board[p.pos];
   if(s.type==='start'){G.themeOptions=activeThemes();G.themeLabel='Você está na casa <b>INÍCIO</b>: escolha o tema da sua pergunta.'}
-  else if(s.type==='final'){G.themeOptions=activeThemes();G.themeLabel='<b>Última casa!</b> Os outros jogadores escolhem, em comum acordo, o tema da pergunta final.'}
+  else if(s.type==='final'){G.themeOptions=activeThemes();G.themeLabel='<b>Última casa!</b> Os outros jogadores escolhem juntos o tema da pergunta final.';if(online())G.vt=vtNova([])}
   else if(s.themes.length>1){G.themeOptions=s.themes;G.themeLabel='Casa com dois temas: escolha qual quer responder.'}
   else{pickTheme(s.themes[0]);return}
   G.phase='theme';render();
@@ -2178,7 +2183,9 @@ async function approveReset(){
     if(EXIDS)Object.entries(EXIDS.ids).forEach(([s,ids])=>{if(!USED[s])return;const rm=new Set(ids);USED[s]=USED[s].filter(x=>!rm.has(x));usedSet[s]=new Set(USED[s]);contaHistLibera(s,ids)});
   }else{USED[t]=[];usedSet[t]=new Set();contaHistLibera(t)}
   EXIDS=null;persist();G.resetNote=`As perguntas de ${T[t].n} foram liberadas de novo.`;pickTheme(t,true)}
-function otherTheme(){const ops=activeThemes().filter(k=>k!==G.exTheme&&!themeDone(k));pickTheme(ops[rndInt(ops.length)])}
+function otherTheme(){
+  if(vtFinal()){G.resetNote='';G.vt=vtNova([...((G.vt&&G.vt.sem)||[]),G.exTheme]);G.phase='theme';SFX.whoosh&&SFX.whoosh();render();return} // última casa: a turma vota de novo, sem esse tema
+  const ops=activeThemes().filter(k=>k!==G.exTheme&&!themeDone(k));pickTheme(ops[rndInt(ops.length)])}
 let SORTEANDO=false,PRE={},API_N=0;
 function chavePre(t,cur,rodada,pos){
   if(cur==null){cur=G.cur;rodada=G.round;pos=(G.players&&G.players[G.cur]&&G.players[G.cur].pos)||0}
@@ -2245,7 +2252,7 @@ function resolve(ok,snapped,pre){
     const extra=[];if(dobro)extra.push('arriscou o dobro');if(bonus)extra.push(`+${bonus} de bônus pela ${imp?'impossível':'difícil'}`);
     msg+=(extra.length?` (${extra.join(' e ')})`:'')+'.';
     if(imp&&regra('bonus'))msg+=` ⭐ Ganhou uma estrela!`;
-    if(p.pos===FINAL)msg+=' Chegou à <b>última casa</b>! Na próxima vez, os outros escolhem o tema da pergunta final.';
+    if(p.pos===FINAL)msg+=' Chegou à <b>última casa</b>! Na próxima vez, os outros votam no tema da pergunta final.';
   }else{ // errou (inclusive a impossível): perde a ficha e repete o tema
     p.forced=G.theme;
     let volta=0;if(dobro){const de=p.pos;p.pos=Math.max(0,p.pos-tok);volta=de-p.pos}
@@ -2296,7 +2303,7 @@ function can(role){
   if(role==='next')return me===G.cur||me===readerIdx()||amHost();
   return false;
 }
-function canTheme(){const p=G.players&&G.players[G.cur];return p&&p.pos===FINAL?can('others'):can('cur')}
+function canTheme(){const p=G.players&&G.players[G.cur];if(!p)return false;if(p.pos!==FINAL)return can('cur');return online()&&G.vt&&!p.forced?vtAplicador()===MYDEV:can('others')}
 function nm(p){return p?`<b style="color:${p.color}">${esc(p.name)}</b>`:'alguém'}
 function turnTitle(p){const f=online()&&fotoDe(p.dev)?bolinha(fotoDe(p.dev),p.color,'tfoto'):'';return online()&&myIdx()===G.cur?`${f}Sua vez, <span style="color:${p.color}">${esc(p.name)}</span>!`:`${f}Vez de <span style="color:${p.color}">${esc(p.name)}</span>`}
 function waitHtml(role,acao){const p=role==='reader'?G.players[readerIdx()]:G.players[G.cur];return `<p class="wait">⏳ Aguardando ${nm(p)} ${acao}…</p>`}
@@ -2408,7 +2415,7 @@ const COMO=[
   {i:'✔️',t:'Acertou ou errou?',d:'Acertou, anda as casas da ficha. Errou, perde a ficha e responde o mesmo tema na próxima vez.'},
   {i:'⭐',t:'Arrisque nas difíceis',d:'Nos modos com bônus, difícil e impossível valem casas a mais e estrelas.'},
   {i:'🏅',t:'Ganhe títulos',d:'Com conta, as partidas online valem pontos no ranking e conquistas. Coloque sua foto e mostre um título ao lado do nome.'},
-  {i:'🏆',t:'Chegue ao fim',d:'Na última casa, os outros escolhem o tema da pergunta final. Acertou, ganhou!'}
+  {i:'🏆',t:'Chegue ao fim',d:'Na última casa, os outros votam no tema da pergunta final. Acertou, ganhou!'}
 ];
 let COMO_I=0,COMO_T=null,COMO_TOQUE=null;
 function comoSlide(s){
@@ -3167,14 +3174,15 @@ const ABA_KEY='arrisca-aviso-aba'; // sessionStorage: some ao fechar o site, ent
 let ABA_SAIU=null,ABA_PISCA=null;
 const TITULO=document.title;
 function abaDispensada(){try{return sessionStorage.getItem(ABA_KEY)==='1'}catch(e){return false}}
-function minhaVez(){return online()&&G.players&&myIdx()===G.cur&&['theme','question','sorteio'].includes(G.phase)&&!G.resp&&G.chosen===null}
-function meuVoto(){const k=respKey();return online()&&G.phase==='question'&&k&&myIdx()!==G.cur&&myIdx()>=0&&!(VOTES[MYDEV]&&VOTES[MYDEV].k===k)}
+function minhaVez(){return online()&&G.players&&myIdx()===G.cur&&['theme','question','sorteio'].includes(G.phase)&&!G.resp&&G.chosen===null&&!votandoTema()}
+function meuVoto(){const k=respKey();if(votandoTema()){const v=VOTES[MYDEV+'_t'];return myIdx()>=0&&myIdx()!==G.cur&&!(v&&v.k==='f:'+G.vt.id)}return online()&&G.phase==='question'&&k&&myIdx()!==G.cur&&myIdx()>=0&&!(VOTES[MYDEV]&&VOTES[MYDEV].k===k)}
 function emPartida(){return online()&&G.players&&G.phase!=='setup'&&G.phase!=='won'}
 function abaAviso(){
   const box=document.getElementById('avisoaba');if(!box)return;
   const vez=minhaVez(),voto=meuVoto();
   document.getElementById('avisotxt').innerHTML=vez
     ?'<b>É a sua vez!</b> Quando você vai para outra aba ou outra janela, o tempo para responder continua correndo e, se acabar, conta como erro. Todo mundo na sala vê que você saiu.'
+    :voto&&votandoTema()?'<b>A turma está votando no tema da pergunta final.</b> Quando você vai para outra aba ou outra janela, a votação pode fechar sem o seu voto.'
     :voto?'<b>Tem uma resposta esperando o seu voto.</b> Quando você vai para outra aba ou outra janela, a partida segue e a votação pode fechar sem você.'
     :'Quando você vai para outra aba ou outra janela, a partida continua: pode chegar a sua vez, o tempo de resposta corre e as votações fecham sem você. No celular, a conexão também pode cair com o site em segundo plano.';
   document.getElementById('avisonao').checked=false;
@@ -3293,7 +3301,7 @@ pintaEfx();
 function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
 
 // ----- sincronização da partida -----
-const SYNC_KEYS=[...SNAP_KEYS,'jogo','exTheme','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica','desfazer','expulsar'];
+const SYNC_KEYS=[...SNAP_KEYS,'jogo','exTheme','vt','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica','desfazer','expulsar'];
 function syncJson(){const o={};SYNC_KEYS.forEach(k=>{if(G[k]!==undefined)o[k]=G[k]});return JSON.stringify(o)}
 let PUSHING=false,PUSH_AGAIN=false,SENT=null;
 async function netPush(){
@@ -3393,6 +3401,7 @@ function limpaEstado(o){
   g.previewBoard=Array.isArray(o.previewBoard)?o.previewBoard.slice(0,80).map(sCasa):null;
   g.ordem=Array.isArray(o.ordem)?o.ordem.map(sId).filter(Boolean).slice(0,30):[];
   const ex=o.expulsar;g.expulsar=ex&&typeof ex==='object'&&sId(ex.id)&&sId(ex.dev)&&sId(ex.alvo)?{id:ex.id,dev:ex.dev,alvo:ex.alvo,nome:semPalavrao(sStr(ex.nome,16)),nomeAlvo:semPalavrao(sStr(ex.nomeAlvo,16)),ate:Number(ex.ate)||0}:null;
+  const vt=o.vt;g.vt=vt&&typeof vt==='object'&&sId(vt.id)&&Number.isFinite(+vt.ate)?{id:vt.id,ate:+vt.ate,sem:sTemas(vt.sem)}:null;
   const dz=o.desfazer;g.desfazer=dz&&typeof dz==='object'&&sId(dz.id)&&sId(dz.dev)?{id:dz.id,dev:dz.dev,nome:semPalavrao(sStr(dz.nome,16)),label:sStr(dz.label,40),ate:Number(dz.ate)||0}:null;
   return g;
 }
@@ -3419,7 +3428,7 @@ function applyRemote(d){
     marcaVistas();fixLegacy();
     render();
     LASTSYNC=syncJson();
-    if(G.players&&d.por!==MYDEV&&myIdx()===G.cur&&(prevCur!==G.cur||!prevPl)&&G.phase!=='won'){try{navigator.vibrate&&navigator.vibrate(150)}catch(e){}toast('🎲 Sua vez!')}
+    if(G.players&&d.por!==MYDEV&&myIdx()===G.cur&&(prevCur!==G.cur||!prevPl)&&G.phase!=='won'){try{navigator.vibrate&&navigator.vibrate(150)}catch(e){}toast(votandoTema()?'🏁 Última casa! A turma está votando no tema da sua pergunta final.':'🎲 Sua vez!')}
     else if(prevPl&&G.players&&G.phase!=='setup'){const agoraJoga=myIdx()>=0;if(agoraJoga&&!eraJogador){toast('🎉 Você entrou na partida! Começa na casa INÍCIO.');SFX.join&&SFX.join()}else if(!agoraJoga&&eraJogador)toast('🚫 Você saiu da partida por votação. Dá para continuar assistindo.')}
   }finally{APPLYING=false}
 }
@@ -3768,6 +3777,68 @@ function julgar(){ // quem fecha a votação é o aparelho de quem respondeu (ou
 }
 function fecharVoto(ok,pre){if(G.phase!=='question'||!G.resp)return;stopTimer();resolve(ok,true,pre)}
 function forcarVoto(ok){return;const me=G.players[myIdx()];fecharVoto(ok,`🎮 ${esc(me?me.name:'Quem criou a sala')} decidiu que a resposta ${ok?'vale':'não vale'}. `)}
+// ----- última casa (online): os outros jogadores votam no tema da pergunta final -----
+// Mesma conta do servidor (api/_juiz.js, temaFinal): mais da metade num tema decide na hora; todos votaram ou o tempo
+// acabou: ganha o mais votado (empate ou ninguém votou: sorteio fixo pela votação, igual em todos os aparelhos)
+const DUR_VTEMA=30;let VT_TENTOU={id:'',ts:0};
+function vtNova(sem){return {id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),ate:Math.round(agora())+DUR_VTEMA*1000,sem}}
+function vtFinal(){const p=G.players&&G.players[G.cur];return online()&&!!G.vt&&!!p&&p.pos===FINAL&&!p.forced}
+function votandoTema(){return G.phase==='theme'&&vtFinal()}
+function vtHash(s){let h=0;s=String(s);for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h}
+function vtConta(){
+  const vt=G.vt;if(!vt||!G.players)return null;
+  const k='f:'+vt.id,sem=vt.sem||[],ops=activeThemes().filter(t=>!sem.includes(t));
+  const el=G.players.filter((p,i)=>i!==G.cur&&p.dev&&((LOBBY[p.dev]&&LOBBY[p.dev].on!==false)||(VOTES[p.dev+'_t']&&VOTES[p.dev+'_t'].k===k)));
+  const cont={},falta=[];let n=0;
+  el.forEach(p=>{const v=VOTES[p.dev+'_t'];if(v&&v.k===k&&ops.includes(v.t)){cont[v.t]=(cont[v.t]||0)+1;n++}else falta.push(p)});
+  return {k,ops,cont,n,total:el.length,falta};
+}
+function vtDecide(c,acabou){
+  if(!c||!c.ops.length)return null;
+  const max=Math.max(0,...Object.values(c.cont)),top=max?c.ops.filter(t=>c.cont[t]===max):[];
+  if(max>c.total/2)return {t:top[0],como:'maioria'};
+  if(!(acabou||(c.total&&c.n>=c.total)))return null;
+  const pool=top.length?top:c.ops;
+  return {t:pool[vtHash(G.vt.id)%pool.length],como:!c.n?'sorteio':top.length>1?'empate':'mais',top};
+}
+function vtAplicador(){ // quem passa o tema que ganhou para o jogo: o aparelho de quem vai responder; se ele caiu, quem criou a sala; senão o primeiro conectado
+  const on=d=>!!d&&!!LOBBY[d]&&LOBBY[d].on!==false,p=G.players&&G.players[G.cur];if(!p)return null;
+  if(on(p.dev))return p.dev;if(on(HOST))return HOST;
+  const o=G.players.find(x=>on(x.dev));return o?o.dev:null;
+}
+function vtNota(d,c){
+  const nome=`<b>${T[d.t].n}</b>`,v=n=>n+(n===1?' voto':' votos');
+  if(d.como==='sorteio')return `🗳️ Ninguém votou a tempo: o tema sorteado foi ${nome}.`;
+  if(d.como==='empate')return `🗳️ Deu empate na votação (${d.top.map(t=>T[t].n).join(', ')}): ficou ${nome}.`;
+  return `🗳️ A turma escolheu ${nome} para a pergunta final (${v(c.cont[d.t]||0)}).`;
+}
+function votoTema(t){
+  if(!votandoTema()||!NET)return;
+  const me=myIdx(),c=vtConta();if(me<0||me===G.cur||!c||!c.ops.includes(t))return;
+  const mv=VOTES[MYDEV+'_t'];if(mv&&mv.k===c.k&&mv.t===t)return;
+  const o={k:c.k,v:true,t,ts:Date.now()};
+  VOTES=Object.assign({},VOTES,{[MYDEV+'_t']:o});SFX.vote();
+  mandaVoto(MYDEV+'_t',o);render();
+}
+function vtConfere(){
+  if(!votandoTema()||SORTEANDO||APPLYING)return;
+  if(vtAplicador()!==MYDEV)return;
+  const c=vtConta(),d=vtDecide(c,agora()>=G.vt.ate);if(!d)return;
+  const id=G.vt.id+'|'+d.t;if(VT_TENTOU.id===id&&Date.now()-VT_TENTOU.ts<6000)return; // não insiste se o sorteio falhou
+  VT_TENTOU={id,ts:Date.now()};
+  G.resetNote=vtNota(d,c);toast(vtNota(d,c).replace(/<[^>]+>/g,''));
+  pickTheme(d.t,true);
+}
+function vtHtml(){
+  const c=vtConta(),p=G.players[G.cur],me=myIdx(),eleitor=me>=0&&me!==G.cur,mv=VOTES[MYDEV+'_t'],meu=mv&&mv.k===c.k?mv.t:null;
+  const seg=Math.max(0,Math.ceil((G.vt.ate-agora())/1000));
+  const txt=eleitor?(meu?`Seu voto: <b>${T[meu].n}</b>. Dá para trocar até a votação fechar.`:`Vote no tema da pergunta final de ${nm(p)}. Ganha o mais votado.`):me===G.cur?'Os outros jogadores estão votando no tema da sua pergunta final.':`Os outros jogadores estão votando no tema da pergunta final de ${nm(p)}.`;
+  let h=`<p class="msg"><b>Última casa!</b> ${txt} <span class="muted">⏳ <span id="vttempo">${seg}</span> s</span></p>`;
+  h+=`<div class="opts optsgrade vtopts">${c.ops.map(k=>`<button style="background:${T[k].c}" class="${meu===k?'on':''}" ${eleitor?'':'disabled'} onclick="votoTema('${k}')"><span class="tic">${ic(k)}</span> ${T[k].n}${c.cont[k]?`<span class="vtn">${c.cont[k]}</span>`:''}</button>`).join('')}</div>`;
+  h+=`<p class="muted">🗳️ ${c.n} de ${c.total} ${c.total===1?'voto':'votos'}${c.falta.length?' · falta: '+c.falta.map(x=>esc(x.name)).join(', '):''}</p>`;
+  return h;
+}
+setInterval(()=>{if(!votandoTema())return;const el=document.getElementById('vttempo');if(el)el.textContent=Math.max(0,Math.ceil((G.vt.ate-agora())/1000));vtConfere()},1000);
 function mandaVoto(id,o){
   const sala=ROOM;
   servidorSala('votar',{sala,id,voto:o}).then(r=>{if(NET&&NET.espelhaVoto)NET.espelhaVoto(sala,id,r.voto||o)}).catch(e=>toast(e.status?'Voto não aceito: '+e.message:'Sem conexão: o voto não foi enviado.'));

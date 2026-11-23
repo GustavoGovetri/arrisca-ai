@@ -163,15 +163,19 @@ async function jogada(body) {
   await ST.gravaVarios(mapa);
   return resposta ? { v, qid: next.qid, resposta } : { v };
 }
+const TEMAS_VOTO = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V', 'N'];
 async function votar(body) {
   const code = codigo(body.sala), q = quem(body);
   const id = String(body.id || '');
-  if (id !== q.dev && id !== q.dev + '_u' && id !== q.dev + '_x') throw erro(403, 'Voto de outro aparelho');
+  if (id !== q.dev && id !== q.dev + '_u' && id !== q.dev + '_x' && id !== q.dev + '_t') throw erro(403, 'Voto de outro aparelho');
   const voto = body.voto && typeof body.voto === 'object' ? body.voto : null;
   if (!voto || typeof voto.k !== 'string' || voto.k.length > 60) throw erro(400, 'Voto inválido');
   const guardada = await ST.ler('srv/chaves/' + code + '/' + q.dev);
   await confereChave(code, q, guardada);
+  const tema = id.endsWith('_t') ? String(voto.t || '') : null; // voto no tema da pergunta final
+  if (tema !== null && !TEMAS_VOTO.includes(tema)) throw erro(400, 'Voto inválido');
   const v = { k: voto.k, v: !!voto.v, ts: Date.now() };
+  if (tema !== null) v.t = tema;
   await ST.grava('PUT', 'salas/' + code + '/votos/' + id, v);
   return { ok: true, voto: v };
 }

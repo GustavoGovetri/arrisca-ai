@@ -96,6 +96,42 @@ async function perguntaOk(c, g) {
 }
 
 // o tema escolhido para a vez é permitido pela casa onde o jogador está?
+// votação do tema da pergunta final (mesma conta do jogo): votam os outros jogadores conectados (ou que já votaram).
+// Mais da metade num tema decide na hora; todos votaram ou o tempo acabou: ganha o mais votado (empate e ninguém votou: sorteio fixo pela votação)
+const DUR_VTEMA = 30000;
+function hashTxt(s) { let h = 0; s = String(s); for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h }
+function temaFinal(g, votos, lobby, acabou) {
+  const P = pls(g), vt = g && g.vt;
+  if (!P || !vt || typeof vt.id !== 'string') return null;
+  votos = votos || {}; lobby = lobby || {};
+  const cur = +g.cur || 0, k = 'f:' + vt.id, sem = Array.isArray(vt.sem) ? vt.sem : [];
+  const ops = ativos(g).filter(t => !sem.includes(t));
+  if (!ops.length) return null;
+  const el = P.filter((p, i) => i !== cur && p.dev && ((lobby[p.dev] && lobby[p.dev].on !== false) || (votos[p.dev + '_t'] && votos[p.dev + '_t'].k === k)));
+  const cont = {}; let n = 0;
+  el.forEach(p => { const v = votos[p.dev + '_t']; if (v && v.k === k && ops.includes(v.t)) { cont[v.t] = (cont[v.t] || 0) + 1; n++ } });
+  const max = Math.max(0, ...Object.values(cont));
+  const top = max ? ops.filter(t => cont[t] === max) : [];
+  if (max > el.length / 2) return { t: top[0], como: 'maioria', cont, n, total: el.length };
+  if (!(acabou || (el.length && n >= el.length))) return null;
+  const pool = top.length ? top : ops;
+  return { t: pool[hashTxt(vt.id) % pool.length], como: !n ? 'sorteio' : top.length > 1 ? 'empate' : 'mais', cont, n, total: el.length };
+}
+function vtValido(vt, agora) {
+  return !!vt && typeof vt === 'object' && typeof vt.id === 'string' && /^[A-Za-z0-9_-]{4,30}$/.test(vt.id) &&
+    Number.isFinite(+vt.ate) && +vt.ate >= agora + 10000 && +vt.ate <= agora + DUR_VTEMA + 10000 &&
+    Array.isArray(vt.sem) && vt.sem.length <= TEMAS.length && vt.sem.every(t => TEMAS.includes(t)) &&
+    Object.keys(vt).every(x => ['id', 'ate', 'sem'].includes(x));
+}
+// na última casa (sem tema obrigatório), o tema só vale se for o da votação: null se pode, senão o motivo
+function escolhaFinal(c, base, tema, quem) {
+  if (base.phase === 'sorteio' && base.sortTema && tema === base.sortTema) return null; // o sorteio desse tema já foi conferido
+  if (base.phase === 'exhausted') return tema === base.exTheme ? null : 'O tema da pergunta final sai da votação'; // liberar as perguntas do tema que ganhou
+  if (!base.vt) return quem.idx >= 0 && quem.idx !== (+base.cur || 0) ? null : 'Não é você quem escolhe o tema agora'; // partida começada antes da votação
+  const d = temaFinal(base, c.votos, c.lobby, c.agora >= +base.vt.ate - 3000);
+  if (!d) return 'A votação do tema ainda não terminou';
+  return d.t === tema ? null : 'O tema da pergunta final sai da votação';
+}
 function temaPermitido(base, g, tema, pulou) {
   const P = pls(base), p = P[+base.cur || 0];
   if (!TEMAS.includes(tema) || !ativos(base).includes(tema)) return false;
@@ -132,7 +168,23 @@ async function progresso(c, base, g, quem) {
   }
   const ajA = aj(P[cur]), ajB = aj(Q[cur]);
   const pulou = !ajA.pular && ajB.pular, deuDica = !ajA.dica && ajB.dica;
-  const podeTema = fin ? !ehCur && idx >= 0 : ehCur; // na pergunta final, quem escolhe o tema são os outros jogadores
+  const votoFinal = fin && !P[cur].forced; // na última casa o tema sai da votação dos outros jogadores
+  // quem aplica o tema que ganhou a votação pode ser qualquer um da sala: o servidor confere o resultado (escolhaFinal)
+  const podeTema = fin ? (votoFinal && base.vt ? idx >= 0 || ehHost : !ehCur && idx >= 0) : ehCur;
+  // a votação começa no início da vez (ou de novo, quando acabam as perguntas do tema que ganhou)
+  if (!igual(base.vt || null, g.vt || null)) {
+    const v = g.vt, semAntes = base.vt && Array.isArray(base.vt.sem) ? base.vt.sem : [];
+    if (!v) return nao('A votação do tema não pode sumir');
+    if (!votoFinal || g.phase !== 'theme' || !vtValido(v, c.agora) || (base.vt && v.id === base.vt.id)) return nao('Votação do tema inválida');
+    if (base.phase === 'exhausted') { if (!igual(v.sem, semAntes.concat([base.exTheme]))) return nao('Votação do tema inválida') }
+    else if (v.sem.length || !(quem.inicioVez || (base.phase === 'theme' && !base.vt))) return nao('A votação do tema não pode mudar');
+  }
+  if (quem.inicioVez && votoFinal && g.phase !== 'theme') return nao('Na última casa o tema sai da votação');
+  // acabaram as perguntas do tema que ganhou a votação
+  if (votoFinal && base.vt && g.phase === 'exhausted' && base.phase !== 'exhausted') {
+    const d = base.phase === 'sorteio' ? { t: base.sortTema } : temaFinal(base, c.votos, c.lobby, c.agora >= +base.vt.ate - 3000);
+    if (!d || d.t !== g.exTheme) return nao('O tema da pergunta final sai da votação');
+  }
   const podeCur = ehCur; // ninguém joga pelo outro (quem some pode ser tirado da partida por votação)
   const novaQ = g.phase === 'question' && !!g.qid && (g.qid !== base.qid || base.phase !== 'question');
 
@@ -144,6 +196,7 @@ async function progresso(c, base, g, quem) {
     if (pulou) { if (!podeCur) return nao('Só quem está na vez pode pular'); if (!base.qid) return nao('Pular sem pergunta') }
     else if (!podeTema && !quem.inicioVez && !(base.phase === 'sorteio' && c.porAnterior === c.dev)) return nao('Não é você quem escolhe o tema agora');
     if (!temaPermitido(base, g, g.theme, pulou)) return nao('Tema não permitido nessa casa');
+    if (votoFinal && !pulou) { const e = escolhaFinal(c, base, g.theme, quem); if (e) return nao(e) }
     const [info, erro] = await perguntaOk(c, g);
     if (erro) return nao(erro);
     const sa = Array.isArray(base.seen) ? base.seen : [], sb = Array.isArray(g.seen) ? g.seen : [];
@@ -169,6 +222,7 @@ async function progresso(c, base, g, quem) {
     }
     if (g.phase === 'sorteio' && g.sortTema && !temaPermitido(base, g, g.sortTema, false)) return nao('Tema não permitido nessa casa');
     if (g.phase === 'sorteio' && base.phase !== 'sorteio' && !(podeTema || quem.inicioVez)) return nao('Não é você quem escolhe o tema agora');
+    if (g.phase === 'sorteio' && base.phase !== 'sorteio' && votoFinal) { const e = escolhaFinal(c, base, g.sortTema, quem); if (e) return nao(e) }
     if (g.phase !== base.phase && !(podeTema || podeCur || quem.inicioVez)) return nao('Não é a sua vez');
     return sim();
   }
@@ -266,7 +320,7 @@ async function fechamento(c, base, g, quem) {
 // começo de uma vez: estado "limpo" do jogador que vai jogar, para conferir o que já veio junto (tema, sorteio)
 function baseDaVez(g, cur, round, players, seen) {
   return Object.assign({}, g, { players, cur, round, phase: 'theme', theme: null, qt: null, qid: null, tk: null, qd: null, q: null,
-    token: null, dobro: false, hint: null, resp: null, chosen: null, seen, sortTema: null });
+    token: null, dobro: false, hint: null, resp: null, chosen: null, seen, sortTema: null, vt: null });
 }
 function jogadoresNovos(Q) {
   return Q.every(p => { const n = nucleoJ(p); return n.pos === 0 && !n.used.length && !n.forced && !n.estrelas && !n.aj.pular && !n.aj.dica });
@@ -452,4 +506,4 @@ async function andamento(c, prev, g, quem) {
   return progresso(c, base, g, Object.assign({}, quem, { inicioVez: true }));
 }
 
-module.exports = { confere, nucleo, decisaoVoto, desfazerAprovado, expulsarAprovado, igualOficial };
+module.exports = { confere, nucleo, decisaoVoto, desfazerAprovado, expulsarAprovado, igualOficial, temaFinal };
