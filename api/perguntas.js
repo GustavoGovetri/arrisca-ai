@@ -345,4 +345,5 @@ module.exports._pergId = async (t, id) => {
 // para conferir o desafio nos testes
 module.exports._desafioTeste = async (dia, temas) => { const B = await banco(); return DSF.monta(B, FX, dia, temas || ORDER.filter(t => t !== 'N')) };
 module.exports._erradasTeste = async (n) => { const B = await banco(); const out = []; for (const t of ORDER) { if (t === 'V') continue; const T = B.temas[t]; for (let i = 0; i < T.items.length && out.length < n * 12; i += 37) { const e = DSF.erradas(B, FX, t, i); if (e) out.push([t, T.items[i][0], resposta(t, T.items[i]), e]) } } return out };
+module.exports._bancoTeste = async () => ({ B: await banco(), FX });
 module.exports._poolsTeste = async () => { const B = await banco(); const o = {}; ORDER.forEach(t => { o[t] = [1, 2, 3, 4].map(nv => DSF.pool(B, FX, t, nv).length + '/' + B.temas[t].lv[nv]) }); return o };
