@@ -536,11 +536,17 @@ input:focus,select:focus,textarea:focus{outline:3px solid var(--amarelo);outline
 #fundo .brilho{color:#ffe7a0}
 .card{box-shadow:inset 0 0 0 3px #ffcf4a,inset 0 0 0 6px rgba(42,4,16,.55),0 6px 0 var(--k),0 18px 36px rgba(20,0,8,.5)}
 .track .halo{fill:none;stroke:#ffb300;stroke-opacity:.22;stroke-width:2.1;stroke-dasharray:0 2.6;stroke-linecap:round}
-.track .lamp{fill:none;stroke:#fff3c2;stroke-width:1.05;stroke-linecap:round;stroke-dasharray:0 7.8;opacity:.32}
-.track[data-luz="0"] .l0,.track[data-luz="1"] .l1,.track[data-luz="2"] .l2,.track:not([data-luz]) .lamp{opacity:1}
+.ring svg.lampadas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;will-change:opacity;animation:luz 1.02s steps(1,end) infinite}
+.ring svg.lampadas.k1{animation-delay:-.68s}
+.ring svg.lampadas.k2{animation-delay:-.34s}
+.lampadas .lamp{fill:none;stroke:#fff3c2;stroke-width:1.05;stroke-linecap:round;stroke-dasharray:0 7.8}
+@keyframes luz{0%{opacity:1}33.34%,100%{opacity:.32}}
 .letreiro{display:inline-block;padding:1.3cqw 2.8cqw 1.6cqw;border-radius:3cqw;background:radial-gradient(120% 140% at 50% 0%,var(--painel2),#2a0410);border:.85cqw dotted #fff3c2;
   box-shadow:0 0 0 .55cqw var(--k),0 .9cqw 0 .55cqw var(--k),0 0 3.5cqw rgba(255,190,60,.55),inset 0 0 2.4cqw rgba(0,0,0,.55);}
-.letreiro[data-luz="1"]{border-color:#ffb300}
+.letreiro{position:relative}
+.letreiro::after{content:'';position:absolute;inset:-.85cqw;border:.85cqw dotted #ffb300;border-radius:inherit;pointer-events:none;opacity:0;will-change:opacity;animation:luzb 1.02s steps(1,end) infinite -.68s}
+.homelogo .letreiro::after{inset:-6px;border-width:6px}
+@keyframes luzb{0%{opacity:1}33.34%,100%{opacity:0}}
 .center .letreiro .logo{font-size:8.4cqw!important;white-space:nowrap}
 .homelogo .letreiro{padding:10px 20px 12px;border-radius:22px;border-width:6px;box-shadow:0 0 0 4px var(--k),0 6px 0 4px var(--k),0 0 26px rgba(255,190,60,.55),inset 0 0 18px rgba(0,0,0,.55)}
 .homelogo .letreiro .logo{font-size:clamp(34px,11vw,52px)!important;white-space:nowrap}
@@ -641,7 +647,7 @@ input.chama{animation:chama .9s}
 .hcard .htxt{min-width:0;display:flex;flex-direction:column;line-height:1.15}
 .hcard .htxt b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hcard .htxt small{font-size:12px;opacity:.85;white-space:nowrap}
-#modalfundo{display:none;position:fixed;inset:0;z-index:39;background:rgba(20,0,8,.62);backdrop-filter:blur(2px)}
+#modalfundo{display:none;position:fixed;inset:0;z-index:39;background:rgba(20,0,8,.7)}
 .chatbox.modal{z-index:40;left:50%;top:50%;right:auto;bottom:auto;transform:translate(-50%,-50%);width:min(470px,calc(100vw - 20px));height:auto;max-height:min(92vh,860px);animation:modalIn .2s ease-out}
 .chatbox.modal.largo{width:min(780px,calc(100vw - 20px));height:min(86vh,820px)}
 @keyframes modalIn{from{opacity:0;transform:translate(-50%,-47%) scale(.98)}to{opacity:1;transform:translate(-50%,-50%)}}
@@ -787,8 +793,8 @@ html.parado .silhmapa i{animation:none}
 .conq .cqe{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;background:rgba(0,0,0,.3);border:3px solid rgba(255,255,255,.15);filter:grayscale(1) opacity(.5)}
 .conq.ok .cqe{filter:none;border-color:var(--m);box-shadow:0 0 0 2px var(--k),0 0 14px color-mix(in srgb,var(--m) 60%,transparent);background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--m) 55%,#fff),color-mix(in srgb,var(--m) 70%,#2a0410))}
 .conq.ok{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--m) 70%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--m) 22%,transparent),rgba(0,0,0,.2))}
-.conq.gm .cqe{background:conic-gradient(#ff3fb4,#a64dff,#40c4ff,#00d65c,#ffd000,#ff3fb4);animation:gira 6s linear infinite}
-@keyframes gira{to{filter:hue-rotate(360deg)}}
+.conq.gm .cqe{background:conic-gradient(#ff3fb4,#a64dff,#40c4ff,#00d65c,#ffd000,#ff3fb4);animation:giraCor 6s linear infinite}
+@keyframes giraCor{to{filter:hue-rotate(360deg)}}
 .conq b{font-size:13.5px;line-height:1.2;margin-top:2px}
 .cqniv{font-style:normal;font-weight:800;font-size:12px;letter-spacing:.3px;color:var(--m,#c9b);text-transform:uppercase}
 .conq:not(.ok) .cqniv{color:rgba(255,255,255,.55)}
@@ -919,6 +925,7 @@ html.leve .sp{will-change:auto}
 html.leve .logo .lt,html.leve .avatar.grande,html.leve .avatar::before,html.leve .pw::before,html.leve .avisoico,html.leve .sp.final::before{animation:none}
 html.leve .primary::after,html.leve .pilula.amarela::after{display:none}
 html.leve .card,html.leve .hbtns .pilula{animation:none}
+html.leve .ring svg.lampadas,html.leve .letreiro::after,html.leve #fundo .ficha,html.leve #fundo .raios{animation:none;will-change:auto}
 
 /* ===== tudo centralizado dentro dos botões e círculos ===== */
 .snd,.seta,.ponto,.chathead button.small,.comoico,.avatar.grande i{display:inline-flex;align-items:center;justify-content:center;line-height:1}
@@ -1173,12 +1180,10 @@ const NATAL_FORCA=(()=>{try{const v=new URLSearchParams(location.search).get('na
 function natalAtivo(){return NATAL_FORCA||mesBrasilia().slice(5)==='12'}
 function eventoNatalAtivo(){return NATAL_FORCA||mesBrasilia()===EVENTO_NATAL.mes}
 function temasEscolha(){return natalAtivo()&&QN('N')>0?[...ORDER,'N']:ORDER}
-const LAMPADAS=[45.7,36.3].map(r=>`<circle class="halo" cx="50" cy="50" r="${r}"/>`+[0,1,2].map(k=>`<circle class="lamp l${k}" cx="50" cy="50" r="${r}" stroke-dashoffset="${-k*2.6}"/>`).join('')).join('');
+const LAMPADAS=[45.7,36.3].map(r=>`<circle class="halo" cx="50" cy="50" r="${r}"/>`).join('');
+// as lâmpadas de cada fase ficam numa camada própria e só a opacidade anima: a placa de vídeo troca as camadas sem redesenhar o tabuleiro
+const LAMPADAS_CAMADAS=[0,1,2].map(k=>`<svg class="lampadas k${k}" viewBox="0 0 100 100" aria-hidden="true">${[45.7,36.3].map(r=>`<circle class="lamp" cx="50" cy="50" r="${r}" stroke-dashoffset="${-k*2.6}"/>`).join('')}</svg>`).join('');
 const LOGO_HTML='<div class="letreiro"><div class="logo" aria-label="Arrisca Aí">'+[...'ARRISCA AÍ'].map((ch,i)=>ch===' '?'<span class="lt esp"></span>':`<span class="lt" style="--i:${i}">${ch}</span>`).join('')+'</div></div>';
-(function luzes(){ // lâmpadas do letreiro acendendo em sequência (3 trocas por segundo, sem animação contínua)
-  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
-  let n=0;setInterval(()=>{if(document.hidden||document.documentElement.classList.contains('parado'))return;const v=String(n++%3);document.querySelectorAll('svg.track,.letreiro').forEach(e=>{e.dataset.luz=v})},340);
-})();
 setTimeout(()=>{fetch('/api/perguntas?acao=aquece',{cache:'no-store'}).catch(()=>{})},1200);
 (function montaFundo(){ // palco: cortinas, bambinela, holofotes passando e brilhos
   const f=document.getElementById('fundo');if(!f)return;
@@ -1535,7 +1540,7 @@ function renderBoard(){
   const key=N+'|'+sz.toFixed(2)+'|'+board.map(s=>s.type+(s.themes||[]).join('/')).join(',');
   if(key!==BOARD_KEY){ // só monta as casas quando o tabuleiro muda
     BOARD_KEY=key;SZ=sz;ring.style.setProperty('--sp',sz.toFixed(2)+'cqw');
-    let h=`<svg class="track" viewBox="0 0 100 100"><circle cx="50" cy="50" r="${R}" fill="none" stroke="#2a0410" stroke-opacity=".7" stroke-width="6.2"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="#4a0619" stroke-width="5"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width=".55" stroke-dasharray="1 1.6" stroke-linecap="round"/>${LAMPADAS}</svg>`;
+    let h=`<svg class="track" viewBox="0 0 100 100"><circle cx="50" cy="50" r="${R}" fill="none" stroke="#2a0410" stroke-opacity=".7" stroke-width="6.2"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="#4a0619" stroke-width="5"/><circle cx="50" cy="50" r="${R}" fill="none" stroke="#ffffff" stroke-opacity=".35" stroke-width=".55" stroke-dasharray="1 1.6" stroke-linecap="round"/>${LAMPADAS}</svg>${LAMPADAS_CAMADAS}`;
     SQ=board.map((s,i)=>{const a=(-90+(i+1)*360/(N+1))*Math.PI/180,x=50+R*Math.cos(a),y=50+R*Math.sin(a);return {x,y,dx:x,dy:y,ds:1}});FOCO=null;
     h+=`<div class="arrow">sentido horário ↻</div>`; // dentro da roda, logo abaixo de INÍCIO e FIM
     board.forEach((s,i)=>{
