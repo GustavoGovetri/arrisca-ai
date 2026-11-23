@@ -957,6 +957,8 @@ button.pronto small{display:block;font-family:inherit;font-size:12px;opacity:.85
 
 /* ===== janela sem foco (outro monitor, outra janela, aba escondida): enfeites param e a placa de vídeo descansa ===== */
 html.parado *,html.parado *::before,html.parado *::after{animation-play-state:paused!important}
+/* as animações de entrada (curtas, que começam invisíveis) não pausam: senão a pergunta e os cartões ficam transparentes com a janela fora de foco */
+html.parado :is(.float,.qtext.reveal,.answer.reveal,.opts.reveal>button,.win,.resp.reveal,.chatbox,.chatprev,.emojivoa,.lob.novo,.card,.card button.big,.hbtns .pilula,.salarow,.silhmapa,.convite,.avisofundo,.avisocard,.dzbox,.largada b){animation-play-state:running!important}
 html.parado #fundo .holofote,html.parado #fundo .ficha,html.parado #fundo .raios{will-change:auto}
 
 .regsub{margin:14px 0 2px;font-family:'Lilita One',sans-serif;font-weight:400;font-size:16px;color:var(--amarelo);text-shadow:var(--txt-contorno)}
