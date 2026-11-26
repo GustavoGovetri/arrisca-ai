@@ -15,6 +15,15 @@ if(cfg&&cfg.databaseURL&&!sim){
     const d=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-database.js`);
     const db=d.getDatabase(salaApp);
     const R=p=>d.ref(db,p);
+    // Só fica conectado ao banco enquanto precisa (dentro de uma sala online ou mandando um reporte).
+    // Cada aba conectada conta no limite do plano grátis, então quem está só na tela inicial não ocupa vaga.
+    d.goOffline(db);
+    let USO=0,LIGADO=false,REAL=false,DESLIGA=null;const AVISA=[];
+    const conta=()=>{const ok=REAL||!USO;AVISA.forEach(cb=>cb(ok))}; // fora de sala, "sem conexão" não é problema
+    const liga=()=>{USO++;clearTimeout(DESLIGA);if(!LIGADO){LIGADO=true;d.goOnline(db)}conta()};
+    const solta=()=>{USO=Math.max(0,USO-1);if(USO)return;clearTimeout(DESLIGA);
+      DESLIGA=setTimeout(()=>{if(!USO&&LIGADO){LIGADO=false;d.goOffline(db);conta()}},15000)}; // espera um pouco: dá tempo de gravar a saída e evita liga-desliga
+    const op=async f=>{liga();try{return await f()}finally{solta()}};
     let UID=null;
     const ANON=(async()=>{
       try{
@@ -27,12 +36,15 @@ if(cfg&&cfg.databaseURL&&!sim){
       return UID;
     })();
     const comId=o=>UID?Object.assign({},o,{u:UID}):o; // marca o que este aparelho grava (as regras conferem)
-    let OFF=0;d.onValue(R('.info/serverTimeOffset'),x=>{OFF=Number(x.val())||0}); // diferença entre o relógio do aparelho e o do servidor
+    let OFF=0;d.onValue(R('.info/serverTimeOffset'),x=>{OFF=Number(x.val())||0});
+    d.onValue(R('.info/connected'),s=>{REAL=!!s.val();conta()}); // diferença entre o relógio do aparelho e o do servidor
     window.NET_IMPL={
       agora(){return Date.now()+OFF},
-      async exists(code){return (await d.get(R('salas/'+code+'/meta'))).exists()},
-      async create(code,meta){await d.set(R('salas/'+code+'/meta'),meta)},
+      estado(){return {uso:USO,ligado:LIGADO,conectado:REAL}}, // para conferir se está ocupando vaga no banco
+      async exists(code){return op(async()=>(await d.get(R('salas/'+code+'/meta'))).exists())},
+      async create(code,meta){return op(()=>d.set(R('salas/'+code+'/meta'),meta))},
       watch(code,h){
+        liga();let solto=false;
         const u=[d.onValue(R('salas/'+code+'/meta'),s=>h.onMeta(s.val())),
                  d.onValue(R('salas/'+code+'/titulos'),s=>h.onTitulos&&h.onTitulos(s.val()||{})),
                  d.onValue(R('salas/'+code+'/respostas'),s=>h.onRespostas&&h.onRespostas(s.val()||{})),
@@ -40,27 +52,27 @@ if(cfg&&cfg.databaseURL&&!sim){
                  d.onValue(R('salas/'+code+'/estado'),s=>h.onState(s.val())),
                  d.onValue(R('salas/'+code+'/votos'),s=>h.onVotes&&h.onVotes(s.val()||{})),
                  d.onValue(d.query(R('salas/'+code+'/chat'),d.limitToLast(60)),s=>{const a=[];s.forEach(c=>{const v=c.val();if(v&&typeof v==='object')a.push(Object.assign({},v,{id:c.key}))});h.onChat&&h.onChat(a)})];
-        return ()=>u.forEach(f=>f());
+        return ()=>{u.forEach(f=>f());if(!solto){solto=true;solta()}};
       },
-      async setMe(code,dev,obj){
+      async setMe(code,dev,obj){return op(async()=>{
         await ANON;
         const r=R('salas/'+code+'/jogadores/'+dev);
         await d.update(r,comId(obj));
         d.onDisconnect(d.child(r,'on')).set(false);
-      },
-      async removePlayer(code,dev){await ANON;await d.remove(R('salas/'+code+'/jogadores/'+dev))},
-      async marcaPedido(code,dev,obj){await ANON;await d.update(R('salas/'+code+'/jogadores/'+dev),obj)}, // quem criou a sala responde a um pedido de entrada
+      })},
+      async removePlayer(code,dev){return op(async()=>{await ANON;await d.remove(R('salas/'+code+'/jogadores/'+dev))})},
+      async marcaPedido(code,dev,obj){return op(async()=>{await ANON;await d.update(R('salas/'+code+'/jogadores/'+dev),obj)})}, // quem criou a sala responde a um pedido de entrada
       // histórico de perguntas de cada aparelho na sala: quem sorteia evita o que qualquer um ali já viu
-      async setUsadas(code,dev,obj){await ANON;await d.set(R('salas/'+code+'/usadas/'+dev),comId(obj))},
-      async getUsadas(code){return (await d.get(R('salas/'+code+'/usadas'))).val()||{}},
-      async tx(code,base,val){
+      async setUsadas(code,dev,obj){return op(async()=>{await ANON;await d.set(R('salas/'+code+'/usadas/'+dev),comId(obj))})},
+      async getUsadas(code){return op(async()=>(await d.get(R('salas/'+code+'/usadas'))).val()||{})},
+      async tx(code,base,val){return op(async()=>{
         const res=await d.runTransaction(R('salas/'+code+'/estado'),cur=>{const v=(cur&&cur.v)||0;if(v!==base)return;return val},{applyLocally:false});
         return res.committed;
-      },
-      async vote(code,dev,obj){await d.set(R('salas/'+code+'/votos/'+dev),obj)},
-      async chat(code,msg){await ANON;await d.push(R('salas/'+code+'/chat'),comId(Object.assign({},msg,{ts:d.serverTimestamp()})))}, // hora do servidor: a ordem não depende do relógio de cada aparelho
-      async report(r){await ANON;await d.push(R('reportes'),comId(r))},
-      onConnected(cb){d.onValue(R('.info/connected'),s=>cb(!!s.val()))}
+      })},
+      async vote(code,dev,obj){return op(()=>d.set(R('salas/'+code+'/votos/'+dev),obj))},
+      async chat(code,msg){return op(async()=>{await ANON;await d.push(R('salas/'+code+'/chat'),comId(Object.assign({},msg,{ts:d.serverTimestamp()})))})}, // hora do servidor: a ordem não depende do relógio de cada aparelho
+      async report(r){return op(async()=>{await ANON;await d.push(R('reportes'),comId(r))})},
+      onConnected(cb){AVISA.push(cb);cb(REAL||!USO)}
     };
   }catch(e){console.warn('Modo online indisponível:',e)}
 }
