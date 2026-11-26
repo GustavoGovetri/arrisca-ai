@@ -12,7 +12,7 @@ const ST = require('./_store');
 const juiz = require('./_juiz');
 const STATS = require('./_stats');
 const { freia } = require('./_limite');
-const FREIO = { criar: 40, entrar: 200, jogada: 3000, votar: 1000, titulo: 200, lista: 400, anunciar: 400 };
+const FREIO = { criar: 40, entrar: 200, jogada: 3000, votar: 1000, palpite: 1000, titulo: 200, lista: 400, anunciar: 400 };
 
 const MAX = 10;              // jogadores por partida
 const VIVA = 3 * 60 * 1000;  // sem notícia do dono por 3 minutos, a sala sai da lista
@@ -157,11 +157,54 @@ async function jogada(body) {
     const info = await perg()(next.tk).catch(() => null);
     if (info && info.qid === next.qid && info.s === code) {
       resposta = { a: info.a, m: info.mapa || null };
+      // palpites de quem estava esperando: guardados fechados até agora, saem junto com a resposta oficial
+      const pp = await ST.ler('srv/palp/' + code + '/' + next.qid).catch(() => null);
+      const p = palpitesAbertos(pp, next, info.a);
+      if (p) { resposta.p = p; resposta.j = String(next.jogo || '').slice(0, 40) }
       mapa['salas/' + code + '/respostas/' + next.qid] = Object.assign({ w: agora }, resposta);
     }
   }
   await ST.gravaVarios(mapa);
   return resposta ? { v, qid: next.qid, resposta } : { v };
+}
+// ---------------------------------------------------------------- palpite de quem está esperando
+//   POST palpite {sala, dev, chave, qid, t | o}  t = texto (resposta digitada), o = alternativa escolhida
+// Fica em srv/ (fechado) enquanto quem está na vez responde: ninguém, nem quem está na vez, vê antes da hora.
+function palpitesAbertos(pp, g, oficial) {
+  if (!pp || typeof pp !== 'object') return null;
+  const devs = new Set((g.players || []).map(x => x && x.dev));
+  const ops = g.q && Array.isArray(g.q[1]) ? g.q[1] : null, out = {};
+  for (const [d, v] of Object.entries(pp)) {
+    if (!ID.test(d) || !devs.has(d) || !v || typeof v !== 'object') continue;
+    if (typeof v.t === 'string' && v.t) out[d] = { t: v.t.slice(0, 80) };
+    else if (Number.isInteger(v.o) && ops && v.o >= 0 && v.o < ops.length) out[d] = { o: v.o, ok: ops[v.o] === oficial ? 1 : 0 };
+  }
+  return Object.keys(out).length ? out : null;
+}
+async function palpite(body) {
+  const code = codigo(body.sala), q = quem(body);
+  const qid = String(body.qid || '');
+  if (!/^[a-z0-9]{1,16}$/.test(qid)) throw erro(400, 'Pergunta inválida');
+  const [est, guardada] = await Promise.all([ST.ler('salas/' + code + '/estado'), ST.ler('srv/chaves/' + code + '/' + q.dev)]);
+  if (!est) throw erro(404, 'Sala não encontrada');
+  await confereChave(code, q, guardada);
+  const g = estadoG(est);
+  if (!g || g.phase !== 'question' || g.qid !== qid || liberou(g)) throw erro(409, 'Essa pergunta já foi respondida');
+  const eu = (g.players || []).findIndex(x => x && x.dev === q.dev);
+  if (eu < 0) throw erro(403, 'Só quem está na partida palpita');
+  if (eu === g.cur) throw erro(403, 'Quem está na vez responde, não palpita');
+  let v;
+  if (body.o !== undefined) {
+    const o = Number(body.o), n = g.q && Array.isArray(g.q[1]) ? g.q[1].length : 0;
+    if (!Number.isInteger(o) || o < 0 || o >= n) throw erro(400, 'Palpite inválido');
+    v = { o };
+  } else {
+    const t = semPalavrao(String(body.t || '').replace(/\s+/g, ' ').trim().slice(0, 80));
+    if (!t) throw erro(400, 'Palpite vazio');
+    v = { t };
+  }
+  await ST.grava('PUT', 'srv/palp/' + code + '/' + qid + '/' + q.dev, Object.assign(v, { ts: Date.now() }));
+  return { ok: true, palpite: v };
 }
 const TEMAS_VOTO = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V', 'N'];
 async function votar(body) {
@@ -185,6 +228,7 @@ async function handle(acao, body) {
   if (acao === 'entrar') return entrar(body);
   if (acao === 'jogada') return jogada(body);
   if (acao === 'votar') return votar(body);
+  if (acao === 'palpite') return palpite(body);
   if (acao === 'titulo') return titulo(body);
   if (acao === 'lista') {
     const todas = DEV ? MEM : ((await dbGet('publicas')) || {});

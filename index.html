@@ -195,6 +195,15 @@ button:active:not(:disabled){transform:scale(.94)}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 .respbox{display:flex;gap:8px;margin-top:10px}
+.palpbox{margin-top:14px;padding:10px 12px;border:2px dashed rgba(255,255,255,.35);border-radius:14px}
+.palptit{font-weight:700;font-size:15px}
+.palpbox .respbox input{font-size:16px;padding:10px}
+.palpops{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.palpops button.on{outline:3px solid var(--amarelo,#ffd23f)}
+.palpmeu{margin-top:8px;font-size:17px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.palpres{margin:10px 0;padding:8px 12px;border-radius:12px;background:rgba(0,0,0,.25)}
+.palpres ul{margin:4px 0 0;padding-left:18px}
+.palpres li{margin:2px 0}
 .respbox input{flex:1;font-size:18px;padding:12px}
 .resp{background:#13151b;border-left:4px solid #3da5ff;padding:10px 12px;border-radius:8px;margin:12px 0}
 .resp .rtxt{font-size:21px;font-weight:800;margin-top:2px;word-break:break-word}
@@ -1391,8 +1400,10 @@ function buscaResposta(){
 function recebeRespostas(o){
   let mudou=false;
   Object.entries(o||{}).forEach(([id,r])=>{
+    if(r&&r.p&&typeof r.p==='object'&&!PALP[id]&&ANS[id]!=null){PALP[id]={j:String(r.j||''),p:r.p};if(id===G.qid)mudou=true}
     if(!r||typeof r.a!=='string'||!/^[a-z0-9]{1,16}$/.test(id)||ANS[id]!=null)return;
     ANS[id]=r.a;if(mapaOk(r.m))MAPAS[id]=r.m;
+    if(r.p&&typeof r.p==='object')PALP[id]={j:String(r.j||''),p:r.p};
     if(id===G.qid){guardaVista(G.qt||G.theme,id,G.q&&G.q[0],r.a);mudou=true}
   });
   if(mudou){forcePanel();render()}
@@ -1682,7 +1693,7 @@ function renderPanel(){
   }
   if(G.phase==='won'){
     const ub=undoBtn();
-    el.innerHTML=`<div class="fimbox"><div class="win">🏆 ${esc(p.name)} venceu!</div><p class="msg" style="text-align:center">Chegou à última casa e acertou a pergunta final.</p>${reiHtml()}${resumoHtml(p)}<div class="answer"><div class="muted">${esc(G.q[0])}</div>${esc(answerText())}</div>${silhuetaHtml(true)}${notaHtml()}${reportHtml()}<div class="fimacoes">${wonBtns()}${ub}</div></div>`;
+    el.innerHTML=`<div class="fimbox"><div class="win">🏆 ${esc(p.name)} venceu!</div><p class="msg" style="text-align:center">Chegou à última casa e acertou a pergunta final.</p>${reiHtml()}${resumoHtml(p)}${palpiteiroHtml()}<div class="answer"><div class="muted">${esc(G.q[0])}</div>${esc(answerText())}</div>${silhuetaHtml(true)}${notaHtml()}${reportHtml()}<div class="fimacoes">${wonBtns()}${ub}</div></div>`;
     return;
   }
   const isFinal=p.pos===FINAL, isV=G.theme==='V';
@@ -1705,6 +1716,7 @@ function renderPanel(){
   if(G.phase==='result'){
     if(isV)h+=optsHtml(true);
     else h+=(G.resp?respBox():'')+`<div class="answer"><div class="muted">${G.resp?'Resposta oficial':'Resposta'}</div>${esc(respostaTxt()??'carregando…')}</div>`;
+    h+=palpitesHtml();
     h+=`<p class="msg">${G.msg}</p>${resultBtns()}`+notaHtml()+reportHtml();
   }else if(canAnswer){
     h+=dobroHtml();
@@ -1713,8 +1725,54 @@ function renderPanel(){
     else if(!G.revealed)h+=`<div style="margin-top:12px"><button class="primary" onclick="stopTimer();G.revealed=true;render()">Mostrar resposta</button></div>`;
     else h+=`${G.timeUp?'<div class="note2">⏰ Tempo esgotado. Se a resposta não saiu a tempo, marque Errou.</div>':''}<div class="answer"><div class="muted">Resposta</div>${esc(respostaTxt()??'carregando…')}</div><div class="row"><button class="ok" onclick="resolve(true)">✔ Acertou</button><button class="bad" onclick="resolve(false)">✘ Errou</button></div>`;
     if(!G.revealed&&G.chosen===null&&!G.resp&&can('cur'))h+=ajudasHtml();
+    h+=palpiteBox();
   }
   el.innerHTML=h;
+}
+// ----- palpite de quem está esperando: só aparece para os outros depois que quem está na vez responde -----
+var PALP={},MEU_PALP={},PALP_RASC='',PALP_ENVIANDO=false;
+function podePalpitar(){return online()&&G.phase==='question'&&G.qid&&G.q&&!G.resp&&(G.chosen===null||G.chosen===undefined)&&!G.timeUp&&can('others')}
+function palpiteBox(){
+  if(!podePalpitar())return '';
+  const meu=MEU_PALP[G.qid],p=G.players[G.cur];
+  let h=`<div class="palpbox"><div class="palptit">🔮 Seu palpite <span class="muted">· os outros só veem depois que ${nm(p)} responder</span></div>`;
+  if(G.theme==='V'&&Array.isArray(G.q[1]))
+    h+=`<div class="palpops">${G.q[1].map((o,i)=>`<button class="small${meu&&meu.o===i?' on':''}" aria-pressed="${!!(meu&&meu.o===i)}" onclick="mandaPalpite(${i})">${'ABCD'[i]}) ${esc(o)}</button>`).join('')}</div>`;
+  else if(meu&&meu.t&&!PALP_EDITA)h+=`<div class="palpmeu">“${esc(meu.t)}” <button class="small" onclick="PALP_EDITA=true;PALP_RASC=MEU_PALP[G.qid].t;render()">Trocar</button></div>`;
+  else h+=`<div class="respbox"><input id="palpin" aria-label="Seu palpite" maxlength="80" value="${esc(PALP_RASC)}" placeholder="Seu chute" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" oninput="PALP_RASC=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();mandaPalpite()}"><button class="small" ${PALP_ENVIANDO?'disabled':''} onclick="mandaPalpite()">Palpitar</button></div>`;
+  return h+'</div>';
+}
+var PALP_EDITA=false;
+async function mandaPalpite(o){
+  if(!podePalpitar()||PALP_ENVIANDO)return;
+  const qid=G.qid,corpo={sala:ROOM,qid};
+  if(o!==undefined)corpo.o=o;
+  else{const t=String(PALP_RASC||'').replace(/\s+/g,' ').trim().slice(0,80);if(!t){toast('Escreva o seu palpite');return}corpo.t=t}
+  PALP_ENVIANDO=true;
+  try{
+    const r=await servidorSala('palpite',corpo);
+    MEU_PALP[qid]=r.palpite||(o!==undefined?{o}:{t:corpo.t});PALP_RASC='';PALP_EDITA=false;SFX.tap&&SFX.tap();
+  }catch(e){toast(e.status===409?'Não deu tempo: a resposta já saiu.':e.status?'Palpite não aceito: '+e.message:'Sem conexão: o palpite não foi enviado.')}
+  finally{PALP_ENVIANDO=false;render()}
+}
+function palpitesHtml(){
+  const x=online()&&G.qid&&PALP[G.qid];if(!x)return '';
+  const linhas=G.players.filter(pl=>x.p[pl.dev]).map(pl=>{
+    const v=x.p[pl.dev];
+    const txt=v.t!=null?`“${esc(v.t)}”`:(G.q&&G.q[1]&&G.q[1][v.o]!=null?`${'ABCD'[v.o]}) ${esc(G.q[1][v.o])} ${v.ok?'✔':'✘'}`:'');
+    return `<li>${nm(pl)}: ${txt}</li>`});
+  return linhas.length?`<div class="palpres"><div class="muted">🔮 Palpites</div><ul>${linhas.join('')}</ul></div>`:'';
+}
+function placarPalpites(){ // palpites certos (alternativas) da partida atual, por aparelho
+  const c={};if(!G.jogo)return c;
+  Object.values(PALP).forEach(x=>{if(x.j!==String(G.jogo))return;Object.entries(x.p).forEach(([d,v])=>{if(v&&v.ok)c[d]=(c[d]||0)+1})});
+  return c;
+}
+function palpiteiroHtml(){
+  if(!online()||!G.players)return '';
+  const c=placarPalpites(),max=Math.max(0,...Object.values(c));if(!max)return '';
+  const top=G.players.filter(pl=>c[pl.dev]===max);
+  return `<p class="msg palpfim" style="text-align:center">🔮 Melhor palpiteiro: ${top.map(nm).join(' e ')} (${max} ${max===1?'palpite certo':'palpites certos'})</p>`;
 }
 function optsHtml(done){
   const opts=G.q[1],right=certaIdx();
@@ -3931,7 +3989,7 @@ function respHtml(){
     return `<p class="wait">✍️ ${nm(p)} está digitando a resposta…</p>`;
   }
   const c=contagem(),k=respKey(),mv=VOTES[MYDEV],meu=mv&&mv.k===k?mv.v:null;
-  let h=respBox()+abaTxt(false)+`<div class="answer"><div class="muted">Resposta oficial</div>${esc(respostaTxt()??'carregando…')}</div>`;
+  let h=respBox()+abaTxt(false)+`<div class="answer"><div class="muted">Resposta oficial</div>${esc(respostaTxt()??'carregando…')}</div>`+palpitesHtml();
   if(eu>=0&&eu!==G.cur)h+=`<p class="muted">${meu===null?'Vale a resposta de '+nm(p)+'?':'Seu voto (dá para mudar até fechar):'}</p><div class="row votos"><button class="ok${meu===true?' on':''}" onclick="votar(true)">✔ Vale</button><button class="bad${meu===false?' on':''}" onclick="votar(false)">✘ Não vale</button></div>`;
   else if(eu===G.cur)h+=`<p class="wait">🗳️ A turma está decidindo se a sua resposta vale…</p>`;
   h+=`<p class="muted">Votos: ✔ ${c.sim} · ✘ ${c.nao} de ${c.n}${c.falta.length?' · falta: '+c.falta.map(x=>esc(x.name)).join(', '):''}</p>`;
