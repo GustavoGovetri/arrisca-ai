@@ -3,6 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#a10d33">
+<link rel="preload" href="/fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/lilita-one.woff2" as="font" type="font/woff2" crossorigin>
 <script>try{var e=localStorage.getItem('arrisca-estilo');if(e&&/^[a-z]{3,10}$/.test(e))document.documentElement.dataset.estilo=e}catch(x){}</script>
 <title>Arrisca Aí – jogo de perguntas</title>
 <meta name="description" content="Jogo de perguntas para jogar em família: num aparelho só ou online, cada um no seu celular.">
@@ -63,7 +67,9 @@ button:disabled{opacity:.35;cursor:not-allowed}
 .bad{background:#c73e3e}.bad:hover:not(:disabled){background:#dd4d4d}
 .row{display:flex;gap:8px;flex-wrap:wrap}
 .badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;color:#fff}
-.qtext{font-size:21px;line-height:1.35;margin:14px 0;font-weight:600}
+.confirma{background:linear-gradient(180deg,#ffe066,#ffc107)!important;color:#2a0410!important}
+.qtext{font-size:21px;line-height:1.35;margin:14px 0;font-weight:600;text-wrap:pretty}
+:focus-visible{outline:3px solid var(--amarelo,#ffd23f);outline-offset:2px}
 .muted{color:#9aa0ad;font-size:13px}
 .answer{background:#13151b;border-left:4px solid #ffb02e;padding:10px 12px;border-radius:8px;margin:12px 0;font-size:17px}
 .tokens{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
@@ -96,6 +102,7 @@ input,select{font:inherit;background:#13151b;color:#fff;border:1px solid #3a4054
 .swatch.on{outline:3px solid #ffd23f;outline-offset:2px}
 .palette{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px 34px;padding:8px;border-radius:10px;background:#1b1e27}
 .palette .swatch{width:28px;height:28px}
+.escolhido{outline:3px dashed var(--amarelo,#ffd23f);outline-offset:2px;border-radius:12px}
 .grip{flex:none;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;padding:6px 4px;color:#9aa3b5;font-size:20px;line-height:1}
 .grip:active{cursor:grabbing}
 .plist>[data-idx],.players>.pl{transition:transform .15s}
@@ -309,6 +316,7 @@ div.dobro{padding:10px 14px;border-radius:10px}
 @font-face{font-family:'Fredoka';src:url(/fonts/fredoka.woff2) format('woff2');font-weight:300 700;font-display:swap}
 @font-face{font-family:'Lilita One';src:url(/fonts/lilita-one.woff2) format('woff2');font-weight:400;font-display:swap}
 :root{
+  color-scheme:dark;
   --k:#2a0410;              /* contorno */
   --painel1:#7d1230;--painel2:#5c0a22;
   --ladrilho:#3f0517;--ladrilho2:#8e1838;
@@ -395,6 +403,7 @@ button.big.primary small{color:#5a3a00}
 .chatreac button:hover:not(:disabled){background:rgba(255,255,255,.1)}
 
 /* campos claros */
+input:not([type=checkbox]):not([type=radio]),select,textarea{color-scheme:light}
 input,select,textarea,.report textarea{background:#fff7f0;color:#2a0410;border:3px solid var(--k);border-radius:12px;font-weight:600;font-family:inherit}
 input::placeholder{color:#b08a90}
 input:focus,select:focus,textarea:focus{outline:3px solid var(--amarelo);outline-offset:1px}
@@ -1120,24 +1129,24 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
 </div>
 <div id="toast"></div>
 <div id="chatprev" class="chatprev" style="display:none" onclick="chatAbre()"></div>
-<div id="salasbox" class="chatbox histbox salasbox" style="display:none"><div class="chathead"><b>🌍 Salas abertas</b><div class="row"><button class="small" onclick="carregaSalas()">↻ Atualizar</button><button class="small" onclick="fechaSalas()">✕</button></div></div><div id="salascorpo" class="histcorpo"></div><div class="salaspe"><button class="primary" onclick="fechaSalas();createRoom(true)">＋ Criar sala aberta</button></div></div>
+<div id="salasbox" class="chatbox histbox salasbox" style="display:none"><div class="chathead"><b>🌍 Salas abertas</b><div class="row"><button class="small" onclick="carregaSalas()">↻ Atualizar</button><button class="small" aria-label="Fechar" title="Fechar" onclick="fechaSalas()">✕</button></div></div><div id="salascorpo" class="histcorpo"></div><div class="salaspe"><button class="primary" onclick="fechaSalas();createRoom(true)">＋ Criar sala aberta</button></div></div>
 <div id="avisoaba" class="avisofundo" style="display:none" onclick="if(event.target===this)abaFecha()"><div class="avisocard" role="dialog" aria-modal="true" aria-labelledby="avisotit">
   <div class="avisoico">👀</div><h3 id="avisotit">Ei, você saiu da aba!</h3><p id="avisotxt"></p>
   <p class="muted avisodica">Dica: deixe o Arrisca Aí aberto na tela durante a partida.</p>
   <label class="avisonao"><input type="checkbox" id="avisonao"><span>Não mostrar de novo<small class="muted">Volta a aparecer quando você abrir o site de novo.</small></span></label>
   <button class="primary" onclick="abaFecha()">Entendi</button></div></div>
 <div id="modalfundo" onclick="modaisFecha()"></div>
-<div id="contabox" class="chatbox modal contabox" style="display:none"><div class="chathead"><b id="contatit">👤 Sua conta</b><button class="small" onclick="contaFecha()">✕</button></div><div id="contacorpo" class="histcorpo"></div></div>
-<div id="rankbox" class="chatbox modal rankbox" style="display:none"><div class="chathead"><b>🏆 Ranking</b><div class="row"><button class="small" title="Atualizar" onclick="rankingCarrega()">↻</button><button class="small" onclick="rankingFecha()">✕</button></div></div><div id="rankcorpo" class="histcorpo"></div></div>
-<div id="desafiobox" class="chatbox modal desafiobox" style="display:none"><div class="chathead"><b>📅 Desafio do dia</b><button class="small" onclick="desafioFecha()">✕</button></div><div id="desafiocorpo" class="histcorpo"></div></div>
-<div id="amigosbox" class="chatbox modal amigosbox" style="display:none"><div class="chathead"><b id="amigostit">👥 Amigos</b><div class="row"><button class="small" title="Atualizar" onclick="amigosCarrega()">↻</button><button class="small" onclick="amigosFecha()">✕</button></div></div><div id="amigoscorpo" class="histcorpo"></div></div>
+<div id="contabox" class="chatbox modal contabox" style="display:none"><div class="chathead"><b id="contatit">👤 Sua conta</b><button class="small" aria-label="Fechar" title="Fechar" onclick="contaFecha()">✕</button></div><div id="contacorpo" class="histcorpo"></div></div>
+<div id="rankbox" class="chatbox modal rankbox" style="display:none"><div class="chathead"><b>🏆 Ranking</b><div class="row"><button class="small" title="Atualizar" onclick="rankingCarrega()">↻</button><button class="small" aria-label="Fechar" title="Fechar" onclick="rankingFecha()">✕</button></div></div><div id="rankcorpo" class="histcorpo"></div></div>
+<div id="desafiobox" class="chatbox modal desafiobox" style="display:none"><div class="chathead"><b>📅 Desafio do dia</b><button class="small" aria-label="Fechar" title="Fechar" onclick="desafioFecha()">✕</button></div><div id="desafiocorpo" class="histcorpo"></div></div>
+<div id="amigosbox" class="chatbox modal amigosbox" style="display:none"><div class="chathead"><b id="amigostit">👥 Amigos</b><div class="row"><button class="small" title="Atualizar" onclick="amigosCarrega()">↻</button><button class="small" aria-label="Fechar" title="Fechar" onclick="amigosFecha()">✕</button></div></div><div id="amigoscorpo" class="histcorpo"></div></div>
 <div id="convite" class="convite" style="display:none" role="alert"></div>
-<div id="painelbox" class="chatbox modal largo painelbox" style="display:none"><div class="chathead"><b>🛠 Painel</b><div class="row"><button class="small" id="revisaobtn" title="Mandar os reportes abertos para o Claude revisar" onclick="painelRevisao()">📤 Revisão</button><button class="small" title="Atualizar" onclick="painelCarrega()">↻</button><button class="small" onclick="painelFecha()">✕</button></div></div><div id="painelcorpo" class="histcorpo"></div></div>
-<div id="visualbox" class="chatbox modal" style="display:none"><div class="chathead"><b>🎨 Visual</b><button class="small" onclick="modalFecha('visualbox')">✕</button></div><div id="visualcorpo" class="histcorpo"></div></div>
-<div id="sombox" class="chatbox modal sombox" style="display:none"><div class="chathead"><b>🔊 Sons e avisos</b><button class="small" onclick="modalFecha('sombox')">✕</button></div><div id="somcorpo" class="histcorpo"></div></div>
-<div id="bugbox" class="chatbox histbox bugbox" style="display:none"><div class="chathead"><b>🐞 Reportar um problema</b><button class="small" onclick="bugFecha()">✕</button></div><div id="bugcorpo" class="histcorpo"></div></div>
-<div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
-<div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b id="chattit">💬 Chat da sala</b><div class="row"><button class="small" id="chatmudobtn" title="Silenciar alguém" onclick="chatMudosTroca()">🔇</button><button class="small" onclick="chatFecha()">✕</button></div></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
+<div id="painelbox" class="chatbox modal largo painelbox" style="display:none"><div class="chathead"><b>🛠 Painel</b><div class="row"><button class="small" id="revisaobtn" title="Mandar os reportes abertos para o Claude revisar" onclick="painelRevisao()">📤 Revisão</button><button class="small" title="Atualizar" onclick="painelCarrega()">↻</button><button class="small" aria-label="Fechar" title="Fechar" onclick="painelFecha()">✕</button></div></div><div id="painelcorpo" class="histcorpo"></div></div>
+<div id="visualbox" class="chatbox modal" style="display:none"><div class="chathead"><b>🎨 Visual</b><button class="small" aria-label="Fechar" title="Fechar" onclick="modalFecha('visualbox')">✕</button></div><div id="visualcorpo" class="histcorpo"></div></div>
+<div id="sombox" class="chatbox modal sombox" style="display:none"><div class="chathead"><b>🔊 Sons e avisos</b><button class="small" aria-label="Fechar" title="Fechar" onclick="modalFecha('sombox')">✕</button></div><div id="somcorpo" class="histcorpo"></div></div>
+<div id="bugbox" class="chatbox histbox bugbox" style="display:none"><div class="chathead"><b>🐞 Reportar um problema</b><button class="small" aria-label="Fechar" title="Fechar" onclick="bugFecha()">✕</button></div><div id="bugcorpo" class="histcorpo"></div></div>
+<div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" aria-label="Fechar" title="Fechar" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
+<div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b id="chattit">💬 Chat da sala</b><div class="row"><button class="small" id="chatmudobtn" title="Silenciar alguém" onclick="chatMudosTroca()">🔇</button><button class="small" aria-label="Fechar" title="Fechar" onclick="chatFecha()">✕</button></div></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" aria-label="Mensagem para a sala" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
 <script>
 // ----- filtro de palavrão (o mesmo do servidor, em api/_palavrao.js) -----
 // Confere palavra por palavra, sem acento, com números no lugar de letras (p0rr4) e letras repetidas (porraaa).
@@ -1358,14 +1367,14 @@ function buscaForma(){
 function mapaHtml(m){
   if(!mapaOk(m))return '';
   const br=m[2]==='br',x=br?+m[0]:(+m[0]+180)/360*100,y=br?+m[1]:(84-m[1])/144*100;
-  return `<div class="silhmapa${br?' br':''}" title="Onde fica"><img src="${br?'brasil.svg':'mundo.svg'}" alt="${br?'Mapa do Brasil':'Mapa-múndi'}"><i style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"></i></div>`;
+  return `<div class="silhmapa${br?' br':''}" title="Onde fica"><img src="${br?'brasil.svg':'mundo.svg'}" width="${br?400:360}" height="${br?412:144}" decoding="async" alt="${br?'Mapa do Brasil':'Mapa-múndi'}"><i style="left:${x.toFixed(2)}%;top:${y.toFixed(2)}%"></i></div>`;
 }
 function silhuetaHtml(rev){
   if(!ehSilhueta())return '';
   const id=G.qid,f=FORMAS[id];
   if(!f||(!f.d&&!f.img)){buscaForma();return `<div class="silhbox"><div class="silh carr"><span>Carregando o desenho…</span></div></div>`}
   const m=rev?MAPAS[id]:null;
-  if(f.img)return `<div class="silhbox"><div class="bandeira"><img src="${f.img}" alt="Bandeira de um país"></div>${mapaHtml(m)}</div>`;
+  if(f.img)return `<div class="silhbox"><div class="bandeira"><img src="${f.img}" width="260" height="173" alt="Bandeira de um país"></div>${mapaHtml(m)}</div>`;
   return `<div class="silhbox"><div class="silh${rev?' rev':''}" style="--c:${T.M.c}"><svg viewBox="0 0 100 100" role="img" aria-label="${rev?'O lugar no mapa':'Silhueta'}"><path d="${f.d}" fill-rule="evenodd"/></svg></div>${mapaHtml(m)}</div>`;
 }
 function respostaTxt(){return G.qid?ANS[G.qid]:undefined}
@@ -1507,7 +1516,7 @@ function renderHist(){
   el.innerHTML=`<p class="muted" style="margin-top:0">Já saíram <b>${totU.toLocaleString('pt-BR')}</b> de ${tot.toLocaleString('pt-BR')} perguntas neste aparelho. Elas não voltam a cair.</p>
   ${itens||'<p class="muted">Ainda não tem nada aqui. As perguntas aparecem depois que a resposta é mostrada.</p>'}
   ${vistas.length>HIST_N?`<div class="row" style="justify-content:center;margin-top:10px"><button class="small" onclick="HIST_N+=100;renderHist()">Mostrar mais (${(vistas.length-HIST_N).toLocaleString('pt-BR')})</button></div>`:''}
-  ${REPORTS.length?`<details data-k="rep"><summary>⚑ Perguntas que você reportou (${REPORTS.length})</summary><p class="muted">Enviadas para revisão. Quando a correção entrar no jogo, elas saem desta lista.</p><ol class="hlist">${REPORTS.map((r,i)=>`<li>${esc(r.q)} <span class="muted">— ${esc(r.a)} · <b>${esc(r.motivo)}</b></span> <button class="small" onclick="removeReport(${i})">✕</button></li>`).join('')}</ol></details>`:''}
+  ${REPORTS.length?`<details data-k="rep"><summary>⚑ Perguntas que você reportou (${REPORTS.length})</summary><p class="muted">Enviadas para revisão. Quando a correção entrar no jogo, elas saem desta lista.</p><ol class="hlist">${REPORTS.map((r,i)=>`<li>${esc(r.q)} <span class="muted">— ${esc(r.a)} · <b>${esc(r.motivo)}</b></span> <button class="small" aria-label="Tirar da lista" title="Tirar da lista" onclick="removeReport(${i})">✕</button></li>`).join('')}</ol></details>`:''}
   <details data-k="liberar"><summary>Avançado: liberar perguntas</summary>
   <p class="muted">Liberar faz as perguntas de um tema voltarem a cair neste aparelho. Quando um tema acaba, o jogo já pergunta se você quer liberar.</p>
   ${linhas}
@@ -1626,7 +1635,7 @@ function renderScores(){
   el.style.display='';
   const ed=!!G.editPl;
   el.innerHTML=`<div class="row" style="align-items:center;justify-content:space-between"><h2 style="margin:0">Jogadores <span class="muted">· rodada ${G.round}</span></h2>${editBtn(ed)}</div>${ed?'<p class="muted" style="margin:6px 0 0">Arraste pelo ⠿ para mudar a ordem e toque na bolinha para trocar a cor. A vez continua com quem está jogando.</p>':''}<div class="players" style="margin-top:8px">`+G.players.map((p,k)=>`
-    <div class="pl${k===G.cur?' cur':''}" data-idx="${k}">${ed?`<span class="grip" title="Arraste para mudar a ordem" onpointerdown="dragRow(event,'game')">⠿</span><button class="swatch${G.pickColor===k?' on':''}" style="background:${p.color}" title="Trocar a cor" onclick="G.pickColor=G.pickColor===${k}?null:${k};renderScores()"></button>`:bolinha(online()?fotoDe(p.dev):null,p.color,'pawn','div')}
+    <div class="pl${k===G.cur?' cur':''}" data-idx="${k}">${ed?`<span class="grip" role="button" tabindex="0" title="${gripTit()}" aria-label="Mudar a ordem (setas para cima e para baixo)" onpointerdown="dragRow(event,'game')" onkeydown="gripTecla(event,'game')">⠿</span><button class="swatch${G.pickColor===k?' on':''}" style="background:${p.color}" title="Trocar a cor" onclick="G.pickColor=G.pickColor===${k}?null:${k};renderScores()"></button>`:bolinha(online()?fotoDe(p.dev):null,p.color,'pawn','div')}
     <div class="nm">${esc(p.name)}${online()?tituloChip(TITULOS[p.dev]):''}${expulsarBtn(p)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
@@ -1639,19 +1648,19 @@ function renderPanel(){
   if(MODE==='online'&&G.phase==='setup'){el.innerHTML=lobbyHtml();return}
   if(G.phase==='setup'){
     const total=Q?G.selThemes.reduce((s,k)=>s+QNj(k,G.selThemes),0):0;
-    let h=`<div class="prepgrid"><div class="pcol"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">Novo jogo</h2><button class="small" onclick="goHome()">${ICON_CASA}Início</button></div><div class="setup-row"><label style="flex:none">Jogadores:</label><select onchange="G.count=+this.value;G.pickColor=null;render()">${[2,3,4,5,6,7,8,9,10].map(n=>`<option ${n===G.count?'selected':''}>${n}</option>`).join('')}</select></div>`;
+    let h=`<div class="prepgrid"><div class="pcol"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">Novo jogo</h2><button class="small" onclick="goHome()">${ICON_CASA}Início</button></div><div class="setup-row"><label style="flex:none">Jogadores:</label><select aria-label="Número de jogadores" onchange="G.count=+this.value;G.pickColor=null;render()">${[2,3,4,5,6,7,8,9,10].map(n=>`<option ${n===G.count?'selected':''}>${n}</option>`).join('')}</select></div>`;
     padPlayers();
     h+='<div class="plist">';
     for(let i=0;i<G.count;i++){
-      h+=`<div class="setup-row" data-idx="${i}"><span class="grip" title="Arraste para mudar a ordem" onpointerdown="dragRow(event,'setup')">⠿</span><span class="ordem">${i+1}º</span><button class="swatch${G.pickColor===i?' on':''}" style="background:${G.colors[i]}" title="Trocar a cor" onclick="G.pickColor=G.pickColor===${i}?null:${i};render()"></button><input value="${esc(G.names[i])}" oninput="G.names[${i}]=this.value" maxlength="16"></div>`;
+      h+=`<div class="setup-row" data-idx="${i}"><span class="grip" role="button" tabindex="0" title="${gripTit()}" aria-label="Mudar a ordem (setas para cima e para baixo)" onpointerdown="dragRow(event,'setup')" onkeydown="gripTecla(event,'setup')">⠿</span><span class="ordem">${i+1}º</span><button class="swatch${G.pickColor===i?' on':''}" style="background:${G.colors[i]}" title="Trocar a cor" onclick="G.pickColor=G.pickColor===${i}?null:${i};render()"></button><input aria-label="Nome do ${i+1}º jogador" value="${esc(G.names[i])}" oninput="G.names[${i}]=this.value" maxlength="16"></div>`;
     }
     h+='</div>';
     if(G.pickColor!=null&&G.pickColor<G.count)h+=`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.names[G.pickColor]||'Jogador '+(G.pickColor+1))}</b>:</span>${paletaHtml(G.colors[G.pickColor],`setupColor(${G.pickColor},'#C')`,G.colors.slice(0,G.count))}</div>`;
     h+=`<p class="muted" style="margin:-2px 0 4px">Quem está em 1º começa. Toque na bolinha para trocar a cor.</p>`;
     h+=`</div><div class="pcol">${modosHtml(true)}${natalEscolhaHtml()}${avancadoHtml(`
-    <div class="row" style="margin:0 0 10px"><button class="small" onclick="shuffleSetup()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">ou arraste pelo ⠿ na lista</span></div>
-    <div class="setup-row"><label style="flex:none">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
-    <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
+    <div class="row" style="margin:0 0 10px"><button class="small" onclick="shuffleSetup()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">${ordemToque()?'ou toque no ⠿ de um e depois no lugar dele':'ou arraste pelo ⠿ na lista'}</span></div>
+    <div class="setup-row"><label style="flex:none">Fichas:</label><select aria-label="Fichas por jogador" onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
+    <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select aria-label="Tamanho do tabuleiro" onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
     ${niveisHtml(true)}${temasHtml(true)}`,false)}</div></div>`;
     h+=`<div class="prepfoot">${G.selThemes.length<3?POUCOS_TEMAS:''}<p class="muted">${Q?(()=>{const u=G.selThemes.reduce((s,k)=>s+usedJ(k,G.selThemes),0);return total.toLocaleString('pt-BR')+' perguntas no baralho'+(u?`, ${(total-u).toLocaleString('pt-BR')} ainda não saíram`:'')+'. '})():'Carregando perguntas… '}A pessoa seguinte na roda lê a pergunta e confere a resposta.</p><button class="primary" ${Q?'':'disabled'} ${G.selThemes.length<3?'disabled':''} onclick="startGame()">Começar</button></div>`;
     el.innerHTML=h;return;
@@ -1986,7 +1995,7 @@ function reportHtml(){
   if(isReported())return `<p class="muted" style="margin-top:8px">⚑ Pergunta reportada. Obrigado!</p>`;
   if(!G.reportOpen)return `<div class="reprow"><button class="small" onclick="G.reportOpen=true;render()">⚑ Reportar pergunta</button></div>`;
   const atual=nivelAtual();
-  return `<div class="report"><b>O que tem de errado?</b><div class="motivos">${MOTIVOS.map((m,i)=>`<label><input type="radio" name="motivo" value="${i}" ${i===0?'checked':''} onchange="motivoMudou()"> ${m}</label>`).join('')}</div><div id="repnivel" style="display:none;margin-top:6px"><b>Qual seria o nível certo?</b>${atual&&LEVELS[atual]?` <span class="muted">(hoje está como ${LEVELS[atual]})</span>`:''}<div class="motivos niveis">${[1,2,3,4].map(n=>`<label><input type="radio" name="nivelcerto" value="${n}" ${n===atual?'disabled':''}> ${LEVELS[n]}</label>`).join('')}</div></div><textarea id="repnota" maxlength="400" placeholder="Comentário (opcional): por exemplo, qual seria a resposta certa"></textarea><div class="row" style="margin-top:6px"><button class="small primary" onclick="sendReport()">Enviar</button><button class="small" onclick="G.reportOpen=false;render()">Cancelar</button></div></div>`;
+  return `<div class="report"><b>O que tem de errado?</b><div class="motivos">${MOTIVOS.map((m,i)=>`<label><input type="radio" name="motivo" value="${i}" ${i===0?'checked':''} onchange="motivoMudou()"> ${m}</label>`).join('')}</div><div id="repnivel" style="display:none;margin-top:6px"><b>Qual seria o nível certo?</b>${atual&&LEVELS[atual]?` <span class="muted">(hoje está como ${LEVELS[atual]})</span>`:''}<div class="motivos niveis">${[1,2,3,4].map(n=>`<label><input type="radio" name="nivelcerto" value="${n}" ${n===atual?'disabled':''}> ${LEVELS[n]}</label>`).join('')}</div></div><textarea id="repnota" aria-label="Comentário sobre a pergunta" maxlength="400" placeholder="Comentário (opcional): por exemplo, qual seria a resposta certa"></textarea><div class="row" style="margin-top:6px"><button class="small primary" onclick="sendReport()">Enviar</button><button class="small" onclick="G.reportOpen=false;render()">Cancelar</button></div></div>`;
 }
 function sendReport(){
   const sel=document.querySelector('input[name="motivo"]:checked');const nota=(document.getElementById('repnota')||{}).value||'';
@@ -2010,8 +2019,37 @@ function paletaHtml(atual,acao,usadas){
   return `<div class="palette">${PALETA.map(([c,n])=>{const dono=usadas.indexOf(c);return `<button class="swatch${c===atual?' on':''}" style="background:${c}" title="${n}${dono>=0&&c!==atual?' (troca com quem usa)':''}" onclick="${acao.replace('#C',c)}"></button>`}).join('')}</div>`;
 }
 let DRAG=null;
+function moveRow(kind,from,to){
+  const mv=a=>{const [x]=a.splice(from,1);a.splice(to,0,x)};
+  if(kind==='lobby'){const a=lobbyOrder();mv(a);G.ordem=a;render()}
+  else if(kind==='setup'){mv(G.names);mv(G.colors);G.pickColor=null;render()}
+  else{snapshot('Mudar a ordem');const atual=G.players[G.cur];mv(G.players);G.cur=G.players.indexOf(atual);G.pickColor=null;render()}
+}
+// acessibilidade: ordenar sem arrastar. Pelo teclado (setas no ⠿) sempre; por toque quando a opção estiver ligada
+const ORDEM_TOQUE_KEY='arrisca-ordem-toque';
+function ordemToque(){try{return localStorage.getItem(ORDEM_TOQUE_KEY)==='1'}catch(e){return false}}
+function trocaOrdemToque(){const l=!ordemToque();try{localStorage.setItem(ORDEM_TOQUE_KEY,l?'1':'0')}catch(e){}TOQUE_SEL=null;toast(l?'👆 Agora é só tocar no ⠿ de um jogador e depois no lugar para onde ele vai.':'Voltou a ordenar arrastando.');render();pintaEfx()}
+function gripTit(){return ordemToque()?'Toque aqui e depois no lugar para onde ele vai':'Arraste para mudar a ordem'}
+var TOQUE_SEL=null;
+function gripTecla(ev,kind){
+  if(ev.key!=='ArrowUp'&&ev.key!=='ArrowDown')return;
+  const row=ev.currentTarget.closest('[data-idx]');if(!row)return;ev.preventDefault();
+  const rows=[...row.parentElement.querySelectorAll(':scope>[data-idx]')],from=rows.indexOf(row),to=from+(ev.key==='ArrowUp'?-1:1);
+  if(from<0||to<0||to>=rows.length)return;
+  const pai=row.parentElement;moveRow(kind,from,to);
+  requestAnimationFrame(()=>{const novo=(document.contains(pai)?pai:document).querySelectorAll(`[data-idx] .grip`);const alvo=[...novo].find(g=>{const r=g.closest('[data-idx]');return r&&+r.dataset.idx===to&&g.getAttribute('onkeydown')===`gripTecla(event,'${kind}')`});if(alvo)alvo.focus()});
+}
+function gripToque(row,kind,from){
+  if(TOQUE_SEL&&TOQUE_SEL.kind===kind&&document.contains(TOQUE_SEL.row)){
+    const de=TOQUE_SEL.from;TOQUE_SEL.row.classList.remove('escolhido');TOQUE_SEL=null;
+    if(de!==from)moveRow(kind,de,from);return;
+  }
+  if(TOQUE_SEL&&TOQUE_SEL.row)TOQUE_SEL.row.classList.remove('escolhido');
+  TOQUE_SEL={kind,from,row};row.classList.add('escolhido');SFX.tap&&SFX.tap();
+}
 function dragRow(ev,kind){
   const h=ev.currentTarget,row=h.closest('[data-idx]');if(!row||DRAG)return;
+  if(ordemToque()){ev.preventDefault();const rs=[...row.parentElement.querySelectorAll(':scope>[data-idx]')];gripToque(row,kind,rs.indexOf(row));return}
   ev.preventDefault();
   const rows=[...row.parentElement.querySelectorAll(':scope>[data-idx]')];
   const from=rows.indexOf(row);if(from<0)return;
@@ -2037,10 +2075,7 @@ function dragEnd(){
   document.body.classList.remove('arrastando');
   d.rows.forEach(r=>{r.style.transform='';r.classList.remove('dragging')});
   if(d.to===d.from)return;
-  const mv=a=>{const [x]=a.splice(d.from,1);a.splice(d.to,0,x)};
-  if(d.kind==='lobby'){const a=lobbyOrder();mv(a);G.ordem=a;render()}
-  else if(d.kind==='setup'){mv(G.names);mv(G.colors);G.pickColor=null;render()}
-  else{snapshot('Mudar a ordem');const atual=G.players[G.cur];mv(G.players);G.cur=G.players.indexOf(atual);G.pickColor=null;render()}
+  moveRow(d.kind,d.from,d.to);
 }
 function moveSetup(i,d){const j=i+d;if(j<0||j>=G.count)return;[G.names[i],G.names[j]]=[G.names[j],G.names[i]];[G.colors[i],G.colors[j]]=[G.colors[j],G.colors[i]];if(G.pickColor===i)G.pickColor=j;else if(G.pickColor===j)G.pickColor=i;render()}
 function shuffleSetup(){const idx=[...Array(G.count).keys()];for(let i=idx.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[idx[i],idx[j]]=[idx[j],idx[i]]}const n=idx.map(i=>G.names[i]),c=idx.map(i=>G.colors[i]);n.forEach((x,i)=>G.names[i]=x);c.forEach((x,i)=>G.colors[i]=x);G.pickColor=null;render();toast('🔀 Ordem sorteada')}
@@ -2383,7 +2418,7 @@ function headBtns(){
   if(!online())return `<button title="Voltar para a tela inicial (a partida fica salva)" onclick="goHome()">${ICON_CASA}Início</button>`+NOVO_BTN;
   let h='';
   if(amHost())h+=NOVO_BTN;
-  return h+`<button class="small" onclick="leaveRoom()">Sair</button>`;
+  return h+`<button class="small${Date.now()-SAIR_T<3000?' confirma':''}" onclick="sairConfirma(this)">${Date.now()-SAIR_T<3000?(G.phase&&G.phase!=='setup'?'Sair da partida?':'Sair da sala?'):'Sair'}</button>`;
 }
 function wonBtns(){
   if(can('host'))return `<button class="primary" onclick="rematch()">Jogar de novo (mesmos jogadores)</button><button onclick="newGame()">Mudar jogadores</button>`;
@@ -2452,7 +2487,7 @@ function homeHtml(){
       <h3>Jogue agora</h3>
       <div class="perfil">
         <button class="avatar grande${minhaFoto()?' temfoto':''}" style="--c:${cor}${minhaFoto()?`;background:${cor} url(${minhaFoto()}) center/cover`:''}" title="Trocar a cor" onclick="HOME_COR=!HOME_COR;render()"><i><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.6L15.6 5a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/></svg></i></button>
-        <input id="homenome" value="${esc(myName())}" maxlength="16" placeholder="Seu nome" autocomplete="nickname" oninput="setMyName(this.value);contaSalvaDepois()" onkeydown="if(event.key==='Enter')this.blur()">
+        <input id="homenome" aria-label="Seu nome" value="${esc(myName())}" maxlength="16" placeholder="Seu nome" autocomplete="nickname" oninput="setMyName(this.value);contaSalvaDepois()" onkeydown="if(event.key==='Enter')this.blur()">
       </div>
       <div id="homeconta" class="homecards">${contaCartoesHtml()}</div>${natalAtivo()?`<div class="homenatal">🎄 <b>Chegou o Natal!</b> Dá para incluir o tema de Natal na hora de criar a sala.${eventoNatalAtivo()?` Jogue ${EVENTO_NATAL.alvo} partidas online com conta até 31/12 e ganhe o título exclusivo <span class="titulo tn8">${EVENTO_NATAL.e} ${EVENTO_NATAL.ti}</span>.`:''}</div>`:''}
       ${HOME_COR?`<div class="palette homepal">${PALETA.map(([c,n])=>`<button class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="homeCor('${c}')"></button>`).join('')}</div>`:''}
@@ -2463,7 +2498,7 @@ function homeHtml(){
         <button class="pilula roxa" ${ok?'':'disabled'} onclick="abreSalas()"><span class="ico">${ICONES.salas}</span><span><b>Salas</b><small>Veja as salas abertas</small></span></button>
         <button class="pilula" onclick="playLocal()"><span class="ico">${ICONES.local}</span><span><b>Neste aparelho</b><small>O celular passa de mão em mão</small></span></button>
       </div>
-      <div class="joinrow"><input id="joincode" maxlength="6" placeholder="Código da sala" autocapitalize="characters" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')joinFromInput()"><button ${ok?'':'disabled'} onclick="joinFromInput()">Entrar</button></div>
+      <div class="joinrow"><input id="joincode" aria-label="Código da sala" maxlength="6" placeholder="Código da sala" autocapitalize="characters" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')joinFromInput()"><button ${ok?'':'disabled'} onclick="joinFromInput()">Entrar</button></div>
       ${ok?'':`<p class="muted">${NETREADY?'O modo online não está disponível agora.':'Conectando o modo online…'}</p>`}
     </section>
     <section class="hbox">
@@ -2503,6 +2538,18 @@ async function enterRoom(code,created,publica){
     render();
   }catch(e){console.error(e);CREATING=false;ENTRANDO=null;toast(e&&e.status&&e.status!==500?e.message:'Sem conexão com a sala. Tente de novo.');if(e&&e.status===404||e&&e.status===403){if(UNWATCH){UNWATCH();UNWATCH=null}MODE=null;ROOM=null;render()}}
 }
+// sair da sala pede um segundo toque (igual ao Novo jogo), para ninguém sair sem querer
+var SAIR_T=0;
+function sairConfirma(b){
+  if(Date.now()-SAIR_T<3000){SAIR_T=0;leaveRoom();return}
+  SAIR_T=Date.now();sairPinta();setTimeout(sairPinta,3050);
+}
+function sairPinta(){ // o botão pode ter sido redesenhado no meio: pinta todos os "Sair" que estiverem na tela
+  const on=Date.now()-SAIR_T<3000;
+  document.querySelectorAll('button[onclick^="sairConfirma"]').forEach(x=>{x.textContent=on?(G.phase&&G.phase!=='setup'?'Sair da partida?':'Sair da sala?'):'Sair';x.classList.toggle('confirma',on)});
+}
+// fechar ou recarregar a aba no meio de uma partida online: o navegador pergunta antes
+addEventListener('beforeunload',e=>{if(online()&&ROOM&&G.phase&&G.phase!=='setup'&&G.phase!=='won'){e.preventDefault();e.returnValue=''}});
 function leaveRoom(){
   if(UNWATCH){UNWATCH();UNWATCH=null}
   const saiu=ROOM,anunciada=ANUNCIO.foi;
@@ -2586,7 +2633,7 @@ function bugInfo(){
 function bugHtml(){
   return `<p class="muted" style="margin-top:0">Achou algo errado no site? Conte aqui que a gente corrige. <b>Pergunta com resposta errada</b> se reporta pelo botão <b>⚑ Reportar pergunta</b>, que aparece depois da resposta.</p>
   <div class="bugtipos">${BUG_TIPOS.map(([k,l])=>`<button class="small${BUG.tipo===k?' on':''}" onclick="BUG.tipo='${k}';bugRender()">${l}</button>`).join('')}</div>
-  <textarea id="bugtexto" maxlength="1500" placeholder="O que você estava fazendo e o que aconteceu?" oninput="BUG.texto=this.value">${esc(BUG.texto)}</textarea>
+  <textarea id="bugtexto" aria-label="O que aconteceu" maxlength="1500" placeholder="O que você estava fazendo e o que aconteceu?" oninput="BUG.texto=this.value">${esc(BUG.texto)}</textarea>
   <label class="bugtec"><input type="checkbox" ${BUG.tecnico?'checked':''} onchange="BUG.tecnico=this.checked"> Mandar junto informações técnicas (tamanho da tela, navegador, em que parte do jogo você estava e erros do site).</label>
   <p class="muted" style="margin:-4px 0 12px;font-size:12.5px">Seu nome no jogo vai junto, para saber quem avisou. Nenhuma senha ou outro dado pessoal é enviado.</p>
   <button class="primary bugenvia" ${BUG.enviando?'disabled':''} onclick="bugEnvia()">${BUG.enviando?'Enviando…':'Enviar'}</button>`;
@@ -3288,14 +3335,18 @@ function pintaEfx(){if(document.getElementById('visualbox')&&document.getElement
 const ESTILOS=[['palco','🎭','Palco','#e3274f','#5c0519'],['neon','🕹️','Fliperama Neon','#ff2a8a','#26104f'],['praia','🏖️','Praia','#5cc8ef','#f2c27a'],
   ['arraia','🎉','Arraiá','#ffb347','#7a2208'],['galaxia','🪐','Galáxia','#6a3fbf','#0d0d33'],['lousa','📚','Lousa','#3c7a5d','#7a4a26']];
 function estiloAtual(){const e=document.documentElement.dataset.estilo;return ESTILOS.some(x=>x[0]===e)?e:'palco'}
-function trocaEstilo(e){if(!ESTILOS.some(x=>x[0]===e))return;document.documentElement.dataset.estilo=e;try{localStorage.setItem('arrisca-estilo',e)}catch(x){}SFX.tap&&SFX.tap();visualRender()}
+function corDaBarra(){const m=document.querySelector('meta[name=theme-color]');if(!m)return;const c=getComputedStyle(document.documentElement).getPropertyValue('--f2').trim();if(c)m.content=c}
+function trocaEstilo(e){if(!ESTILOS.some(x=>x[0]===e))return;document.documentElement.dataset.estilo=e;try{localStorage.setItem('arrisca-estilo',e)}catch(x){}corDaBarra();SFX.tap&&SFX.tap();visualRender()}
+corDaBarra();
 function visualAbre(){visualRender();modalAbre('visualbox')}
 function visualRender(){
   const c=document.getElementById('visualcorpo');if(!c)return;const at=estiloAtual(),leve=document.documentElement.classList.contains('leve');
   c.innerHTML=`<h4 class="ctsub" style="margin-top:0">Estilo do site</h4><div class="estilos">${ESTILOS.map(([k,i,n,c1,c2])=>`<button class="estcard${k===at?' on':''}" onclick="trocaEstilo('${k}')" aria-pressed="${k===at}"><span class="estprev" style="background:linear-gradient(160deg,${c1},${c2})">${i}</span><b>${n}</b></button>`).join('')}</div>
     <p class="muted" style="text-align:center;margin:6px 0 0;font-size:13px">Vale só para este aparelho; cada jogador escolhe o seu.</p>
     <h4 class="ctsub">Efeitos</h4>
-    <label class="somck"><input type="checkbox" ${leve?'checked':''} onchange="trocaEfeitos()"><span>🍃 Efeitos leves<small>Fundo parado e menos animação. Bom para celulares mais simples e para o Firefox.</small></span></label>`;
+    <label class="somck"><input type="checkbox" ${leve?'checked':''} onchange="trocaEfeitos()"><span>🍃 Efeitos leves<small>Fundo parado e menos animação. Bom para celulares mais simples e para o Firefox.</small></span></label>
+    <h4 class="ctsub">Acessibilidade</h4>
+    <label class="somck"><input type="checkbox" ${ordemToque()?'checked':''} onchange="trocaOrdemToque()"><span>👆 Ordenar jogadores sem arrastar<small>Toque no ⠿ de um jogador e depois no ⠿ do lugar para onde ele vai. No teclado, as setas no ⠿ já mudam a ordem.</small></span></label>`;
 }
 function trocaEfeitos(){
   const l=!document.documentElement.classList.contains('leve');
@@ -3490,25 +3541,25 @@ function lobbyHtml(){
   const ord=lobbyOrder();
   const me=LOBBY[MYDEV]||{};
   const usadas=ord.filter(d=>d!==MYDEV).map(d=>LOBBY[d].cor).filter(Boolean);
-  let h=`${amHost()?'<div class="prepgrid"><div class="pcol">':''}<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Sala <span class="code">${ROOM}</span></h2><button class="small" onclick="leaveRoom()">Sair</button></div>
+  let h=`${amHost()?'<div class="prepgrid"><div class="pcol">':''}<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Sala <span class="code">${ROOM}</span></h2><button class="small${Date.now()-SAIR_T<3000?' confirma':''}" onclick="sairConfirma(this)">${Date.now()-SAIR_T<3000?(G.phase&&G.phase!=='setup'?'Sair da partida?':'Sair da sala?'):'Sair'}</button></div>
   ${amHost()?'':(G.publica?'<p class="muted">🌍 Sala aberta a todos.</p>':'')}
   <p class="muted">Mande o link ou o código para quem vai jogar. Cada um entra pelo próprio celular.${amHost()&&G.publica?' <b>🌍 A sala também aparece em Salas para qualquer pessoa entrar.</b>':''}</p>
   <div class="row"><button class="small primary" onclick="shareRoom()">📤 Compartilhar</button><button class="small" onclick="copyText(linkSala(),'📋 Link copiado')">📋 Copiar link</button>${CONTA.user?'<button class="small" onclick="amigosAbre()">👥 Chamar amigos</button>':''}</div>
   <h2 style="margin-top:16px">Você</h2>
-  <div class="setup-row"><button class="swatch${me.cor?'':' vazio'}" style="background:${me.cor||'#3a4054'}" title="Escolher a cor" onclick="G.pickColor=G.pickColor==='me'?null:'me';render()"></button><input id="meunome" value="${esc(me.nome||'')}" maxlength="16" placeholder="Seu nome" onchange="setMyName(this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
+  <div class="setup-row"><button class="swatch${me.cor?'':' vazio'}" style="background:${me.cor||'#3a4054'}" title="Escolher a cor" onclick="G.pickColor=G.pickColor==='me'?null:'me';render()"></button><input id="meunome" aria-label="Seu nome" autocomplete="nickname" value="${esc(me.nome||'')}" maxlength="16" placeholder="Seu nome" onchange="setMyName(this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
   ${G.pickColor==='me'||(!me.cor&&(me.nome||'').trim())?`<div class="pal-wrap"><span class="muted">Escolha sua cor:</span><div class="palette">${PALETA.map(([c,n])=>{const tomada=usadas.includes(c);return `<button class="swatch${c===me.cor?' on':''}${tomada?' taken':''}" style="background:${c}" title="${n}${tomada?' (já escolhida)':''}" ${tomada?'disabled':''} onclick="setMyColor('${c}')"></button>`}).join('')}</div></div>`:''}
   ${!(me.nome||'').trim()?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Digite seu nome para entrar na partida.</p>':''}
   <h2 style="margin-top:16px">Jogadores <span class="muted">(${ord.length})</span></h2><div class="plist">`;
-  ord.forEach((d,i)=>{const l=LOBBY[d]||{};h+=`<div class="setup-row lob${l.on===false?' offline':''}${NOVOS[d]?' novo':''}" data-idx="${i}">${amHost()?`<span class="grip" title="Arraste para mudar a ordem" onpointerdown="dragRow(event,'lobby')">⠿</span>`:''}<span class="ordem">${i+1}º</span>${bolinha(fotoDe(d),l.cor||'#3a4054','swatch')}<span class="lname">${esc((l.nome||'').trim()||'(sem nome)')}${tituloChip(TITULOS[d])}${d===MYDEV?' <span class="you">você</span>':''}${d===HOST?' <span class="host">criou a sala</span>':l.pronto?' <span class="pronto">✅ pronto</span>':' <span class="espera">⏳ confirmando</span>'}${l.on===false?' <span class="off">offline</span>':''}</span>${amHost()&&d!==MYDEV?`<button class="small" title="Tirar da sala" onclick="kick('${d}')">✕</button>`:''}</div>`});
+  ord.forEach((d,i)=>{const l=LOBBY[d]||{};h+=`<div class="setup-row lob${l.on===false?' offline':''}${NOVOS[d]?' novo':''}" data-idx="${i}">${amHost()?`<span class="grip" role="button" tabindex="0" title="${gripTit()}" aria-label="Mudar a ordem (setas para cima e para baixo)" onpointerdown="dragRow(event,'lobby')" onkeydown="gripTecla(event,'lobby')">⠿</span>`:''}<span class="ordem">${i+1}º</span>${bolinha(fotoDe(d),l.cor||'#3a4054','swatch')}<span class="lname">${esc((l.nome||'').trim()||'(sem nome)')}${tituloChip(TITULOS[d])}${d===MYDEV?' <span class="you">você</span>':''}${d===HOST?' <span class="host">criou a sala</span>':l.pronto?' <span class="pronto">✅ pronto</span>':' <span class="espera">⏳ confirmando</span>'}${l.on===false?' <span class="off">offline</span>':''}</span>${amHost()&&d!==MYDEV?`<button class="small" title="Tirar da sala" onclick="kick('${d}')">✕</button>`:''}</div>`});
   h+='</div>';
   if(amHost()){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
     h+=`${ord.length>1?'<p class="muted" style="margin:-2px 0 4px">Quem está em 1º começa.</p>':''}</div><div class="pcol">${modosHtml(true)}${natalEscolhaHtml()}${avancadoHtml(`
     <h3 class="avtit" style="margin-top:0">Quem pode entrar</h3><div class="visib"><button class="${G.publica?'':'on'}" onclick="G.publica=false;render()">🔒 Só com código</button><button class="${G.publica?'on':''}" onclick="G.publica=true;render()">🌍 Aberta a todos</button></div><p class="muted">${G.publica?'A sala aparece em <b>Salas</b> para qualquer pessoa entrar enquanto vocês esperam. Quando a partida começa, ela sai da lista.':'Só entra quem tiver o link ou o código.'}</p>
     <h3 class="avtit">Partida</h3>
-    <div class="row" style="margin:0 0 10px"><button class="small" onclick="shuffleLobby()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">ou arraste pelo ⠿ na lista</span></div>
-    <div class="setup-row"><label style="flex:none">Fichas:</label><select onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
-    <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select onchange="G.size=this.value;G.previewBoard=null;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
+    <div class="row" style="margin:0 0 10px"><button class="small" onclick="shuffleLobby()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">${ordemToque()?'ou toque no ⠿ de um e depois no lugar dele':'ou arraste pelo ⠿ na lista'}</span></div>
+    <div class="setup-row"><label style="flex:none">Fichas:</label><select aria-label="Fichas por jogador" onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
+    <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select aria-label="Tamanho do tabuleiro" onchange="G.size=this.value;G.previewBoard=null;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
     ${niveisHtml(false)}${temasHtml(false)}`,true)}
     </div></div><div class="prepfoot">${G.selThemes.length<3?POUCOS_TEMAS:''}${semNome?'<p class="muted">Quem ficar sem nome entra como "Jogador" com o número da vez.</p>':''}
     ${ord.length>=2&&faltaPronto().length?`<p class="muted">⏳ Esperando confirmar: <b>${faltaPronto().map(d=>esc(nomeLobby(d))).join(', ')}</b></p>`:''}
@@ -3876,7 +3927,7 @@ function respBox(){const p=G.players[G.cur];return `<div class="resp"><div class
 function respHtml(){
   const p=G.players[G.cur],eu=myIdx();
   if(!G.resp){
-    if(can('cur'))return `<div class="respbox"><input id="resp" maxlength="120" value="${esc(RASCUNHO)}" onpaste="marcaColou()" placeholder="Digite sua resposta" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" oninput="RASCUNHO=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();enviarResposta()}"><button class="primary" onclick="enviarResposta()">Enviar</button></div><div class="row" style="margin-top:8px"><button class="small bad" onclick="giveUp()">✘ Não sei</button></div>`;
+    if(can('cur'))return `<div class="respbox"><input id="resp" aria-label="Sua resposta" maxlength="120" value="${esc(RASCUNHO)}" onpaste="marcaColou()" placeholder="Digite sua resposta" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" oninput="RASCUNHO=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();enviarResposta()}"><button class="primary" onclick="enviarResposta()">Enviar</button></div><div class="row" style="margin-top:8px"><button class="small bad" onclick="giveUp()">✘ Não sei</button></div>`;
     return `<p class="wait">✍️ ${nm(p)} está digitando a resposta…</p>`;
   }
   const c=contagem(),k=respKey(),mv=VOTES[MYDEV],meu=mv&&mv.k===k?mv.v:null;
@@ -4062,7 +4113,7 @@ function focoAgenda(alvo){FOCO_ALVO=alvo;if(FOCO_RAF)return;FOCO_RAF=requestAnim
 function painelSons(){
   const L=[['Toque em botão','tap'],['Apostar ficha','chip'],['Pergunta aparece','whoosh'],['Mostrar resposta','flip'],['Escolher tema','pop'],['Peão andando','passos'],['Acertou','correct'],['Errou','wrong'],['Timer começa','go'],['Timer (segundos)','tick'],['Timer (3 últimos)','hurry'],['Tempo esgotado','timeup'],['Vez de outro','turn'],['Sua vez (online)','myturn'],['Dica','magic'],['Alguém entrou na sala','join'],['Mensagem no chat','msg'],['Voto','vote'],['Começar partida','start'],['Chegou na última casa','final'],['Vitória','win'],['Acertou uma impossível','impossivel'],['Arriscar o dobro','dobro'],['Rasteira','rasteira']];
   const d=document.createElement('div');d.className='chatbox histbox';d.style.zIndex='50';
-  d.innerHTML='<div class="chathead"><b>🔊 Sons do jogo</b><button class="small" onclick="this.closest(\'.chatbox\').remove()">✕</button></div><div class="histcorpo"><p class="muted" style="margin-top:0">Toque para ouvir cada som.</p><div style="display:grid;gap:8px">'+L.map(([t,f])=>`<button onclick="${f==='passos'?'[1,2,3,4,5].forEach(i=>setTimeout(()=>SFX.step(i),i*230))':'SFX.'+(f.includes('(')?f:f+'()')}">▶ ${t}</button>`).join('')+'</div></div>';
+  d.innerHTML='<div class="chathead"><b>🔊 Sons do jogo</b><button class="small" aria-label="Fechar" title="Fechar" onclick="this.closest(\'.chatbox\').remove()">✕</button></div><div class="histcorpo"><p class="muted" style="margin-top:0">Toque para ouvir cada som.</p><div style="display:grid;gap:8px">'+L.map(([t,f])=>`<button onclick="${f==='passos'?'[1,2,3,4,5].forEach(i=>setTimeout(()=>SFX.step(i),i*230))':'SFX.'+(f.includes('(')?f:f+'()')}">▶ ${t}</button>`).join('')+'</div></div>';
   document.body.appendChild(d);
 }
 if(URLP.get('sons')!==null)setTimeout(painelSons,300);
