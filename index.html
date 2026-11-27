@@ -1294,6 +1294,9 @@ span.eqpill{cursor:default}
 .eqresp b{color:#fff}
 .eqmemb{font-size:12.5px;color:var(--suave);margin-top:2px;line-height:1.35}
 .eqmemb .vez{color:#fff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.chatabas{margin:8px 12px 0;flex:none}
+.eqchat{all:unset;cursor:pointer;color:var(--amarelo);font:600 14px 'Fredoka',sans-serif;text-decoration:underline;text-underline-offset:3px}
+.eqchat:focus-visible{outline:2px solid var(--amarelo);outline-offset:2px;border-radius:4px}
 /* Sobrevivência relâmpago: sem tabuleiro, uma coluna só */
 body.sobrev .wrap{grid-template-columns:minmax(0,1fr);max-width:860px}
 body.sobrev .wrap>.ringwrap{display:none}
@@ -1384,7 +1387,7 @@ body.sobrev .wrap>.ringwrap{display:none}
 <div id="sombox" class="chatbox modal sombox" style="display:none"><div class="chathead"><b>🔊 Sons e avisos</b><button class="small" aria-label="Fechar" title="Fechar" onclick="modalFecha('sombox')">✕</button></div><div id="somcorpo" class="histcorpo"></div></div>
 <div id="bugbox" class="chatbox histbox bugbox" style="display:none"><div class="chathead"><b>🐞 Reportar um problema</b><button class="small" aria-label="Fechar" title="Fechar" onclick="bugFecha()">✕</button></div><div id="bugcorpo" class="histcorpo"></div></div>
 <div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" aria-label="Fechar" title="Fechar" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
-<div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b id="chattit">💬 Chat da sala</b><div class="row"><button class="small" id="chatmudobtn" title="Silenciar alguém" onclick="chatMudosTroca()">🔇</button><button class="small" aria-label="Fechar" title="Fechar" onclick="chatFecha()">✕</button></div></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" aria-label="Mensagem para a sala" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
+<div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b id="chattit">💬 Chat da sala</b><div class="row"><button class="small" id="chatmudobtn" title="Silenciar alguém" onclick="chatMudosTroca()">🔇</button><button class="small" aria-label="Fechar" title="Fechar" onclick="chatFecha()">✕</button></div></div><div id="chatabas" class="abas chatabas" role="group" aria-label="Com quem conversar" style="display:none"></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" aria-label="Mensagem para a sala" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
 <script>
 // ----- filtro de palavrão (o mesmo do servidor, em api/_palavrao.js) -----
 // Confere palavra por palavra, sem acento, com números no lugar de letras (p0rr4) e letras repetidas (porraaa).
@@ -2903,7 +2906,7 @@ function can(role){
 function canTheme(){const p=G.players&&G.players[G.cur];if(!p)return false;if(p.pos!==FINAL)return can('cur');return online()&&G.vt&&!p.forced?vtAplicador()===MYDEV:can('others')}
 function nm(p){return p?`<b style="color:${p.color}">${esc(p.name)}</b>`:'alguém'}
 function turnTitle(p){const fd=respDe(p),f=online()&&fotoDe(fd)?bolinha(fotoDe(fd),p.color,'tfoto'):'',nome=`<span style="color:${p.color}">${esc(p.name)}</span>`;
-  if(Array.isArray(p.membros)){const m=membroVez(p),r=m?`<small class="eqresp">${online()&&m.dev===MYDEV?'Você responde pelo time':'Responde: <b>'+esc(m.name)+'</b>'}</small>`:'';return `${f}${online()&&myIdx()===G.cur?'Vez do seu time, '+nome+'!':'Vez do '+nome}${r}`}
+  if(Array.isArray(p.membros)){const m=membroVez(p),r=m?`<small class="eqresp">${online()&&m.dev===MYDEV?'Você responde pelo time':'Responde: <b>'+esc(m.name)+'</b>'}${online()&&myIdx()===G.cur&&chatAbaTem()?' · <button type="button" class="eqchat" onclick="chatTime()">chat do time</button>':''}</small>`:'';return `${f}${online()&&myIdx()===G.cur?'Vez do seu time, '+nome+'!':'Vez do '+nome}${r}`}
   return online()&&myIdx()===G.cur?`${f}Sua vez, ${nome}!`:`${f}Vez de ${nome}`}
 function waitHtml(role,acao){const p=role==='reader'?G.players[readerIdx()]:G.players[G.cur];return `<p class="wait">⏳ Aguardando ${nmVez(p)} ${acao}…</p>`}
 function waitThemeHtml(){const p=G.players[G.cur];return p.pos===FINAL?`<p class="wait">⏳ ${Array.isArray(p.membros)?'Os outros times escolhem o tema da pergunta final do '+nm(p):'Os outros jogadores escolhem o tema da pergunta final de '+nm(p)}.</p>`:waitHtml('cur','escolher o tema')}
@@ -4671,7 +4674,7 @@ function chatMudosHtml(){
   h+=outros.length?outros.map(([d,l])=>`<div class="mudorow"><span class="cn" style="color:${corOk(l.cor)}">${esc(l.nome||'Sem nome')}</span><button type="button" class="small${mudo(d)?' primary':''}" onclick="mudoTroca('${d}')">${mudo(d)?'🔊 Voltar a ouvir':'🔇 Silenciar'}</button></div>`).join(''):'<p class="muted chatvazio">Ainda não tem mais ninguém na sala.</p>';
   return h+`<button type="button" class="small" style="margin-top:8px;align-self:flex-start" onclick="chatMudosTroca()">← Voltar ao chat</button>`;
 }
-function chatZera(){CHAT=[];CHAT_OPEN=false;CHAT_INIT=false;CHAT_MUDOS_VER=false;CHAT_VISTAS=new Set();CHAT_CONHECE=new Set();const pv=document.getElementById('chatprev');if(pv)pv.style.display='none';chatBadge();chatVis()}
+function chatZera(){CHAT=[];CHAT_RAW=[];CHAT_ABA='sala';TIME_K=null;CHAT_OPEN=false;CHAT_INIT=false;CHAT_MUDOS_VER=false;CHAT_VISTAS=new Set();CHAT_CONHECE=new Set();const pv=document.getElementById('chatprev');if(pv)pv.style.display='none';chatBadge();chatVis()}
 function chatVis(){
   const b=document.getElementById('chatbtn'),x=document.getElementById('chatbox');if(!b||!x)return;
   const on=online();b.style.display=on?'':'none';x.style.display=on&&CHAT_OPEN?'':'none';
@@ -4679,25 +4682,82 @@ function chatVis(){
 }
 function chatAbre(){CHAT_OPEN=true;chatViu();const pv=document.getElementById('chatprev');if(pv)pv.style.display='none';chatBadge();chatVis();chatPinta();setTimeout(()=>{const i=document.getElementById('chatin');if(i&&matchMedia('(pointer:fine)').matches)i.focus()},60)}
 function chatFecha(){CHAT_OPEN=false;CHAT_MUDOS_VER=false;chatViu();chatBadge();chatVis()}
-function chatViu(){CHAT.forEach(m=>CHAT_VISTAS.add(m.id))}
+function chatViu(){CHAT.filter(chatDaAba).forEach(m=>CHAT_VISTAS.add(m.id))}
 function chatBadge(){const n=CHAT.filter(m=>!CHAT_VISTAS.has(m.id)&&m.dev!==MYDEV&&!mudo(m.dev)).length;const el=document.getElementById('chatn');if(el)el.textContent=n?(n>9?'9+':n):''}
 function chatPinta(){
   if(!CHAT_OPEN)return;const el=document.getElementById('chatlist');if(!el)return;
   const bx=document.getElementById('chatbox');if(bx)bx.classList.toggle('mudos',CHAT_MUDOS_VER);
-  const tt=document.getElementById('chattit');tituloSet(tt,CHAT_MUDOS_VER?'mudo':'chat',CHAT_MUDOS_VER?'Silenciar alguém':'Chat da sala');
+  const aba=chatAbaAtual(),tt=document.getElementById('chattit');tituloSet(tt,CHAT_MUDOS_VER?'mudo':'chat',CHAT_MUDOS_VER?'Silenciar alguém':aba==='time'?'Chat do time':'Chat da sala');
+  const ab=document.getElementById('chatabas'),tem=chatAbaTem()&&!CHAT_MUDOS_VER;
+  if(ab){ab.style.display=tem?'':'none';if(tem){const nv=a=>CHAT.filter(m=>!CHAT_VISTAS.has(m.id)&&m.dev!==MYDEV&&!mudo(m.dev)&&(a==='time')===!!m.eq).length;
+    ab.innerHTML=['sala','time'].map(a=>{const k=nv(a);return `<button type="button" class="small${aba===a?' on':''}" aria-pressed="${aba===a}" onclick="chatAba('${a}')">${a==='time'?esc(meuTime().name):'Sala toda'}${k?` (${k})`:''}</button>`}).join('')}}
+  const ci=document.getElementById('chatin');if(ci){ci.placeholder=aba==='time'?'Só o seu time vê':'Escreva uma mensagem';ci.maxLength=aba==='time'?100:200;ci.setAttribute('aria-label',aba==='time'?'Mensagem para o seu time':'Mensagem para a sala')}
   const mb=document.getElementById('chatmudobtn');if(mb)mb.classList.toggle('on',CHAT_MUDOS_VER);
   if(CHAT_MUDOS_VER){el.innerHTML=chatMudosHtml();return}
-  const vis=CHAT.filter(m=>!mudo(m.dev));
-  el.innerHTML=vis.length?vis.map(m=>{const emo=REACOES.includes(m.t),eu=m.dev===MYDEV,hr=horaChat(m.ts);return `<div class="cm${eu?' me':''}${emo?' emo':''}">${eu||emo?'':`<span class="cn" style="color:${corOk(chatCor(m))}">${fotoDe(m.dev)?bolinha(fotoDe(m.dev),corOk(chatCor(m)),'chatfoto'):''}${esc(chatNome(m))}</span>`}${esc(m.t)}${hr?`<span class="ch">${emo&&!eu?esc(chatNome(m))+' · ':''}${hr}</span>`:''}</div>`}).join(''):'<p class="muted chatvazio">Nenhuma mensagem ainda. Mande um oi! 👋</p>';
+  const vis=CHAT.filter(m=>!mudo(m.dev)&&chatDaAba(m));
+  el.innerHTML=vis.length?vis.map(m=>{const emo=REACOES.includes(m.t),eu=m.dev===MYDEV,hr=horaChat(m.ts);return `<div class="cm${eu?' me':''}${emo?' emo':''}">${eu||emo?'':`<span class="cn" style="color:${corOk(chatCor(m))}">${fotoDe(m.dev)?bolinha(fotoDe(m.dev),corOk(chatCor(m)),'chatfoto'):''}${esc(chatNome(m))}</span>`}${esc(m.t)}${hr?`<span class="ch">${emo&&!eu?esc(chatNome(m))+' · ':''}${hr}</span>`:''}</div>`}).join(''):(aba==='time'?'<p class="muted chatvazio">Só quem é do seu time vê as mensagens daqui. Bom lugar para ajudar quem está respondendo.</p>':'<p class="muted chatvazio">Nenhuma mensagem ainda. Mande um oi! 👋</p>');
   el.scrollTop=el.scrollHeight;
 }
-function chatRecebido(a){
+// ----- chat do time (modo equipes): a mensagem vai no chat da sala, cifrada (AES-GCM) com a chave do time.
+// Só quem está no time recebe a chave do servidor (api/salas.js, ação chaveTime); os outros recebem só o texto embaralhado e não mostram.
+var CHAT_RAW=[],CHAT_ABA='sala',TIME_DEC={},TIME_PEND=new Set(),TIME_K=null,TIME_K_P=null,TIME_K_ERR=0;
+var TIME_RE=/^⟦(eq[0-3])⟧([A-Za-z0-9+/=]{20,200})$/,TIME_MAX=116; // 116 bytes de texto: cifrado e em base64, cabe nos 200 caracteres de uma mensagem
+function meuTime(){if(!online()||!emEquipes()||!G.jogo||!G.players)return null;const i=myIdx();return i>=0?G.players[i]:null}
+function chatAbaTem(){return !!meuTime()&&!!(window.crypto&&crypto.subtle)}
+function chatAbaAtual(){return CHAT_ABA==='time'&&chatAbaTem()?'time':'sala'}
+function chatDaAba(m){return chatAbaAtual()==='time'?!!m.eq:!m.eq}
+function chatAba(a){CHAT_ABA=a;chatViu();chatBadge();chatPinta();const i=document.getElementById('chatin');if(i&&matchMedia('(pointer:fine)').matches)i.focus()}
+function chatTime(){chatAbre();chatAba('time')}
+function b64de(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0))}
+function enc8(s){return new TextEncoder().encode(s)}
+function b64para(u){let s='';u.forEach(x=>s+=String.fromCharCode(x));return btoa(s)}
+async function timeChave(){ // null: não está num time; undefined: não deu para buscar agora
+  const p=meuTime();if(!p||!chatAbaTem())return null;
+  if(TIME_K&&TIME_K.jogo===G.jogo&&TIME_K.eq===p.dev)return TIME_K;
+  if(TIME_K_P)return TIME_K_P;
+  if(Date.now()-TIME_K_ERR<10000)return undefined;
+  TIME_K_P=(async()=>{
+    try{
+      const r=await servidorSala('chaveTime',{sala:ROOM});
+      if(!r||r.eq!==p.dev||r.jogo!==G.jogo||typeof r.k!=='string')return null;
+      const key=await crypto.subtle.importKey('raw',b64de(r.k),'AES-GCM',false,['encrypt','decrypt']);
+      return (TIME_K={jogo:r.jogo,eq:r.eq,key});
+    }catch(e){TIME_K_ERR=Date.now();return undefined}
+    finally{TIME_K_P=null}
+  })();
+  return TIME_K_P;
+}
+async function timeAbre(id,eq,b64){ // decifra uma mensagem do time (de outro time, ou de outra partida, fica escondida)
+  if(TIME_PEND.has(id))return;TIME_PEND.add(id);
+  try{
+    const k=await timeChave();
+    if(k===undefined)return;
+    if(!k||k.eq!==eq){TIME_DEC[id]=null;return}
+    const b=b64de(b64);
+    TIME_DEC[id]=new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12),additionalData:enc8(ROOM+'|'+eq)},k.key,b.slice(12)));
+  }catch(e){TIME_DEC[id]=null}
+  finally{TIME_PEND.delete(id);if(id in TIME_DEC)chatMonta()}
+}
+async function timeFecha(t){ // texto para o time → mensagem cifrada
+  const k=await timeChave();if(!k)throw new Error('sem a chave do time');
+  let b=enc8(t);while(b.length>TIME_MAX){t=[...t].slice(0,-1).join('');b=enc8(t)}
+  const iv=crypto.getRandomValues(new Uint8Array(12)),ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:enc8(ROOM+'|'+k.eq)},k.key,b));
+  const u=new Uint8Array(12+ct.length);u.set(iv);u.set(ct,12);
+  return '⟦'+k.eq+'⟧'+b64para(u);
+}
+function chatRecebido(a){CHAT_RAW=(Array.isArray(a)?a:Object.values(a||{})).filter(m=>m&&typeof m.t==='string'&&m.t);chatMonta()}
+function chatMonta(){
   // mensagens conferidas e em ordem pela hora do servidor (o relógio de cada aparelho pode estar adiantado ou atrasado)
-  CHAT=(Array.isArray(a)?a:Object.values(a||{})).filter(m=>m&&typeof m.t==='string'&&m.t).map((m,i)=>({
-    id:String(m.id||('m'+i)).slice(0,40),dev:sId(m.dev)||'',n:semPalavrao(sStr(m.n,16)),c:m.c,t:semPalavrao(sStr(m.t,200)),ts:Number(m.ts)||0
-  })).sort((x,y)=>(x.ts-y.ts)||(x.id<y.id?-1:x.id>y.id?1:0));
+  const ids=[];CHAT=[];
+  CHAT_RAW.forEach((m,i)=>{
+    const id=String(m.id||('m'+i)).slice(0,40),tm=TIME_RE.exec(m.t);ids.push(id);
+    let t=m.t,eq=null;
+    if(tm){eq=tm[1];if(!(id in TIME_DEC)){timeAbre(id,eq,tm[2]);return}t=TIME_DEC[id];if(t==null)return}
+    CHAT.push({id,dev:sId(m.dev)||'',n:semPalavrao(sStr(m.n,16)),c:m.c,t:semPalavrao(sStr(t,200)),ts:Number(m.ts)||0,eq});
+  });
+  CHAT.sort((x,y)=>(x.ts-y.ts)||(x.id<y.id?-1:x.id>y.id?1:0));
   const por={};CHAT=CHAT.filter(m=>{const a=por[m.dev]||(por[m.dev]=[]);while(a.length&&m.ts-a[0]>10000)a.shift();a.push(m.ts);return a.length<=6}); // quem manda mensagem demais seguida não enche a tela
-  if(!CHAT_INIT){CHAT_INIT=true;CHAT.forEach(m=>{CHAT_CONHECE.add(m.id);CHAT_VISTAS.add(m.id)})}
+  if(!CHAT_INIT){CHAT_INIT=true;ids.forEach(id=>{CHAT_CONHECE.add(id);CHAT_VISTAS.add(id)})} // o que já estava lá ao entrar (inclusive do time, decifrado depois) não toca nem conta como novo
   else{
     const novos=CHAT.filter(m=>!CHAT_CONHECE.has(m.id)&&m.dev!==MYDEV&&!mudo(m.dev));
     CHAT.forEach(m=>CHAT_CONHECE.add(m.id));
@@ -4710,7 +4770,7 @@ function horaChat(ts){if(!ts)return '';try{return new Date(ts).toLocaleTimeStrin
 function chatPrevia(m){
   const el=document.getElementById('chatprev');if(!el)return;
   if(REACOES.includes(m.t))return;
-  el.innerHTML=`<b style="color:${corOk(chatCor(m))}">${esc(chatNome(m))}:</b> ${esc(m.t)}`;el.style.display='';
+  el.innerHTML=`<b style="color:${corOk(chatCor(m))}">${esc(chatNome(m))}${m.eq?' (time)':''}:</b> ${esc(m.t)}`;el.style.display='';
   clearTimeout(el._h);el._h=setTimeout(()=>{el.style.display='none'},4000);
 }
 function emojiVoa(e){
@@ -4727,6 +4787,10 @@ function chatManda(t){
   CHAT_ENVIOS.push(agora);t=semPalavrao(t);
   const nc=meuNomeCor(),m={dev:MYDEV,n:nc.n,c:nc.c,t,ts:Date.now()};
   if(REACOES.includes(t))emojiVoa(t);
+  if(chatAbaAtual()==='time'){ // só o time consegue ler
+    timeFecha(t).then(c=>NET.chat(ROOM,Object.assign(m,{t:c}))).catch(()=>toast('A mensagem do time não foi enviada. Tente de novo.'));
+    return;
+  }
   NET.chat(ROOM,m).catch(()=>toast('Sem conexão: a mensagem não foi enviada.'));
 }
 function chatEnvia(ev){ev.preventDefault();const i=document.getElementById('chatin');if(!i)return;if(chatManda(i.value)!==false)i.value=''}

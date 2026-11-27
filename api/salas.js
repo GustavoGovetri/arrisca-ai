@@ -12,7 +12,7 @@ const ST = require('./_store');
 const juiz = require('./_juiz');
 const STATS = require('./_stats');
 const { freia } = require('./_limite');
-const FREIO = { criar: 40, entrar: 200, jogada: 3000, votar: 1000, palpite: 1000, titulo: 200, lista: 400, anunciar: 400, sv: 4000 };
+const FREIO = { criar: 40, entrar: 200, jogada: 3000, votar: 1000, palpite: 1000, titulo: 200, lista: 400, anunciar: 400, sv: 4000, chaveTime: 400 };
 
 const MAX = 10;              // jogadores por partida
 const VIVA = 3 * 60 * 1000;  // sem notícia do dono por 3 minutos, a sala sai da lista
@@ -334,8 +334,30 @@ async function sobrev(body) {
   throw erro(400, 'Ação inválida');
 }
 
+// ---------------------------------------------------------------- chat do time (modo equipes)
+//   POST chaveTime {sala, dev, chave} → a chave do chat do time deste aparelho, nesta partida
+// As mensagens do time vão no chat da sala, cifradas (AES-GCM) com essa chave: quem é de outro time recebe só o texto embaralhado.
+// A chave sai de um segredo do servidor + sala + partida + time, e só quem está no time recebe.
+function segredoTime() {
+  if (process.env.ARRISCA_DEV_KEY) return process.env.ARRISCA_DEV_KEY + '|time';
+  return require('./_fb').cred().private_key + '|arrisca-time';
+}
+async function chaveTime(body) {
+  const code = codigo(body.sala), q = quem(body);
+  const [est, guardada] = await Promise.all([ST.ler('salas/' + code + '/estado'), ST.ler('srv/chaves/' + code + '/' + q.dev)]);
+  if (!est) throw erro(404, 'Sala não encontrada');
+  await confereChave(code, q, guardada);
+  const g = estadoG(est);
+  if (!g || !g.equipes || !Array.isArray(g.players) || !g.jogo) throw erro(409, 'A partida não é em equipes');
+  const p = g.players.find(x => x && Array.isArray(x.membros) && juiz.devsDe(x).includes(q.dev));
+  if (!p || !/^eq[0-3]$/.test(String(p.dev))) throw erro(403, 'Só quem está num time');
+  const k = crypto.createHmac('sha256', segredoTime()).update('time|' + code + '|' + g.jogo + '|' + p.dev).digest('base64');
+  return { eq: p.dev, jogo: g.jogo, k };
+}
+
 async function handle(acao, body) {
   if (acao === 'sv') return sobrev(body);
+  if (acao === 'chaveTime') return chaveTime(body);
   if (acao === 'criar') return criar(body);
   if (acao === 'entrar') return entrar(body);
   if (acao === 'jogada') return jogada(body);
