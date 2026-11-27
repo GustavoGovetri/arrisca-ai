@@ -225,7 +225,7 @@ async function palpite(body) {
   await ST.grava('PUT', 'srv/palp/' + code + '/' + qid + '/' + q.dev, Object.assign(v, { ts: Date.now() }));
   return { ok: true, palpite: v };
 }
-const TEMAS_VOTO = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V', 'N'];
+const TEMAS_VOTO = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V', 'N', 'F'];
 async function votar(body) {
   const code = codigo(body.sala), q = quem(body);
   const id = String(body.id || '');
@@ -258,7 +258,7 @@ async function votar(body) {
 const SV = require('./_sobrev');
 let SV_SORTEIA = null;
 function svSorteia(temas, nv, evitar) { if (!SV_SORTEIA) SV_SORTEIA = require('./perguntas.js')._svSorteia; return SV_SORTEIA(temas, nv, evitar) }
-function svTemas(g) { const t = (Array.isArray(g.selThemes) ? g.selThemes : []).filter(x => TEMAS_VOTO.includes(x)); return t.length ? t : TEMAS_VOTO.filter(x => x !== 'N') }
+function svTemas(g) { const t = (Array.isArray(g.selThemes) ? g.selThemes : []).filter(x => TEMAS_VOTO.includes(x) && x !== 'F'); return t.length ? t : TEMAS_VOTO.filter(x => x !== 'N' && x !== 'F') }
 async function svGrava(code, atual, est, next, antes, depois) { // nova versão do estado, só se ninguém mexeu no meio
   if (antes) await ST.gravaVarios(antes); // a certa da pergunta nova é guardada antes de a pergunta aparecer
   const agora = Date.now(), v = atual.v + 1, gs = JSON.stringify(next);

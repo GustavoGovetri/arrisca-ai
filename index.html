@@ -269,6 +269,16 @@ button:active:not(:disabled){transform:scale(.94)}
 .natalbox{display:flex;align-items:center;gap:10px;margin:10px 0 2px;padding:10px 12px;border-radius:14px;background:linear-gradient(135deg,rgba(22,128,60,.35),rgba(193,18,31,.3));border:2px solid rgba(255,255,255,.14)}
 .natalbox.on{border-color:#3ddc84;box-shadow:0 0 0 2px rgba(61,220,132,.25)}
 .natalbox>div{flex:1;min-width:0}.natalbox b{display:block}.natalbox small{opacity:.85;font-size:12.5px}
+.turmabox{display:flex;align-items:center;gap:10px;margin:10px 0 2px;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,#c026d3 22%,rgba(0,0,0,.25));border:2px solid rgba(255,255,255,.14)}
+.turmabox.on{border-color:#e879f9;box-shadow:0 0 0 2px rgba(232,121,249,.25)}
+.turmabox>div{flex:1;min-width:0}.turmabox b{display:block}.turmabox small{opacity:.88;font-size:12.5px}.turmaico{font-size:22px}
+.turmabox .linkbtn{font-size:12.5px;padding:0;min-height:0}
+.bform textarea{width:100%;resize:vertical;font:inherit;border-radius:14px;padding:10px 12px}
+.bniveis{display:flex;gap:6px;flex-wrap:wrap}
+.blista{display:flex;flex-direction:column;gap:8px}
+.bitem{padding:10px 12px;border-radius:14px;background:rgba(255,243,222,.05);border:1px solid rgba(255,243,222,.08)}
+.bitem .bq{font-weight:600;overflow-wrap:anywhere}.bitem .ba{margin-top:3px;color:#55e08a;overflow-wrap:anywhere}.bitem .ba .muted{color:var(--suave)}
+.bpe{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:13px}.bacoes{margin-left:auto;display:flex;gap:6px}
 .natalico{font-size:28px;line-height:1}
 .titulo.tn8{background:linear-gradient(180deg,#2fbf5b,#147a36);color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.45);box-shadow:0 1px 0 var(--k),0 0 0 1px #ffd23f inset,0 0 10px rgba(61,220,132,.45)}
 .homenatal{margin:10px auto 0;max-width:420px;padding:9px 12px;border-radius:14px;background:linear-gradient(135deg,rgba(22,128,60,.55),rgba(193,18,31,.5));border:2px solid rgba(255,255,255,.18);font-size:13.5px;line-height:1.35;text-align:center}
@@ -1344,6 +1354,7 @@ body.sobrev .wrap>.ringwrap{display:none}
         <li>Na última casa, os outros votam no tema. Acertou a pergunta final, venceu.</li>
         <li><b>Modos:</b> 🎲 Tradicional; ⭐ Bônus (difícil +1 casa, impossível +2); 🔥 Arriscado (na difícil e na impossível dá para apostar o dobro; se errar, volta o valor da ficha e joga o tema da casa nova).</li>
         <li><b>Em equipes:</b> de 2 a 4 times. Cada time anda junto no tabuleiro, com as mesmas fichas, e os membros respondem um de cada vez. Na votação da resposta e do tema final, só os outros times votam.</li>
+        <li><b>👪 Turma:</b> perguntas que você mesmo escreve em Conta → Perguntas (ex.: "Em que cidade a vó nasceu?"). Quem criou a sala liga o tema e elas caem no tabuleiro como os outros. Só em sala com código, e não valem ranking.</li>
         <li><b>Sobrevivência relâmpago</b> (só online): todo mundo responde a mesma pergunta de múltipla escolha em 15 segundos. Errou ou não respondeu, perde uma vida; cada um tem 3. As perguntas vão ficando mais difíceis, e quem sobrar por último ganha. Se todo mundo que sobrou errar junto, ninguém sai naquela rodada.</li>
         <li><b>Ajudas</b>, uma vez por partida: ⏭ Pular troca a pergunta e 💡 Dica mostra a primeira letra (ou tira uma alternativa errada).</li>
       </ul>
@@ -1419,17 +1430,18 @@ const T={
   ES:{i:'⚽',n:'Esporte',d:'futebol, Olimpíadas, atletas e regras',c:'#dc2626'},
   GG:{i:'🎮',n:'Games e Geek',d:'videogames, animes, quadrinhos e jogos de mesa',c:'#b8860b'},
   V:{i:'🎲',n:'Variedades',d:'múltipla escolha: língua, raciocínio e curiosidades',c:'#6b7280'},
-  N:{i:'🎄',n:'Natal',d:'tradições, Papai Noel, músicas, filmes e comidas de Natal (só em dezembro)',c:'#16803c'}
+  N:{i:'🎄',n:'Natal',d:'tradições, Papai Noel, músicas, filmes e comidas de Natal (só em dezembro)',c:'#16803c'},
+  F:{i:'👪',n:'Turma',d:'perguntas que você escreveu para a sua turma (não valem ranking)',c:'#c026d3'}
 };
 // os temas de sempre; o Natal (N) só aparece para escolher em dezembro
-const ORDER=Object.keys(T).filter(k=>k!=='N'),TODOS_TEMAS=Object.keys(T);
+const ORDER=Object.keys(T).filter(k=>k!=='N'&&k!=='F'),TODOS_TEMAS=Object.keys(T); // F: perguntas da turma (baralho da conta de quem criou a sala)
 const EVENTO_NATAL={mes:'2026-12',id:'ev-natal2026',e:'🎄',ti:'Natal 2026',alvo:5}; // título exclusivo de quem jogar 5 partidas online em dezembro
 function mesBrasilia(){const d=new Date(Date.now()-3*3600e3);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')}
 // ?natal=1 mostra o Natal antes de dezembro (para conferir); vale até fechar a aba. ?natal=0 desliga.
 const NATAL_FORCA=(()=>{try{const v=new URLSearchParams(location.search).get('natal');if(v==='0')sessionStorage.removeItem('arrisca-natal');else if(v!==null)sessionStorage.setItem('arrisca-natal','1');return sessionStorage.getItem('arrisca-natal')==='1'}catch(e){return false}})();
 function natalAtivo(){return NATAL_FORCA||mesBrasilia().slice(5)==='12'}
 function eventoNatalAtivo(){return NATAL_FORCA||mesBrasilia()===EVENTO_NATAL.mes}
-function temasEscolha(){return natalAtivo()&&QN('N')>0?[...ORDER,'N']:ORDER}
+function temasEscolha(){const l=natalAtivo()&&QN('N')>0?[...ORDER,'N']:[...ORDER];if(turmaPode())l.push('F');return l}
 const LAMPADAS=[45.7,36.3].map(r=>`<circle class="halo" cx="50" cy="50" r="${r}"/>`).join('');
 // as lâmpadas de cada fase ficam numa camada própria e só a opacidade anima: a placa de vídeo troca as camadas sem redesenhar o tabuleiro
 const LAMPADAS_CAMADAS=[0,1,2].map(k=>`<svg class="lampadas k${k}" viewBox="0 0 100 100" aria-hidden="true">${[45.7,36.3].map(r=>`<circle class="lamp" cx="50" cy="50" r="${r}" stroke-dashoffset="${-k*2.6}"/>`).join('')}</svg>`).join('');
@@ -1548,7 +1560,7 @@ const USED={},usedSet={},IDS={},IDX={};
 TODOS_TEMAS.forEach(k=>{USED[k]=[];usedSet[k]=new Set()});
 let HIST_TS=0,localOk=true,dbRef=null,writing=false,dirty=false,syncNote='';
 const LS_KEY='arrisca-perguntas-usadas-v1';
-function QN(k){return Q&&Q.n?(Q.n[k]||0):0}
+function QN(k){if(k==='F')return online()&&!amHost()?(G.nF||0):(BAR.lista?BAR.lista.length:(G.nF||0));return Q&&Q.n?(Q.n[k]||0):0}
 function countUsed(k){return usedSet[k]?Math.min(usedSet[k].size,QN(k)):0}
 function applyHist(h){
   Object.keys(USED).forEach(k=>{delete USED[k];delete usedSet[k]});
@@ -1614,6 +1626,7 @@ const STOPK=new Set(['sim','nao','verdadeiro','falso','nenhum','nenhuma','todos'
 const KCACHE=new Map();
 // ---------- perguntas vêm do servidor, uma por vez ----------
 async function api(acao,body){
+  if(acao==='sortear'&&body&&body.t==='F'&&!body.sala&&AUTH&&CONTA.user){try{body=Object.assign({},body,{conta:await AUTH.token()})}catch(e){}}
   API_N++;
   const r=await fetch('/api/perguntas?acao='+acao,body?{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)}:{});
   let j=null;try{j=await r.json()}catch(e){}
@@ -1656,7 +1669,8 @@ function silhuetaHtml(rev){
   return `<div class="silhbox"><div class="silh${rev?' rev':''}" style="--c:${T.M.c}"><svg viewBox="0 0 100 100" role="img" aria-label="${rev?'O lugar no mapa':'Silhueta'}"><path d="${f.d}" fill-rule="evenodd"/></svg></div>${mapaHtml(m)}</div>`;
 }
 function respostaTxt(){return G.qid?ANS[G.qid]:undefined}
-function certaIdx(){const a=respostaTxt();return G.theme==='V'&&a!=null&&G.q?G.q[1].indexOf(a):null}
+function ehMC(){return !!(G.q&&Array.isArray(G.q[1]))} // múltipla escolha: Variedades, ou pergunta da turma com alternativas
+function certaIdx(){const a=respostaTxt();return ehMC()&&a!=null?G.q[1].indexOf(a):null}
 function buscaResposta(){
   const id=G.qid,t=G.qt||G.theme,q0=G.q&&G.q[0];
   if(!id)return Promise.reject(new Error('sem pergunta'));
@@ -1731,7 +1745,7 @@ function undo(){
 }
 // ---------- partida em andamento (sobrevive a recarregar/atualizar a página) ----------
 const GAME_KEY='arrisca-partida-v1';
-const GAME_KEYS=[...SNAP_KEYS,'exTheme','count','names','colors','fichas','board','themes','selThemes','size','level','modo'];
+const GAME_KEYS=[...SNAP_KEYS,'exTheme','count','names','colors','fichas','board','themes','selThemes','size','level','modo','nF'];
 let gameReady=false,gameRef=null,gWriting=false,gDirty=false,lastGameJson='',GAME_TS=0;
 function gameJson(){const st={};GAME_KEYS.forEach(k=>st[k]=G[k]);return JSON.stringify({estado:st,desfazer:UNDO,sorteios:DRAWLOG})}
 function saveGame(){
@@ -1940,7 +1954,7 @@ function renderPanel(){
     h+='</div>';
     if(G.pickColor!=null&&G.pickColor<G.count)h+=`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.names[G.pickColor]||'Jogador '+(G.pickColor+1))}</b>:</span>${paletaHtml(G.colors[G.pickColor],`setupColor(${G.pickColor},'#C')`,G.colors.slice(0,G.count))}</div>`;
     h+=`<p class="muted" style="margin:-2px 0 4px">${G.equipes?'Os times jogam na ordem das cores abaixo.':'Quem está em 1º começa.'} Toque na bolinha para trocar a cor.</p>`+equipesHtml(true,true);
-    h+=`</div><div class="pcol">${modosHtml(true)}${natalEscolhaHtml()}${avancadoHtml(`
+    h+=`</div><div class="pcol">${modosHtml(true)}${natalEscolhaHtml()}${turmaEscolhaHtml()}${avancadoHtml(`
     <div class="row" style="margin:0 0 10px"><button class="small" onclick="shuffleSetup()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">${ordemToque()?'ou toque no ⠿ de um e depois no lugar dele':'ou arraste pelo ⠿ na lista'}</span></div>
     <div class="setup-row"><label style="flex:none">Fichas:</label><select aria-label="Fichas por jogador" onchange="G.fichas=+this.value;render()">${[5,6,7].map(n=>`<option value="${n}" ${n===NF()?'selected':''}>${n}</option>`).join('')}</select></div>
     <div class="setup-row"><label style="flex:none">Tabuleiro:</label><select aria-label="Tamanho do tabuleiro" onchange="G.size=this.value;render()">${Object.entries(SIZES).map(([k,v])=>`<option value="${k}" ${k===G.size?'selected':''}>${v.l}</option>`).join('')}</select><button class="small" style="flex:none" onclick="G.previewBoard=null;render()" title="Sortear outra distribuição dos temas">🔀</button></div>
@@ -1968,7 +1982,7 @@ function renderPanel(){
     el.innerHTML=`<div class="fimbox"><div class="win">🏆 ${esc(p.name)} venceu!</div><p class="msg" style="text-align:center">Chegou à última casa e acertou a pergunta final.</p>${reiHtml()}${resumoHtml(p)}${palpiteiroHtml()}<div class="answer"><div class="muted">${esc(G.q[0])}</div>${esc(answerText())}</div>${silhuetaHtml(true)}${notaHtml()}${reportHtml()}<div class="fimacoes">${wonBtns()}${ub}</div></div>`;
     return;
   }
-  const isFinal=p.pos===FINAL, isV=G.theme==='V';
+  const isFinal=p.pos===FINAL, isV=ehMC();
   const locked=G.revealed||G.chosen!==null||G.phase==='result';
   let h=head+`<div style="margin-top:12px"><span class="badge" style="background:${T[G.theme].c}">${ic(G.theme)} ${T[G.theme].n}</span> ${G.qt&&G.qt!==G.theme&&T[G.qt]?`<span class="veio">pergunta de ${T[G.qt].n}</span> `:''}${G.forcedNow?'<span class="badge" style="background:#5a4a1a">repetindo o tema</span>':''} ${isFinal?'<span class="badge" style="background:#b8860b">PERGUNTA FINAL</span>':''}${G.qd&&canShowLv()?` <span class="badge" style="background:${LVCOLOR[G.qd]}">${LEVELS[G.qd]}</span>`:''}</div>`;
   const canAnswer=isFinal||G.token||G.phase==='result';
@@ -2008,7 +2022,7 @@ function palpiteBox(){
   if(!podePalpitar())return '';
   const meu=MEU_PALP[G.qid],p=G.players[G.cur];
   let h=`<div class="palpbox"><div class="palptit">🔮 Seu palpite <span class="muted">· os outros só veem depois que ${nm(p)} responder</span></div>`;
-  if(G.theme==='V'&&Array.isArray(G.q[1]))
+  if(ehMC())
     h+=`<div class="palpops">${G.q[1].map((o,i)=>`<button class="small${meu&&meu.o===i?' on':''}" aria-pressed="${!!(meu&&meu.o===i)}" onclick="mandaPalpite(${i})">${'ABCD'[i]}) ${esc(o)}</button>`).join('')}</div>`;
   else if(meu&&meu.t&&!PALP_EDITA)h+=`<div class="palpmeu">“${esc(meu.t)}” <button class="small" onclick="PALP_EDITA=true;PALP_RASC=MEU_PALP[G.qid].t;render()">Trocar</button></div>`;
   else h+=`<div class="respbox"><input id="palpin" aria-label="Seu palpite" maxlength="80" value="${esc(PALP_RASC)}" placeholder="Seu chute" autocomplete="off" autocapitalize="sentences" enterkeyhint="send" oninput="PALP_RASC=this.value" onkeydown="if(event.key==='Enter'){event.preventDefault();mandaPalpite()}"><button class="small" ${PALP_ENVIANDO?'disabled':''} onclick="mandaPalpite()">Palpitar</button></div>`;
@@ -2091,8 +2105,65 @@ function chipConta(k,a,soma){ // número curto no canto do chip: 2,1 mil pergunt
   const n=parseInt(t.replace(/\D/g,''),10);return n>=1000?(n/1000).toFixed(1).replace('.',',')+' mil':String(n);
 }
 function toggleTheme(k){if(!T[k])return;const i=G.selThemes.indexOf(k);if(i>=0)G.selThemes.splice(i,1);else{G.selThemes.push(k);G.selThemes.sort((a,b)=>TODOS_TEMAS.indexOf(a)-TODOS_TEMAS.indexOf(b))}render()}
-function temasHist(){const l=temasEscolha();return l.includes('N')||!countUsed('N')?l:[...l,'N']}
+function temasHist(){const l=temasEscolha().slice();if(!l.includes('N')&&countUsed('N'))l.push('N');if(!l.includes('F')&&countUsed('F'))l.push('F');return l}
 // em dezembro, o tema de Natal fica à vista na hora de criar a sala (fora do Avançado)
+// ----- perguntas da turma: o baralho da conta (Conta → Perguntas) vira o tema "Turma" -----
+var BAR={lista:null,max:300,carregando:false,erro:'',ed:null,ocupado:false,msg:''};
+async function baralhoCarrega(){
+  if(!CONTA.user||BAR.carregando)return;BAR.carregando=true;
+  try{const j=await contaApi('GET',{acao:'baralho'});BAR.lista=Array.isArray(j.lista)?j.lista:[];BAR.max=+j.max||300;BAR.erro=''}
+  catch(e){BAR.erro=e.message}
+  finally{BAR.carregando=false;render();if(document.getElementById('contabox')&&CONTA_UI.tab==='perg')contaRender()}
+}
+function turmaPode(){return !!CONTA.user&&!!BAR.lista&&BAR.lista.length>0&&!G.sv&&(!online()||(amHost()&&!G.publica))}
+function turmaEscolhaHtml(){
+  if(G.sv||(online()&&!amHost()))return '';
+  if(!CONTA.user)return '';
+  if(BAR.lista===null){if(!BAR.carregando&&!BAR.erro)setTimeout(baralhoCarrega,0);return ''}
+  const n=BAR.lista.length,on=G.selThemes.includes('F')&&turmaPode();
+  if(!n)return `<div class="turmabox"><span class="turmaico">👪</span><div><b>Perguntas da turma</b><small>Escreva perguntas que só a sua turma sabe e jogue com elas como um tema.</small></div><button type="button" class="small" onclick="contaAbre('perg')">Escrever</button></div>`;
+  if(online()&&G.publica)return `<div class="turmabox"><span class="turmaico">👪</span><div><b>Perguntas da turma</b><small>Só em sala com código: numa sala aberta a todos, qualquer pessoa veria as perguntas.</small></div></div>`;
+  return `<div class="turmabox${on?' on':''}"><span class="turmaico">👪</span><div><b>Perguntas da turma</b><small>${n} ${n===1?'pergunta sua':'perguntas suas'}. Não valem ranking. <button type="button" class="linkbtn" onclick="contaAbre('perg')">Editar</button></small></div><button type="button" class="small${on?' primary':''}" onclick="toggleTheme('F')" aria-pressed="${on}">${on?'✓ Incluído':'＋ Incluir'}</button></div>`;
+}
+function turmaPrepara(){ // na hora de começar: o tema só fica se dá para usar, e todo mundo fica sabendo quantas perguntas tem
+  if(G.selThemes.includes('F')&&!turmaPode())G.selThemes=G.selThemes.filter(k=>k!=='F');
+  G.nF=G.selThemes.includes('F')?BAR.lista.length:0;
+}
+function baralhoHtml(){
+  if(BAR.lista===null){if(!BAR.carregando)setTimeout(baralhoCarrega,0);return BAR.erro?`<div class="contaerro">${esc(BAR.erro)}</div><button class="small" onclick="BAR.erro='';baralhoCarrega()">Tentar de novo</button>`:'<p class="pvazio">Carregando suas perguntas…</p>'}
+  const ed=BAR.ed||{q:'',a:'',e:['','',''],nv:2},dis=BAR.ocupado?'disabled':'';
+  let h=`<p class="ctdica">Escreva perguntas que só a sua turma sabe responder (família, amigos, viagens, apelidos). Na sala com código, quem criou a sala liga o tema <b style="color:${T.F.c}">👪 Turma</b> e elas caem no tabuleiro como os outros temas. Não valem pontos no ranking.</p>
+  <form class="ctform bform" onsubmit="event.preventDefault();baralhoSalva()">
+    <h4 class="ctsub" style="margin-top:4px">${ed.id?'Editar pergunta':'Nova pergunta'}</h4>
+    <label for="bq">Pergunta</label><textarea id="bq" maxlength="200" rows="2" placeholder="Ex.: Em que cidade a vó Maria nasceu?" oninput="baralhoCampo('q',this.value)">${esc(ed.q)}</textarea>
+    <label for="ba">Resposta</label><input id="ba" maxlength="80" placeholder="Ex.: Ribeirão Preto" value="${esc(ed.a)}" oninput="baralhoCampo('a',this.value)">
+    <label>Nível</label><div class="bniveis">${[1,2,3,4].map(l=>`<button type="button" class="small${ed.nv===l?' on':''}" aria-pressed="${ed.nv===l}" onclick="baralhoCampo('nv',${l});contaRender()">${LEVELS[l]}</button>`).join('')}</div>
+    <label>Alternativas erradas <small>(opcional: com as 3, vira múltipla escolha)</small></label>${[0,1,2].map(i=>`<input maxlength="80" aria-label="Alternativa errada ${i+1}" placeholder="Errada ${i+1}" value="${esc(ed.e[i]||'')}" oninput="baralhoCampo('e${i}',this.value)">`).join('')}
+    <div class="row"><button class="primary" type="submit" ${dis}>${BAR.ocupado?'Salvando…':ed.id?'Salvar mudanças':'Adicionar'}</button>${ed.id?`<button type="button" class="small" ${dis} onclick="BAR.ed=null;BAR.msg='';contaRender()">Cancelar</button>`:''}</div>
+  </form>${BAR.msg?`<p class="contaok">${esc(BAR.msg)}</p>`:''}${BAR.erro?`<div class="contaerro">${esc(BAR.erro)}</div>`:''}
+  <h4 class="ctsub">Suas perguntas <span class="muted">(${BAR.lista.length} de ${BAR.max})</span></h4>`;
+  if(!BAR.lista.length)return h+'<p class="pvazio">Nenhuma pergunta ainda.</p>';
+  return h+`<div class="blista">${BAR.lista.slice().reverse().map(x=>`<div class="bitem"><div class="bq">${esc(x.q)}</div><div class="ba">${esc(x.a)}${x.e?` <span class="muted">· ${x.e.map(esc).join(' · ')}</span>`:''}</div><div class="bpe"><span class="badge" style="background:${LVCOLOR[x.nv]||LVCOLOR[2]}">${LEVELS[x.nv]||LEVELS[2]}</span>${x.e?'<span class="muted">múltipla escolha</span>':''}<span class="bacoes"><button type="button" class="small" ${dis} onclick="baralhoEdita('${x.id}')">Editar</button><button type="button" class="small${BAR.apagar===x.id?' confirma':''}" ${dis} onclick="baralhoApaga('${x.id}')">${BAR.apagar===x.id?'Apagar mesmo?':'Apagar'}</button></span></div></div>`).join('')}</div>`;
+}
+function baralhoCampo(k,v){const ed=BAR.ed||(BAR.ed={q:'',a:'',e:['','',''],nv:2});if(k.startsWith('e'))ed.e[+k.slice(1)]=v;else ed[k]=v;BAR.msg=''}
+function baralhoEdita(id){const x=(BAR.lista||[]).find(y=>y.id===id);if(!x)return;BAR.ed={id,q:x.q,a:x.a,e:x.e?x.e.slice():['','',''],nv:+x.nv||2};BAR.msg='';BAR.erro='';contaRender();const el=document.getElementById('bq');if(el){el.scrollIntoView({block:'center'});el.focus()}}
+async function baralhoSalva(){
+  const ed=BAR.ed||{};if(BAR.ocupado)return;
+  const e=(ed.e||[]).map(x=>String(x||'').trim());
+  BAR.ocupado=true;BAR.erro='';contaRender();
+  try{
+    const j=await contaApi('POST',{acao:'baralho',op:'salva',id:ed.id||undefined,q:ed.q,a:ed.a,nv:ed.nv||2,e:e.some(Boolean)?e:[]});
+    BAR.lista=j.lista;BAR.msg=ed.id?'Pergunta atualizada.':'Pergunta adicionada.';BAR.ed=null;SFX.pop&&SFX.pop();
+  }catch(x){BAR.erro=x.message}
+  finally{BAR.ocupado=false;contaRender();render()}
+}
+async function baralhoApaga(id){
+  if(BAR.apagar!==id){BAR.apagar=id;contaRender();setTimeout(()=>{if(BAR.apagar===id){BAR.apagar=null;contaRender()}},3000);return}
+  BAR.apagar=null;BAR.ocupado=true;contaRender();
+  try{const j=await contaApi('POST',{acao:'baralho',op:'apaga',id});BAR.lista=j.lista;BAR.msg='Pergunta apagada.';if(BAR.ed&&BAR.ed.id===id)BAR.ed=null}
+  catch(x){BAR.erro=x.message}
+  finally{BAR.ocupado=false;contaRender();render()}
+}
 function natalEscolhaHtml(){
   if(!temasEscolha().includes('N'))return '';const on=G.selThemes.includes('N');
   return `<div class="natalbox${on?' on':''}"><span class="natalico">🎄</span><div><b>Tema de Natal</b><small>${QN('N').toLocaleString('pt-BR')} perguntas de Natal, só em dezembro.</small></div><button type="button" class="small${on?' primary':''}" onclick="toggleTheme('N')" aria-pressed="${on}">${on?'✓ Incluído':'＋ Incluir'}</button></div>`;
@@ -2116,7 +2187,7 @@ function onTimeUp(){
   if(G.phase!=='question'||G.revealed||G.chosen!==null)return;
   const p=G.players&&G.players[G.cur];if(!p)return;
   if(!(p.pos===FINAL||G.token))return;
-  if(G.theme==='V'){snapshot('Tempo esgotado');G.timeUp=true;resolve(false,true);G.msg='⏰ Tempo esgotado. '+G.msg;render()}
+  if(ehMC()){snapshot('Tempo esgotado');G.timeUp=true;resolve(false,true);G.msg='⏰ Tempo esgotado. '+G.msg;render()}
   else{G.revealed=true;G.timeUp=true;G.timerLeft=0;render()}
 }
 function giveUp(){snapshot('Não sei');G.timeUp=false;resolve(false,true);G.msg='Não soube responder. '+G.msg;render()}
@@ -2145,13 +2216,13 @@ async function useDica(){
   try{r=await api('dica',{id,t:G.qt||G.theme,tk:G.tk})}catch(e){toast('Não consegui buscar a dica: '+e.message);return}
   if(G.qid!==id||G.phase!=='question')return;
   snapshot('Dica');marcaAj('dica');
-  if(G.theme==='V'){const k=G.q[1].indexOf(r.elim);G.hint={elim:k>=0?k:0}}
+  if(ehMC()){const k=G.q[1].indexOf(r.elim);G.hint={elim:k>=0?k:0}}
   else G.hint={mask:r.mask,n:r.n,words:r.words};
   render();
 }
 function ajudasHtml(){
   const pu=ajUsada('pular'),di=ajUsada('dica')||!!G.hint;
-  let h=`<div class="ajudas"><button class="small" ${pu?'disabled':''} onclick="usePular()">⏭ Pular${pu?' (usado)':' · 1x'}</button><button class="small" ${di?'disabled':''} onclick="useDica()">💡 Dica${ajUsada('dica')?' (usada)':' · 1x'}</button>${G.theme==='V'?'<button class="small bad" onclick="giveUp()">✘ Não sei</button>':''}</div>`;
+  let h=`<div class="ajudas"><button class="small" ${pu?'disabled':''} onclick="usePular()">⏭ Pular${pu?' (usado)':' · 1x'}</button><button class="small" ${di?'disabled':''} onclick="useDica()">💡 Dica${ajUsada('dica')?' (usada)':' · 1x'}</button>${ehMC()?'<button class="small bad" onclick="giveUp()">✘ Não sei</button>':''}</div>`;
   if(G.hint&&G.hint.mask!==undefined)h+=`<div class="hint">💡 Começa com <b>${esc(G.hint.mask.trim()[0]||'')}</b> · ${G.hint.n} ${G.hint.n===1?'caractere':'letras'}${G.hint.words>1?` em ${G.hint.words} palavras`:''}<div class="mask">${esc(G.hint.mask)}</div></div>`;
   if(G.hint&&G.hint.elim!==undefined)h+=`<div class="hint">💡 Uma alternativa errada foi riscada.</div>`;
   return h;
@@ -2180,7 +2251,7 @@ async function initReports(ref){
 const MOTIVOS=['Resposta errada','Pergunta confusa','A pergunta entrega a resposta','Nível de dificuldade errado','Outro'];
 const MOT_NIVEL=3;
 function isReported(){return REPORTS.some(r=>r.id===G.qid&&r.t===(G.qt||G.theme))}
-function nivelAtual(){const q=G.q||[];return G.theme==='V'?q[4]:q[3]}
+function nivelAtual(){const q=G.q||[];return ehMC()?q[4]:q[3]}
 function motivoMudou(){const sel=document.querySelector('input[name="motivo"]:checked');const box=document.getElementById('repnivel');if(box)box.style.display=(sel&&+sel.value===MOT_NIVEL)?'':'none'}
 // ----- Desafio do dia: 10 perguntas de múltipla escolha, as mesmas para todo mundo; o progresso fica neste aparelho -----
 const DSF_KEY='arrisca-desafio-v1',DSF_HIST='arrisca-desafio-hist';
@@ -2310,7 +2381,7 @@ function dsfFimHtml(){
 let NOTAS={};try{NOTAS=JSON.parse(localStorage.getItem('arrisca-notas')||'{}')||{}}catch(e){}
 function notasSalva(){const k=Object.keys(NOTAS);if(k.length>400)k.slice(0,k.length-400).forEach(x=>delete NOTAS[x]);try{localStorage.setItem('arrisca-notas',JSON.stringify(NOTAS))}catch(e){}}
 function notaHtml(){
-  if(!G.qid||!G.tk)return '';
+  if(!G.qid||!G.tk||G.qt==='F')return '';
   const v=NOTAS[G.qid];
   return `<div class="notarow"><span class="muted">${v?'Valeu pela nota!':'Gostou da pergunta?'}</span><button type="button" class="small${v===1?' on':''}" aria-label="Gostei" title="Gostei" onclick="notaDa(1)">👍</button><button type="button" class="small${v===-1?' on':''}" aria-label="Não gostei" title="Não gostei" onclick="notaDa(-1)">👎</button></div>${v===-1&&!isReported()?'<p class="muted" style="margin:2px 0 0;font-size:12.5px">Tem algo errado nela? Use o ⚑ Reportar pergunta.</p>':''}`;
 }
@@ -2321,7 +2392,7 @@ async function notaDa(v){
   try{await api('nota',{id,t,tk,v:v||null,dev:MYDEV})}catch(e){if(antes)NOTAS[id]=antes;else delete NOTAS[id];notasSalva();renderPanel();toast('Não consegui mandar a nota: '+e.message)}
 }
 function reportHtml(){
-  if(!G.qid)return '';
+  if(!G.qid||G.qt==='F')return '';
   if(isReported())return `<p class="muted" style="margin-top:8px">⚑ Pergunta reportada. Obrigado!</p>`;
   if(!G.reportOpen)return `<div class="reprow"><button class="small" onclick="G.reportOpen=true;render()">⚑ Reportar pergunta</button></div>`;
   const atual=nivelAtual();
@@ -2338,6 +2409,7 @@ function sendReport(){
 }
 function removeReport(i){const r=REPORTS[i];if(r)RESOLVIDOS.push(repKey(r));REPORTS.splice(i,1);saveReports();renderHist()}
 function startGame(){
+  turmaPrepara();
   UNDO=[];G.jogo=Math.random().toString(36).slice(2,10);G.ult=null; // identifica a partida (para as contas)
   G.inicio=Date.now();G.res={top:null}; // para o resumo do fim da partida
   G.pickColor=null;G.editPl=false;
@@ -2601,7 +2673,7 @@ async function pickTheme(t,keepNote){
   USED[src].push(r.id);usedSet[src].add(r.id);DRAWLOG.push([src,r.id]);
   if(!Array.isArray(G.seen))G.seen=[];G.seen.push([src,r.id]);persist();
   G.qd=r.d;G.qid=r.id;G.tk=r.tk;G.dobro=false;G.aba=null;G.lvNote=r.lvNote||'';G.hint=null;G.timeUp=false;G.reportOpen=false;G.resp=null;G.tEnd=null;RASCUNHO='';G.chosen=null;G.revealed=false;
-  G.q=src==='V'?[r.q,r.opts,null,r.b,r.d]:[r.q,null,r.b,r.d];
+  G.q=Array.isArray(r.opts)?[r.q,r.opts,null,r.b,r.d]:[r.q,null,r.b,r.d];
   G.phase='question';iniciaTempo();render()}
 
 function resolve(ok,snapped,pre){
@@ -3304,7 +3376,7 @@ function contaInicia(){
       u=n;
     }
     const antes=CONTA.user&&CONTA.user.uid;
-    CONTA.user=u;CONTA.admin=false;if(!u||u.uid!==antes){CONTA.perfil=null;CONTA.dados=null;CONTA.resumo=null;CONTA_HIST.ok=false}
+    CONTA.user=u;CONTA.admin=false;if(!u||u.uid!==antes){CONTA.perfil=null;CONTA.dados=null;CONTA.resumo=null;CONTA_HIST.ok=false;BAR.lista=null;BAR.ed=null;BAR.erro=''}
     if(u){
       try{const j=await contaApi('POST',{acao:'entrar',nome:myName(),cor:myColor()});contaAplica(j.perfil);CONTA.admin=!!j.admin}
       catch(e){console.warn(e);CONTA_UI.erro='Você entrou, mas não consegui carregar o perfil agora: '+e.message}
@@ -3392,9 +3464,10 @@ function contaHtml(){
   const cor=CONTA_UI.pcor||p.cor||myColor()||'#ffd000';
   const google=u.provedor==='google.com';
   const topo=`<div class="ctbanner" style="--c:${p.cor||cor}"><span class="avatar ctav${fotoUrl(p.foto)?' temfoto':''}" style="--c:${p.cor||cor}${fotoUrl(p.foto)?`;background:${p.cor||cor} url(${p.foto}) center/cover`:''}"></span><div class="ctquem"><b>${esc(p.nome||u.nome||'Jogador')}</b><small>${esc(u.email)} · ${google?'Google':'e-mail e senha'}</small>${p.id?`<small class="ctid">ID ${fmtId(p.id)} <button type="button" class="linkbtn" onclick="copia('${idAm(p.id)}','📋 ID copiado')">copiar</button> · <button type="button" class="linkbtn" onclick="amigosAbre()">👥 amigos</button></small>`:''}</div></div>
-    <div class="abas ctabas">${[['perfil','Perfil'],['conq','Conquistas'],['hist','Histórico']].map(([k,l])=>`<button class="small${CONTA_UI.tab===k?' on':''}" onclick="CONTA_UI.tab='${k}';CONTA_UI.erro='';CONTA_UI.ok='';contaRender()">${l}</button>`).join('')}</div>`;
+    <div class="abas ctabas">${[['perfil','Perfil'],['conq','Conquistas'],['hist','Histórico'],['perg','Perguntas']].map(([k,l])=>`<button class="small${CONTA_UI.tab===k?' on':''}" onclick="CONTA_UI.tab='${k}';CONTA_UI.erro='';CONTA_UI.ok='';contaRender()">${l}</button>`).join('')}</div>`;
   if(CONTA_UI.tab==='conq')return topo+conquistasHtml(d);
   if(CONTA_UI.tab==='hist')return topo+historicoHtml(d);
+  if(CONTA_UI.tab==='perg')return topo+baralhoHtml();
   const nome=CONTA_UI.pnome!=null?CONTA_UI.pnome:(p.nome||'');
   return topo+`${!google&&!u.verificado?`<div class="contaerro">📩 Confirme seu e-mail: mandamos um link para <b>${esc(u.email)}</b>. Enquanto não confirmar, suas partidas não contam no ranking. Não chegou? Olhe o spam. <button class="linkbtn" ${dis} onclick="contaReenvia()">Mandar de novo</button><button class="linkbtn" ${dis} onclick="contaJaConfirmei()">Já confirmei</button></div>`:''}
     ${statsHtml(d)}
@@ -4020,7 +4093,7 @@ pintaEfx();
 function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
 
 // ----- sincronização da partida -----
-const SYNC_KEYS=[...SNAP_KEYS,'jogo','exTheme','vt','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica','desfazer','expulsar','equipes','nEq','times','sv','so'];
+const SYNC_KEYS=[...SNAP_KEYS,'jogo','exTheme','vt','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica','desfazer','expulsar','equipes','nEq','times','sv','so','nF'];
 function syncJson(){const o={};SYNC_KEYS.forEach(k=>{if(G[k]!==undefined)o[k]=G[k]});return JSON.stringify(o)}
 let PUSHING=false,PUSH_AGAIN=false,SENT=null;
 async function netPush(){
@@ -4122,7 +4195,7 @@ function limpaEstado(o){
   g.board=Array.isArray(o.board)?o.board.slice(0,80).map(sCasa):null;
   g.previewBoard=Array.isArray(o.previewBoard)?o.previewBoard.slice(0,80).map(sCasa):null;
   g.ordem=Array.isArray(o.ordem)?o.ordem.map(sId).filter(Boolean).slice(0,30):[];
-  g.sv=!!o.sv;g.so=svLimpa(o.so);
+  g.sv=!!o.sv;g.so=svLimpa(o.so);g.nF=sInt(o.nF,0,500,0);
   g.equipes=!!o.equipes;g.nEq=sInt(o.nEq,2,4,2);g.times={};if(o.times&&typeof o.times==='object')Object.keys(o.times).slice(0,40).forEach(d=>{if(sId(d))g.times[d]=sInt(o.times[d],0,3,0)});
   const ex=o.expulsar;g.expulsar=ex&&typeof ex==='object'&&sId(ex.id)&&sId(ex.dev)&&sId(ex.alvo)?{id:ex.id,dev:ex.dev,alvo:ex.alvo,nome:semPalavrao(sStr(ex.nome,16)),nomeAlvo:semPalavrao(sStr(ex.nomeAlvo,16)),ate:Number(ex.ate)||0}:null;
   const vt=o.vt;g.vt=vt&&typeof vt==='object'&&sId(vt.id)&&Number.isFinite(+vt.ate)?{id:vt.id,ate:+vt.ate,sem:sTemas(vt.sem)}:null;
@@ -4224,7 +4297,7 @@ function lobbyHtml(){
   h+='</div>'+(G.sv?'':equipesHtml(false,amHost()));
   if(amHost()){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
-    h+=`${ord.length>1&&!G.equipes&&!G.sv?'<p class="muted" style="margin:-2px 0 4px">Quem está em 1º começa.</p>':''}</div><div class="pcol">${tipoJogoHtml()}${G.sv?'':modosHtml(true)}${natalEscolhaHtml()}${G.sv?avancadoHtml(`
+    h+=`${ord.length>1&&!G.equipes&&!G.sv?'<p class="muted" style="margin:-2px 0 4px">Quem está em 1º começa.</p>':''}</div><div class="pcol">${tipoJogoHtml()}${G.sv?'':modosHtml(true)}${natalEscolhaHtml()}${turmaEscolhaHtml()}${G.sv?avancadoHtml(`
     <h3 class="avtit" style="margin-top:0">Quem pode entrar</h3><div class="visib"><button class="${G.publica?'':'on'}" onclick="G.publica=false;render()">🔒 Só com código</button><button class="${G.publica?'on':''}" onclick="G.publica=true;render()">🌍 Aberta a todos</button></div><p class="muted">${G.publica?'A sala aparece em <b>Salas</b> para qualquer pessoa entrar enquanto vocês esperam. Quando a partida começa, ela sai da lista.':'Só entra quem tiver o link ou o código.'}</p>
     ${temasHtml(false)}`,true):avancadoHtml(`
     <h3 class="avtit" style="margin-top:0">Quem pode entrar</h3><div class="visib"><button class="${G.publica?'':'on'}" onclick="G.publica=false;render()">🔒 Só com código</button><button class="${G.publica?'on':''}" onclick="G.publica=true;render()">🌍 Aberta a todos</button></div><p class="muted">${G.publica?'A sala aparece em <b>Salas</b> para qualquer pessoa entrar enquanto vocês esperam. Quando a partida começa, ela sai da lista.':'Só entra quem tiver o link ou o código.'}</p>
@@ -4656,7 +4729,7 @@ function pintaTimer(){
 }
 function tempoAcabou(){
   if(!online()||G.phase!=='question'||G.resp||G.chosen!==null)return;
-  if(G.theme==='V'){G.timeUp=true;resolve(false,true,'⏰ Tempo esgotado. ');return}
+  if(ehMC()){G.timeUp=true;resolve(false,true,'⏰ Tempo esgotado. ');return}
   enviarResposta(true);
 }
 // ----- chat da sala -----
@@ -4884,7 +4957,7 @@ function falaPara(){if(VOZ_OK)try{speechSynthesis.cancel()}catch(e){}}
 function falaPergunta(){
   if(!G.q||!G.q[0])return;
   let t=String(G.q[0]);
-  if(G.theme==='V'&&Array.isArray(G.q[1]))t+='. As alternativas são: '+G.q[1].map((o,i)=>'ABCDEF'[i]+'. '+o).join('. ')+'.';
+  if(ehMC())t+='. As alternativas são: '+G.q[1].map((o,i)=>'ABCDEF'[i]+'. '+o).join('. ')+'.';
   falaTexto(t);
 }
 const SFX=(()=>{

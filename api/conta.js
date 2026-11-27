@@ -5,6 +5,7 @@
 //   POST {acao:'resposta', sala, jogo, dev, tk, ok, fim, modo, nj} → registra uma resposta de partida online
 //   POST {acao:'vitoria', sala, jogo, dev, tk, modo, nj} → modo equipes: a vitória do time para quem não respondeu a final
 //   POST {acao:'sobrevivencia', sala, jogo, dev, qid | fim:true} → uma rodada (ou a vitória) da Sobrevivência relâmpago
+//   GET  ?acao=baralho / POST {acao:'baralho', op:'salva'|'apaga', ...} → perguntas da turma (tema "Turma", sem ranking)
 //   POST {acao:'apagar'}                 → apaga os dados da conta guardados no banco
 //   GET  ?acao=desafio / POST {acao:'desafio', dia, resp, fim, hist} → desafio do dia guardado na conta
 //   GET  ?acao=painel                    → (só o dono) bugs, perguntas reportadas e perguntas com mais 👎
@@ -111,6 +112,7 @@ async function resposta(u, body) {
   if (!emailOk(u)) throw falha(403, 'Confirme seu e-mail para suas partidas contarem no ranking.');
   const info = await require('./perguntas.js')._infoTk(body.tk);
   if (!info || info.m !== 'o' || !info.s) throw falha(400, 'Só perguntas de partidas online contam.');
+  if (info.t === 'F') return { ja: true, turma: true }; // perguntas da turma não valem ranking
   if (info.e < Date.now() - 6 * 3600e3) throw falha(400, 'Essa pergunta já é antiga.');
   const sala = info.s;
   if (body.sala && body.sala !== sala) throw falha(400, 'A pergunta é de outra sala.');
@@ -185,7 +187,7 @@ async function vitoriaTime(u, body) {
     ler('srv/resp/' + sala + '/' + info.qid)
   ]);
   if (dono !== u.uid) throw falha(403, 'Essa vitória é de outro jogador.');
-  if (reg.v) return { ja: true };
+  if (reg.v || info.t === 'F' || (rr && rr.t === 'F')) return { ja: true }; // vitória numa pergunta da turma não vale ranking
   if (!perfil) throw falha(404, 'Conta não encontrada. Entre de novo.');
   if (!rr || !rr.ok || !rr.fim || !Array.isArray(rr.eq) || !rr.eq.includes(dev) || (rr.jogo || 'x') !== jogo) throw falha(400, 'Essa vitória não confere com a sala.');
   const s = ST.normaliza(st), agora = Date.now();
@@ -238,6 +240,41 @@ async function sobrevivencia(u, body) {
   if (!(await gravaSe(regC, { u: u.uid, w: agora }, reg.etag))) return { ja: true };
   await gravaVarios(mapaPontos(u, s, part, chave, perfil, ganhou, agora));
   return { pts, ok, fim, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n, nivel: c.nivel })) };
+}
+
+// Perguntas da turma: o baralho da conta (só o dono vê as respostas aqui). Vira o tema "Turma" nas salas de quem escreveu.
+// Cada pergunta: q (texto), a (resposta), e (3 alternativas erradas, opcional: com elas vira múltipla escolha), nv (nível 1 a 4).
+const BARALHO_MAX = 300, ID_B = /^f[0-9a-f]{10}$/;
+const normB = x => String(x || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+async function baralho(u, body, get) {
+  const base = 'usuarios/' + u.uid + '/baralho';
+  const atual = (await ler(base)) || {};
+  const lista = () => Object.entries(atual).filter(([id, x]) => ID_B.test(id) && x && typeof x === 'object')
+    .map(([id, x]) => ({ id, q: x.q, a: x.a, e: Array.isArray(x.e) ? x.e : null, nv: x.nv || 2, ts: +x.ts || 0 })).sort((a, b) => a.ts - b.ts);
+  if (get) return { lista: lista(), max: BARALHO_MAX };
+  if (body.op === 'apaga') {
+    const id = String(body.id || '');
+    if (!ID_B.test(id) || !atual[id]) throw falha(404, 'Essa pergunta não existe mais.');
+    await grava('PUT', base + '/' + id, null); delete atual[id];
+    return { lista: lista(), max: BARALHO_MAX };
+  }
+  if (body.op !== 'salva') throw falha(400, 'Ação desconhecida.');
+  const q = txt(body.q, 200), a = txt(body.a, 80), nv = [1, 2, 3, 4].includes(+body.nv) ? +body.nv : 2;
+  if (q.length < 5) throw falha(400, 'Escreva a pergunta.');
+  if (!a) throw falha(400, 'Escreva a resposta.');
+  const e = (Array.isArray(body.e) ? body.e : []).slice(0, 3).map(x => txt(x, 80)).filter(Boolean);
+  if (e.length && e.length !== 3) throw falha(400, 'Para virar múltipla escolha, escreva as 3 alternativas erradas (ou deixe as 3 em branco).');
+  if (e.length && new Set([a, ...e].map(normB)).size !== 4) throw falha(400, 'As alternativas precisam ser diferentes da resposta e entre si.');
+  let id = body.id ? String(body.id) : null;
+  if (id && (!ID_B.test(id) || !atual[id])) throw falha(404, 'Essa pergunta não existe mais.');
+  if (!id) {
+    if (Object.keys(atual).length >= BARALHO_MAX) throw falha(400, 'Seu baralho já tem ' + BARALHO_MAX + ' perguntas.');
+    id = 'f' + require('crypto').randomBytes(5).toString('hex');
+  }
+  const x = { q, a, nv, ts: atual[id] ? +atual[id].ts || Date.now() : Date.now() };
+  if (e.length) x.e = e;
+  await grava('PUT', base + '/' + id, x); atual[id] = x;
+  return { lista: lista(), max: BARALHO_MAX, id };
 }
 
 // histórico de perguntas da conta (vale em qualquer aparelho): por tema, ids separados por espaço
@@ -374,6 +411,7 @@ module.exports = async (req, res) => {
     else if (!get && acao === 'resposta') r = await resposta(u, body);
     else if (!get && acao === 'vitoria') r = await vitoriaTime(u, body);
     else if (!get && acao === 'sobrevivencia') r = await sobrevivencia(u, body);
+    else if (acao === 'baralho') r = await baralho(u, body, get);
     else if (acao === 'usadas') r = await usadas(u, body, get);
     else if (acao === 'desafio') r = await desafio(u, body, get);
     else if (!get && acao === 'apagar') { await apagar(u); r = { ok: true } }

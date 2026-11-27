@@ -240,6 +240,65 @@ function mascara(a) {
   return { mask: out, n, words };
 }
 
+// ---------------------------------------------------------------- perguntas da turma (tema "F", "Turma")
+// O baralho é da conta de quem criou a sala (sala online) ou da conta deste aparelho (jogo num aparelho só).
+// Na sala, a pergunta sorteada fica guardada em srv/fq/<sala>/<id> (fechado): se o dono mexer no baralho no meio da
+// partida, a que já saiu continua igual para o juiz. Não vale ranking (api/conta.js recusa o tema F).
+const ID_F = /^f[0-9a-f]{10}$/;
+const falhaP = (status, m) => Object.assign(new Error(m), { status });
+const opsF = x => Array.isArray(x.e) && x.e.length === 3 ? [x.a, ...x.e] : null;
+const nivelF = x => [1, 2, 3, 4].includes(+x.nv) ? +x.nv : 2;
+async function baralhoDe(uid) {
+  const b = await ST.ler('usuarios/' + uid + '/baralho');
+  return Object.entries(b || {}).filter(([id, x]) => ID_F.test(id) && x && typeof x === 'object' && typeof x.q === 'string' && typeof x.a === 'string');
+}
+async function perguntaF(tk) { // a pergunta por trás de um token do tema "Turma"
+  if (tk.s) { const x = await ST.ler('srv/fq/' + tk.s + '/' + tk.i); return x && typeof x.q === 'string' ? x : null }
+  if (!tk.u || !ID_F.test(tk.i)) return null;
+  const x = await ST.ler('usuarios/' + tk.u + '/baralho/' + tk.i);
+  return x && typeof x.q === 'string' && typeof x.a === 'string' ? x : null;
+}
+async function turma(acao, body) {
+  if (acao === 'sortear') {
+    const sala = body.sala && /^[A-Z0-9]{4,6}$/.test(body.sala) ? body.sala : null;
+    let uid = null;
+    if (sala) { // sala online: o baralho de quem criou a sala (a conta que está no aparelho dele)
+      const meta = await ST.ler('salas/' + sala + '/meta');
+      uid = meta && meta.host ? await ST.ler('srv/contas/' + sala + '/' + meta.host) : null;
+      if (!uid) throw falhaP(409, 'Quem criou a sala precisa entrar na conta para usar as perguntas da turma.');
+    } else { // num aparelho só: o baralho da conta deste aparelho
+      if (!body.conta) throw falhaP(403, 'Entre na conta para jogar com as suas perguntas.');
+      uid = (await require('./_auth').verifica(String(body.conta).slice(0, 4000))).uid;
+    }
+    const lista = await baralhoDe(uid);
+    if (!lista.length) throw falhaP(404, 'O baralho da turma está vazio.');
+    const usadas = new Set(Array.isArray(body.usadas) ? body.usadas.slice(0, 2000).map(String) : []);
+    const livres = lista.filter(([id]) => !usadas.has(id));
+    if (!livres.length) return { esgotado: true, ids: { F: lista.map(([id]) => id) } };
+    const [id, x] = livres[rnd(livres.length)], nv = nivelF(x), ops = opsF(x);
+    if (sala) await ST.grava('PUT', 'srv/fq/' + sala + '/' + id, { q: x.q, a: x.a, e: ops ? x.e : null, nv });
+    const out = { id, t: 'F', q: x.q, b: 'turma', d: nv, lvNote: '', tk: assina({ i: id, t: 'F', m: sala ? 'o' : 'l', s: sala, u: sala ? null : uid, e: Date.now() + 864e5 }) };
+    if (ops) out.opts = shuffle(ops.slice());
+    return out;
+  }
+  const tk = confere(body.tk);
+  if (!tk || tk.i !== body.id || tk.t !== 'F' || tk.e < Date.now()) throw falhaP(403, 'Pergunta inválida');
+  if (acao === 'nota') return { ok: true }; // as perguntas da turma não vão para o painel do dono do jogo
+  const x = await perguntaF(tk);
+  if (!x) throw falhaP(410, 'Essa pergunta mudou. Sorteie outra.');
+  if (acao === 'resposta') {
+    if (tk.m === 'o' && !(await salaLiberou(tk.s, tk.i))) throw falhaP(403, 'A resposta só aparece depois que a pessoa responde.');
+    return { a: x.a };
+  }
+  if (acao === 'dica') {
+    const ops = opsF(x);
+    if (ops) { const h = crypto.createHmac('sha256', chaveTk()).update('dica|' + body.tk).digest(); return { elim: x.e[h.readUInt32BE(0) % 3] } }
+    return mascara(x.a);
+  }
+  if (acao === 'forma') throw falhaP(404, 'Essa pergunta não tem desenho.');
+  throw falhaP(400, 'Ação inválida');
+}
+
 // ---------------------------------------------------------------- rotas
 async function handle(acao, body, rede) {
   const B = await banco();
@@ -258,6 +317,7 @@ async function handle(acao, body, rede) {
     if (!x) throw Object.assign(new Error('Pergunta inválida'), { status: 400 });
     return { c: x.c };
   }
+  if (body.t === 'F') return turma(acao, body);
   const t = body.t;
   if (!Object.prototype.hasOwnProperty.call(B.temas, t)) throw Object.assign(new Error('Tema inválido'), { status: 400 });
   if (acao === 'sortear') {
@@ -321,6 +381,7 @@ module.exports._handle = handle;
 module.exports._infoTk = async tk => {
   const x = confere(tk);
   if (!x || typeof x.i !== 'string' || typeof x.t !== 'string') return null;
+  if (x.t === 'F') return { qid: x.i, t: 'F', m: x.m, s: x.s || null, e: +x.e || 0, nivel: 2 }; // perguntas da turma: não valem ranking
   const B = await banco(), T = B.temas[x.t];
   if (!T) return null;
   const i = T.idx.get(x.i);
@@ -331,6 +392,10 @@ module.exports._infoTk = async tk => {
 module.exports._pergTk = async tk => {
   const x = confere(tk);
   if (!x || typeof x.i !== 'string' || typeof x.t !== 'string') return null;
+  if (x.t === 'F') {
+    const f = await perguntaF(x);
+    return f ? { qid: x.i, t: 'F', m: x.m, s: x.s || null, e: +x.e || 0, nivel: nivelF(f), q: f.q, a: f.a, opts: opsF(f), mapa: null } : null;
+  }
   const B = await banco(), T = B.temas[x.t];
   if (!T) return null;
   const i = T.idx.get(x.i);

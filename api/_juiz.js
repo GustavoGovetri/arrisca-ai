@@ -4,7 +4,7 @@
 // anda casas que não ganhou, troca o nível da pergunta ou finge que a turma aceitou a resposta.
 // Arquivo com "_" no começo: a Vercel não publica como rota.
 
-const TEMAS = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V', 'N'];
+const TEMAS = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V', 'N', 'F']; // F: perguntas da turma (baralho de quem criou a sala)
 const TAMANHOS = { curto: 30, normal: 40, longo: 50 };
 const MODOS = ['classico', 'bonus', 'arriscado'];
 const MAXJ = 10;
@@ -21,6 +21,8 @@ function modo(g) { return g.modo === 'semdo' ? 'arriscado' : MODOS.includes(g.mo
 const bonusOn = g => modo(g) !== 'classico';
 const dobroOn = g => modo(g) === 'arriscado';
 const final = g => (Array.isArray(g.board) ? g.board.length : 1) - 1;
+const mc = g => !!g && Array.isArray(g.q) && Array.isArray(g.q[1]); // pergunta de múltipla escolha (Variedades, ou da turma com alternativas)
+const temOpts = info => !!info && Array.isArray(info.opts) && info.opts.length > 0; // a pergunta oficial tem alternativas
 const pls = g => (g && Array.isArray(g.players) && g.players.length ? g.players : null);
 const ativos = g => (Array.isArray(g.themes) && g.themes.length ? g.themes : TEMAS);
 
@@ -119,10 +121,10 @@ async function perguntaOk(c, g) {
   if (num(g.qd) !== info.nivel) return [null, 'Nível da pergunta não confere'];
   const q = Array.isArray(g.q) ? g.q : [];
   if (String(q[0] || '') !== info.q) return [null, 'Texto da pergunta não confere'];
-  if (info.t === 'V') {
+  if (temOpts(info)) {
     const o = Array.isArray(q[1]) ? q[1].map(String) : [];
     if (o.length !== info.opts.length || J(o.slice().sort()) !== J(info.opts.map(String).sort())) return [null, 'Alternativas não conferem'];
-  }
+  } else if (Array.isArray(q[1])) return [null, 'Alternativas não conferem'];
   return [info, null];
 }
 
@@ -275,11 +277,11 @@ async function progresso(c, base, g, quem) {
     if (mud('dobro') && (base.resp || (base.chosen !== null && base.chosen !== undefined))) return nao('Dobro depois de responder');
   }
   if (mud('hint')) { if (base.hint || !deuDica) return nao('Dica inválida') } else if (deuDica) return nao('Dica inválida');
-  if (mud('resp')) { if (base.resp || !g.resp || typeof g.resp.t !== 'string' || !g.resp.k || chaveUsada(c.votos, g.resp.k)) return nao('Resposta inválida'); if (base.theme === 'V') return nao('Resposta inválida') }
+  if (mud('resp')) { if (base.resp || !g.resp || typeof g.resp.t !== 'string' || !g.resp.k || chaveUsada(c.votos, g.resp.k)) return nao('Resposta inválida'); if (mc(base)) return nao('Resposta inválida') }
   if (mud('chosen')) {
     if (base.chosen !== null && base.chosen !== undefined) return nao('A alternativa já foi escolhida');
     const i = num(g.chosen);
-    if (base.theme !== 'V' || !Number.isInteger(i) || i < 0 || i > 5) return nao('Alternativa inválida');
+    if (!mc(base) || !Number.isInteger(i) || i < 0 || i > 5) return nao('Alternativa inválida');
   }
   if (mud('tEnd') && (Number.isFinite(+base.tEnd) && base.tEnd !== null || !tempoOk(c, g))) return nao('Tempo inválido');
   return sim();
@@ -329,7 +331,7 @@ async function fechamento(c, base, g, quem) {
   const ehCur = quem.idx === cur;
   const escolha = base.chosen !== null && base.chosen !== undefined ? num(base.chosen) : num(g.chosen);
   if (ok) {
-    if (base.theme === 'V' || info.t === 'V') {
+    if (mc(base) || temOpts(info)) {
       const o = Array.isArray(base.q) && Array.isArray(base.q[1]) ? base.q[1] : [];
       if (!Number.isInteger(escolha) || String(o[escolha]) !== String(info.a)) return nao('Essa alternativa não é a certa');
     } else {
@@ -338,7 +340,7 @@ async function fechamento(c, base, g, quem) {
       if (dec !== true && !exata) return nao('A turma ainda não aceitou a resposta');
     }
   } else {
-    const dec = base.theme === 'V' ? null : decisaoVoto(base, c.votos, c.lobby);
+    const dec = mc(base) ? null : decisaoVoto(base, c.votos, c.lobby);
     const acabou = Number.isFinite(+base.tEnd) && c.agora > +base.tEnd + 1500;
     if (!(ehCur || dec === false || acabou)) return nao('Só quem está na vez pode desistir');
   }
