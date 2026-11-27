@@ -1305,6 +1305,31 @@ span.eqpill{cursor:default}
 .eqmemb{font-size:12.5px;color:var(--suave);margin-top:2px;line-height:1.35}
 .eqmemb .vez{color:#fff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .chatabas{margin:8px 12px 0;flex:none}
+/* modo TV: sem menu nem botões de jogar; letras maiores; QR code para entrar */
+body.tv .toolbar,body.tv #bugbtn,body.tv #chatbox,body.tv #chatbtn,body.tv #view-jogo>.card:not(#panel):not(#scores){display:none!important}
+body.tv .wrap{grid-template-columns:minmax(0,1fr) minmax(440px,38%);max-width:none;padding:14px 26px 20px}
+body.tv #panel{font-size:1.12em}
+body.tv #panel .qtext{font-size:28px}
+body.tv.sobrev .wrap{grid-template-columns:minmax(0,1fr);max-width:1100px}
+.tvlob h2{margin:22px 0 10px}
+.tventra{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.tvqr .qr{display:block;width:min(230px,40vw);height:auto;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.tvcod{display:flex;flex-direction:column;gap:2px;min-width:0}
+.tvcod small{color:var(--suave);font-size:15px}
+.tvsite{font-size:22px;color:#fff3de;overflow-wrap:anywhere}
+.tvcodigo{font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(48px,6vw,84px);letter-spacing:8px;line-height:1.05;color:var(--amarelo);text-shadow:0 3px 0 var(--k)}
+.tvjog{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.tvj{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:rgba(255,243,222,.06);font-size:18px;min-width:0}
+.tvj b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tvj .pawn{width:30px;height:30px;border-radius:50%;flex:none}
+.tvj small{font-size:13px;color:var(--suave)}.tvj small.ok{color:#55e08a}.tvj.off{opacity:.5}
+.tvinfo{margin-top:16px}
+.hm-tv{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:10px 12px;border-radius:14px;cursor:pointer;color:#fff3de;background:rgba(255,243,222,.05);border:1px dashed rgba(255,243,222,.22)}
+.hm-tv:hover{background:rgba(255,243,222,.1)}.hm-tv:focus-visible{outline:2px solid var(--amarelo);outline-offset:2px}
+.hm-tv[disabled]{opacity:.5;cursor:default}
+.hm-tv svg.traco{width:26px;height:26px;flex:none;color:var(--amarelo)}
+.hm-tv span{display:flex;flex-direction:column}.hm-tv b{font:700 15px 'Fredoka',sans-serif}.hm-tv small{font-size:12.5px;color:var(--suave)}
+.tvdica{display:flex;align-items:center;gap:8px;font-size:13.5px}.tvdica svg.traco{width:20px;height:20px;flex:none;color:var(--amarelo)}
 .eqchat{all:unset;cursor:pointer;color:var(--amarelo);font:600 14px 'Fredoka',sans-serif;text-decoration:underline;text-underline-offset:3px}
 .eqchat:focus-visible{outline:2px solid var(--amarelo);outline-offset:2px;border-radius:4px}
 /* Sobrevivência relâmpago: sem tabuleiro, uma coluna só */
@@ -1355,6 +1380,7 @@ body.sobrev .wrap>.ringwrap{display:none}
         <li><b>Modos:</b> 🎲 Tradicional; ⭐ Bônus (difícil +1 casa, impossível +2); 🔥 Arriscado (na difícil e na impossível dá para apostar o dobro; se errar, volta o valor da ficha e joga o tema da casa nova).</li>
         <li><b>Em equipes:</b> de 2 a 4 times. Cada time anda junto no tabuleiro, com as mesmas fichas, e os membros respondem um de cada vez. Na votação da resposta e do tema final, só os outros times votam.</li>
         <li><b>👪 Turma:</b> perguntas que você mesmo escreve em Conta → Perguntas (ex.: "Em que cidade a vó nasceu?"). Quem criou a sala liga o tema e elas caem no tabuleiro como os outros. Só em sala com código, e não valem ranking.</li>
+        <li><b>Modo TV:</b> na TV (ou num computador ligado nela), abra o site, digite o código da sala e toque em <b>Abrir como TV</b>. Ela mostra o tabuleiro, a pergunta, o tempo e o placar em tela grande, e na sala de espera um QR code para o pessoal entrar. A TV não conta como jogador.</li>
         <li><b>Sobrevivência relâmpago</b> (só online): todo mundo responde a mesma pergunta de múltipla escolha em 15 segundos. Errou ou não respondeu, perde uma vida; cada um tem 3. As perguntas vão ficando mais difíceis, e quem sobrar por último ganha. Se todo mundo que sobrou errar junto, ninguém sai naquela rodada.</li>
         <li><b>Ajudas</b>, uma vez por partida: ⏭ Pular troca a pergunta e 💡 Dica mostra a primeira letra (ou tira uma alternativa errada).</li>
       </ul>
@@ -1467,7 +1493,8 @@ const ICO={
   globo:TRACO('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
   ferramenta:TRACO('<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/>'),
   bug:TRACO('<rect x="7" y="8" width="10" height="12" rx="5"/><path d="M9 8a3 3 0 0 1 6 0M3 13h4M17 13h4M4 7l3 2M20 7l-3 2M4 19l3-2M20 19l-3-2M12 12v8"/>'),
-  perfil:TRACO('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>')
+  perfil:TRACO('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
+  tv:TRACO('<rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>')
 };
 // títulos das janelas: ícone de traço no lugar do emoji
 const JANELA_ICO={visualbox:'visual',rankbox:'ranking',contabox:'conta',amigosbox:'amigos',desafiobox:'desafio',painelbox:'ferramenta',sombox:'som',bugbox:'bug',histbox:'hist',chatbox:'chat',salasbox:'globo'};
@@ -1935,13 +1962,13 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${online()?tituloChip(TITULOS[p.dev]):''}${expulsarBtn(p)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div>${Array.isArray(p.membros)?`<div class="eqmemb">${p.membros.map((m,j)=>`<span class="${j===(p.vez||0)%p.membros.length?'vez':''}">${esc(m.name)}${online()&&m.dev===MYDEV?' (você)':''}</span>`).join(' · ')}</div>`:''}</div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE||!!ENTRANDO);document.body.classList.toggle('salaespera',MODE==='online'&&!ENTRANDO&&G.phase==='setup');document.body.classList.toggle('sobrev',svOn()&&!ENTRANDO);document.body.classList.toggle('prep',!!MODE&&!ENTRANDO&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();svRelogio();setTimeout(svConta,0);chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(online()&&G.phase==='theme'&&G.vt)setTimeout(vtConfere,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
+function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE||!!ENTRANDO);document.body.classList.toggle('salaespera',MODE==='online'&&!ENTRANDO&&G.phase==='setup');document.body.classList.toggle('sobrev',svOn()&&!ENTRANDO);document.body.classList.toggle('tv',TV&&online());document.body.classList.toggle('prep',!!MODE&&!ENTRANDO&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();svRelogio();setTimeout(svConta,0);chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(online()&&G.phase==='theme'&&G.vt)setTimeout(vtConfere,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
 
 function renderPanel(){
   const el=document.getElementById('panel');
   if(ENTRANDO){el.innerHTML=entrandoHtml();return}
   if(!MODE){el.innerHTML=homeHtml();return}
-  if(MODE==='online'&&G.phase==='setup'){el.innerHTML=lobbyHtml();return}
+  if(MODE==='online'&&G.phase==='setup'){el.innerHTML=TV?tvLobbyHtml():lobbyHtml();return}
   if(svOn()){el.innerHTML=svHtml();return}
   if(G.phase==='setup'){
     const total=Q?G.selThemes.reduce((s,k)=>s+QNj(k,G.selThemes),0):0;
@@ -2829,7 +2856,7 @@ function svPasso(){
   let quando=null;
   if(G.phase==='svq'){const vo=svVivosOn();quando=vo.length&&vo.every(p=>svRespondeu(p.dev))?t:so.ate+1600}
   else if(G.phase==='svr')quando=so.prox+150;
-  if(quando===null||t<quando+(amHost()?0:2500+parseInt(MYDEV.slice(-3),36)%1500))return;
+  if(quando===null||TV||t<quando+(amHost()?0:2500+parseInt(MYDEV.slice(-3),36)%1500))return;
   const k=G.phase+'|'+so.qid+'|'+RV;
   if(SV_PEDIU===k&&t-SV_PEDIU_T<3000)return;
   SV_PEDIU=k;SV_PEDIU_T=t;
@@ -2846,7 +2873,7 @@ function svMsg(){
   const so=G.so,eu=svEu();
   if(G.phase==='svq'){
     const vo=(G.players||[]).filter(p=>p.vidas>0),feitas=vo.filter(p=>svRespondeu(p.dev)).length,cont=`${feitas} de ${vo.length} já ${feitas===1?'respondeu':'responderam'}`;
-    if(!eu)return `Você está assistindo. ${cont}.`;
+    if(!eu)return TV?`${cont}.`:`Você está assistindo. ${cont}.`;
     if(!(eu.vidas>0))return `Você saiu do jogo, mas dá para continuar assistindo. ${cont}.`;
     if(SV_MEU[so.qid]===undefined)return 'Escolha uma alternativa antes de o tempo acabar.';
     return `Resposta enviada. ${cont}.`;
@@ -2924,6 +2951,108 @@ function svConta(){
     }).catch(e=>{SV_CONTOU.delete(k);console.warn('conta:',e.message)})};
   manda({qid:so.qid},G.jogo+'|'+so.qid);
   if(G.phase==='svfim'&&(so.fim||[]).includes(MYDEV))setTimeout(()=>manda({fim:true},G.jogo+'|fim'),1500);
+}
+// QR-INICIO: QR code feito aqui mesmo (modo byte, correção M, versões 1 a 6: até 106 letras), sem carregar código de fora.
+// Segue a norma ISO 18004: blocos com Reed-Solomon (GF(256), 0x11D), máscara com menor penalidade, formato BCH (0x537, 0x5412).
+const QR=(()=>{
+  const ECC=[0,10,16,26,18,24,16],BLOCOS=[0,1,1,1,2,2,4]; // correção M: codewords de correção por bloco e quantos blocos
+  const mul=(x,y)=>{let z=0;for(let i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11D);z^=((y>>>i)&1)*x}return z};
+  function divisor(g){const r=new Array(g).fill(0);r[g-1]=1;let raiz=1;for(let i=0;i<g;i++){for(let j=0;j<g;j++){r[j]=mul(r[j],raiz);if(j+1<g)r[j]^=r[j+1]}raiz=mul(raiz,2)}return r}
+  function resto(dados,div){const r=div.map(()=>0);for(const b of dados){const f=b^r.shift();r.push(0);div.forEach((c,i)=>{r[i]^=mul(c,f)})}return r}
+  const brutos=v=>{let r=(16*v+128)*v+64;if(v>=2){const n=Math.floor(v/7)+2;r-=(25*n-10)*n-55}return r}; // casas para dados e correção
+  const capBits=v=>(Math.floor(brutos(v)/8)-ECC[v]*BLOCOS[v])*8;
+  function penal(M,n){ // penalidade da máscara (regras N1 a N4)
+    let p=0;
+    const linha=get=>{
+      let run=1;for(let i=1;i<=n;i++){if(i<n&&get(i)===get(i-1))run++;else{if(run>=5)p+=run-2;run=1}}
+      for(let i=0;i+11<=n;i++){let s='';for(let k=0;k<11;k++)s+=get(i+k)?'1':'0';if(s==='10111010000'||s==='00001011101')p+=40}
+    };
+    for(let y=0;y<n;y++)linha(i=>M[y][i]);
+    for(let x=0;x<n;x++)linha(i=>M[i][x]);
+    for(let y=0;y<n-1;y++)for(let x=0;x<n-1;x++){const c=M[y][x];if(c===M[y][x+1]&&c===M[y+1][x]&&c===M[y+1][x+1])p+=3}
+    let esc=0;M.forEach(r=>r.forEach(c=>{if(c)esc++}));const tot=n*n;p+=(Math.ceil(Math.abs(esc*20-tot*10)/tot)-1)*10;
+    return p;
+  }
+  function gera(txt){ // matriz de casas (true = escura), ou null se não couber
+    const bytes=[...new TextEncoder().encode(String(txt))];
+    let v=1;while(v<=6&&12+bytes.length*8>capBits(v))v++;
+    if(v>6)return null;
+    const cap=capBits(v),bits=[],poe=(val,k)=>{for(let i=k-1;i>=0;i--)bits.push((val>>>i)&1)};
+    poe(4,4);poe(bytes.length,8);bytes.forEach(b=>poe(b,8)); // modo byte, tamanho, texto
+    poe(0,Math.min(4,cap-bits.length));poe(0,(8-bits.length%8)%8);
+    for(let pad=0xEC;bits.length<cap;pad^=0xEC^0x11)poe(pad,8);
+    const dados=[];for(let i=0;i<bits.length;i+=8)dados.push(bits.slice(i,i+8).reduce((a,b)=>a<<1|b,0));
+    const nb=BLOCOS[v],ec=ECC[v],raw=Math.floor(brutos(v)/8),curtos=nb-raw%nb,lenC=Math.floor(raw/nb),div=divisor(ec),bl=[];
+    for(let i=0,k=0;i<nb;i++){const d=dados.slice(k,k+lenC-ec+(i<curtos?0:1));k+=d.length;const e=resto(d,div);if(i<curtos)d.push(0);bl.push(d.concat(e))}
+    const cw=[];for(let i=0;i<bl[0].length;i++)bl.forEach((b,j)=>{if(i!==lenC-ec||j>=curtos)cw.push(b[i])}); // intercala os blocos
+    const n=v*4+17,M=[...Array(n)].map(()=>Array(n).fill(false)),F=[...Array(n)].map(()=>Array(n).fill(false));
+    const fx=(x,y,d)=>{M[y][x]=d;F[y][x]=true};
+    for(let i=0;i<n;i++){fx(6,i,i%2===0);fx(i,6,i%2===0)} // linhas de tempo
+    const finder=(x,y)=>{for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const d=Math.max(Math.abs(dx),Math.abs(dy)),xx=x+dx,yy=y+dy;if(xx>=0&&xx<n&&yy>=0&&yy<n)fx(xx,yy,d!==2&&d!==4)}};
+    finder(3,3);finder(n-4,3);finder(3,n-4);
+    if(v>=2){const a=n-7;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)fx(a+dx,a+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1)} // alinhamento
+    const formato=m=>{const d=m;let r=d;for(let i=0;i<10;i++)r=(r<<1)^((r>>>9)*0x537);const b=(d<<10|r)^0x5412,bit=i=>((b>>>i)&1)===1; // correção M (00) + máscara
+      for(let i=0;i<=5;i++)fx(8,i,bit(i));fx(8,7,bit(6));fx(8,8,bit(7));fx(7,8,bit(8));for(let i=9;i<15;i++)fx(14-i,8,bit(i));
+      for(let i=0;i<8;i++)fx(n-1-i,8,bit(i));for(let i=8;i<15;i++)fx(8,n-15+i,bit(i));fx(8,n-8,true)};
+    formato(0);
+    let i=0;for(let dir=n-1;dir>=1;dir-=2){if(dir===6)dir=5;for(let vert=0;vert<n;vert++)for(let j=0;j<2;j++){const x=dir-j,sobe=((dir+1)&2)===0,y=sobe?n-1-vert:vert;if(!F[y][x]&&i<cw.length*8){M[y][x]=((cw[i>>>3]>>>(7-(i&7)))&1)===1;i++}}}
+    const MASC=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,(x,y)=>x%3===0,(x,y)=>(x+y)%3===0,(x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,(x,y)=>x*y%2+x*y%3===0,(x,y)=>(x*y%2+x*y%3)%2===0,(x,y)=>((x+y)%2+x*y%3)%2===0];
+    const aplica=m=>{for(let y=0;y<n;y++)for(let x=0;x<n;x++)if(!F[y][x]&&MASC[m](x,y))M[y][x]=!M[y][x]};
+    let melhor=0,menor=Infinity;
+    for(let m=0;m<8;m++){aplica(m);formato(m);const p=penal(M,n);if(p<menor){menor=p;melhor=m}aplica(m)}
+    aplica(melhor);formato(melhor);
+    return M;
+  }
+  function svg(txt){ // preto no branco, com a margem de 4 casas que os leitores pedem
+    const M=gera(txt);if(!M)return '';
+    const n=M.length,q=4;let d='';
+    M.forEach((r,y)=>r.forEach((c,x)=>{if(c)d+=`M${x+q} ${y+q}h1v1h-1z`}));
+    return `<svg class="qr" viewBox="0 0 ${n+2*q} ${n+2*q}" role="img" aria-label="QR code para entrar na sala" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#000"/></svg>`;
+  }
+  return {gera,svg};
+})();
+// QR-FIM
+// ----- modo TV: a tela grande só assiste a sala (não entra na lista de jogadores, não vota, não manda nada) -----
+var TV=false,NET_REAL=null,TV_LOCK=null;
+const PENDING_TV=(new URLSearchParams(location.search).get('tv')||'').toUpperCase().replace(/[^A-Z0-9]/g,'')||null;
+function tvNet(n){ // o mesmo acesso à sala, mas sem gravar nada em nome deste aparelho
+  const nada=async()=>{};
+  return Object.assign(Object.create(n),{setMe:nada,removePlayer:nada,marcaPedido:nada,setUsadas:nada,chat:nada,vote:nada,report:nada});
+}
+function tvAbre(){ // botão da tela inicial: usa o código digitado
+  const v=((document.getElementById('joincode')||{}).value||'').trim();
+  if(v.length<4){toast('Digite o código da sala e toque em Abrir como TV');const el=document.getElementById('joincode');if(el)el.focus();return}
+  tvEntra(v);
+}
+async function tvEntra(code){
+  code=String(code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(!NET){toast('O modo online não está disponível agora.');return}
+  ENTRANDO={code};clearTimeout(ENTRANDO_T);ENTRANDO_T=setTimeout(entrandoFim,9000);render();
+  try{
+    if(NET.anonToken)await NET.anonToken();
+    if(!(await NET.exists(code))){ENTRANDO=null;toast('Sala '+code+' não encontrada');MODE=null;try{history.replaceState(null,'',location.pathname+(URLP.get('net')?'?net='+URLP.get('net'):''))}catch(e){}render();return}
+    if(UNWATCH){UNWATCH();UNWATCH=null}
+    stopTimer();
+    if(!TV){NET_REAL=NET;NET=tvNet(NET)}TV=true;
+    MODE='online';ROOM=code;RV=0;LASTSYNC='';UNDO=[];HOST=null;LOBBY={};TITULOS={};LOBBY_N=0;LOBBY_VISTOS=null;HOSTALL=false;
+    G=JSON.parse(G_DEFAULT);G.ordem=[];
+    try{history.replaceState(null,'','?tv='+code+(URLP.get('net')?'&net='+URLP.get('net'):''))}catch(e){}
+    try{await servidorSala('entrar',{sala:code})}catch(e){} // registra o aparelho na sala (sem entrar na lista de jogadores)
+    VOTES={};chatZera();
+    UNWATCH=NET.watch(code,{onMeta:m=>{HOST=(m&&m.host)||null;render()},onLobby:l=>{LOBBY=limpaLobby(l);lobbyChanged()},onState:applyRemote,onVotes:v=>{VOTES=v||{};render()},onChat:chatRecebido,onTitulos:t=>{TITULOS=limpaTitulos(t);render()},onRespostas:recebeRespostas});
+    tvAcordada();render();
+  }catch(e){console.error(e);ENTRANDO=null;toast('Não consegui abrir a sala na TV. Tente de novo.');render()}
+}
+function tvSai(){leaveRoom();TV=false;if(NET_REAL){NET=NET_REAL;NET_REAL=null}try{if(TV_LOCK)TV_LOCK.release()}catch(e){}TV_LOCK=null;render()}
+async function tvAcordada(){try{if(TV&&navigator.wakeLock&&document.visibilityState==='visible')TV_LOCK=await navigator.wakeLock.request('screen')}catch(e){}} // a TV não apaga a tela no meio do jogo
+document.addEventListener('visibilitychange',()=>{if(TV&&document.visibilityState==='visible')tvAcordada()});
+function tvLobbyHtml(){ // sala de espera na TV: código grande, QR code e quem já entrou
+  const ord=lobbyOrder(),hn=HOST&&LOBBY[HOST]&&(LOBBY[HOST].nome||'').trim()?esc(LOBBY[HOST].nome):'quem criou a sala';
+  const jog=ord.map(d=>{const l=LOBBY[d]||{};return `<div class="tvj${l.on===false?' off':''}${NOVOS[d]?' novo':''}">${bolinha(fotoDe(d),l.cor||'#3a4054','pawn','span')}<b>${esc((l.nome||'').trim()||'Sem nome')}</b>${d===HOST?'<small>criou a sala</small>':l.pronto?'<small class="ok">pronto</small>':''}</div>`}).join('');
+  return `<div class="tvlob"><div class="tventra"><div class="tvqr">${QR.svg(linkSala())}</div><div class="tvcod"><small>Aponte a câmera do celular para o código ao lado, ou entre em</small><b class="tvsite">${esc(location.host)}</b><small>e digite o código da sala</small><b class="tvcodigo">${esc(ROOM)}</b></div></div>
+  <h2>Jogadores <span class="muted">(${ord.length})</span></h2>${jog?`<div class="tvjog">${jog}</div>`:'<p class="muted">Ninguém ainda. Entre pelo celular!</p>'}
+  <p class="muted tvinfo">${G.sv?'Jogo: <b>Sobrevivência relâmpago</b>':`Modo: <b>${MODOS[modo()].n}</b>${G.equipes?' · em equipes':''}`} · ${esc(resumoTemas())}</p>
+  <p class="wait">Esperando ${hn} começar a partida…</p><div class="row" style="justify-content:center"><button class="small hb" onclick="tvSai()">Sair do modo TV</button></div></div>`;
 }
 function tipoJogoHtml(){
   return `<h2 style="margin-top:16px">Jogo</h2><div class="visib" role="group" aria-label="Jogo"><button class="${G.sv?'':'on'}" aria-pressed="${!G.sv}" onclick="G.sv=false;render()">Tabuleiro</button><button class="${G.sv?'on':''}" aria-pressed="${!!G.sv}" onclick="G.sv=true;render()">Sobrevivência relâmpago</button></div>${G.sv?`<p class="mododesc">${SV_DESC}</p>`:''}`;
@@ -3049,6 +3178,7 @@ function plTag(p){if(!online())return '';let s='';if(Array.isArray(p.membros)){i
 function editBtn(ed){return can('host')?`<button class="small" onclick="G.editPl=!G.editPl;G.pickColor=null;renderScores()">${ed?'✓ Pronto':'✎ Ordem e cores'}</button>`:''}
 const NOVO_BTN=`<button class="hb" onclick="if(window.__c){newGame()}else{window.__c=1;this.textContent='Confirmar?';const b=this;setTimeout(()=>{window.__c=0;b.textContent='Novo jogo'},2500)}">Novo jogo</button>`;
 function headBtns(){
+  if(TV)return `<button class="small hb" onclick="tvSai()">Sair do modo TV</button>`;
   if(!online())return `<button class="hb" title="Voltar para a tela inicial (a partida fica salva)" onclick="goHome()">${ICON_CASA}Início</button>`+NOVO_BTN;
   let h='';
   if(amHost())h+=NOVO_BTN;
@@ -3132,6 +3262,7 @@ function homeHtml(){
       <button class="hm-btn" onclick="playLocal()">${ICO.celular}Neste aparelho</button>
     </div>
     <div class="joinrow"><input id="joincode" aria-label="Código da sala" maxlength="6" placeholder="Código da sala" autocapitalize="characters" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')joinFromInput()"><button ${ok?'':'disabled'} onclick="joinFromInput()">Entrar</button></div>
+    <button type="button" class="hm-tv" ${ok?'':'disabled'} onclick="tvAbre()">${ICO.tv}<span><b>Abrir como TV</b><small>A TV mostra o jogo em tela grande e cada um joga pelo celular.</small></span></button>
     ${ok?'':`<p class="muted">${NETREADY?'O modo online não está disponível agora.':'Conectando o modo online…'}</p>`}
   </section>
   <aside class="hm-lado">
@@ -3201,7 +3332,7 @@ function sairPinta(){ // o botão pode ter sido redesenhado no meio: pinta todos
   document.querySelectorAll('button[onclick^="sairConfirma"]').forEach(x=>{x.textContent=on?(G.phase&&G.phase!=='setup'?'Sair da partida?':'Sair da sala?'):'Sair';x.classList.toggle('confirma',on)});
 }
 // fechar ou recarregar a aba no meio de uma partida online: o navegador pergunta antes
-addEventListener('beforeunload',e=>{if(online()&&ROOM&&G.phase&&G.phase!=='setup'&&G.phase!=='won'){e.preventDefault();e.returnValue=''}});
+addEventListener('beforeunload',e=>{if(online()&&ROOM&&!TV&&G.phase&&G.phase!=='setup'&&G.phase!=='won'){e.preventDefault();e.returnValue=''}});
 function leaveRoom(){
   if(UNWATCH){UNWATCH();UNWATCH=null}
   const saiu=ROOM,anunciada=ANUNCIO.foi;
@@ -3966,6 +4097,7 @@ function minhaVez(){return online()&&G.players&&myIdx()===G.cur&&['theme','quest
 function meuVoto(){const k=respKey();if(votandoTema()){const v=VOTES[MYDEV+'_t'];return myIdx()>=0&&myIdx()!==G.cur&&!(v&&v.k==='f:'+G.vt.id)}return online()&&G.phase==='question'&&k&&myIdx()!==G.cur&&myIdx()>=0&&!(VOTES[MYDEV]&&VOTES[MYDEV].k===k)}
 function emPartida(){return online()&&G.players&&G.phase!=='setup'&&G.phase!=='won'&&G.phase!=='svfim'}
 function abaAviso(){
+  if(TV)return;
   const box=document.getElementById('avisoaba');if(!box)return;
   const vez=minhaVez(),voto=meuVoto();
   document.getElementById('avisotxt').innerHTML=vez
@@ -4090,14 +4222,14 @@ function trocaEfeitos(){
   pintaEfx();toast(l?'🍃 Efeitos leves ligados.':'✨ Todos os efeitos ligados.');
 }
 pintaEfx();
-function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
+function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_TV&&!TV&&!ROOM){tvEntra(PENDING_TV);return}if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
 
 // ----- sincronização da partida -----
 const SYNC_KEYS=[...SNAP_KEYS,'jogo','exTheme','vt','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica','desfazer','expulsar','equipes','nEq','times','sv','so','nF'];
 function syncJson(){const o={};SYNC_KEYS.forEach(k=>{if(G[k]!==undefined)o[k]=G[k]});return JSON.stringify(o)}
 let PUSHING=false,PUSH_AGAIN=false,SENT=null;
 async function netPush(){
-  if(!online()||APPLYING||!NET||CREATING||RV<1)return;
+  if(!online()||APPLYING||!NET||CREATING||RV<1||TV)return;
   const j=syncJson();if(j===LASTSYNC)return;
   if(G.phase==='setup'&&!amHost()){LASTSYNC=j;return} // na sala de espera só quem criou a sala mexe
   if(svFase()){LASTSYNC=j;return} // na Sobrevivência quem conduz é o servidor
@@ -4286,7 +4418,7 @@ function lobbyHtml(){
   let h=`${amHost()?'<div class="prepgrid"><div class="pcol">':''}<div class="lobtopo"><div class="lobcod"><small>Código da sala</small><b>${ROOM}</b></div><button class="small hb${Date.now()-SAIR_T<3000?' confirma':''}" onclick="sairConfirma(this)">${Date.now()-SAIR_T<3000?(G.phase&&G.phase!=='setup'?'Sair da partida?':'Sair da sala?'):'Sair'}</button></div>
   ${amHost()?'':(G.publica?'<p class="muted">🌍 Sala aberta a todos.</p>':'')}
   <p class="muted">Mande o link ou o código para quem vai jogar. Cada um entra pelo próprio celular.${amHost()&&G.publica?' <b>🌍 A sala também aparece em Salas para qualquer pessoa entrar.</b>':''}</p>
-  <div class="lobacoes"><button class="lobac prim" onclick="shareRoom()">${ICO.compartilhar}Compartilhar</button><button class="lobac" onclick="copyText(linkSala(),'📋 Link copiado')">${ICO.link}Copiar link</button>${CONTA.user?`<button class="lobac" onclick="amigosAbre()">${ICO.chamar}Chamar amigo</button>`:''}</div>
+  ${amHost()?`<p class="muted tvdica">${ICO.tv}<span>Tem TV? Abra o site nela, digite o código <b>${ROOM}</b> e toque em <b>Abrir como TV</b>.</span></p>`:''}<div class="lobacoes"><button class="lobac prim" onclick="shareRoom()">${ICO.compartilhar}Compartilhar</button><button class="lobac" onclick="copyText(linkSala(),'📋 Link copiado')">${ICO.link}Copiar link</button>${CONTA.user?`<button class="lobac" onclick="amigosAbre()">${ICO.chamar}Chamar amigo</button>`:''}</div>
   <h2 style="margin-top:16px">Você</h2>
   <div class="setup-row"><button class="swatch${me.cor?'':' vazio'}" style="background:${me.cor||'#3a4054'}" title="Escolher a cor" onclick="G.pickColor=G.pickColor==='me'?null:'me';render()"></button><input id="meunome" aria-label="Seu nome" autocomplete="nickname" value="${esc(me.nome||'')}" maxlength="16" placeholder="Seu nome" onchange="setMyName(this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
   ${G.pickColor==='me'||(!me.cor&&(me.nome||'').trim())?`<div class="pal-wrap"><span class="muted">Escolha sua cor:</span><div class="palette">${PALETA.map(([c,n])=>{const tomada=usadas.includes(c);return `<button class="swatch${c===me.cor?' on':''}${tomada?' taken':''}" style="background:${c}" title="${n}${tomada?' (já escolhida)':''}" ${tomada?'disabled':''} onclick="setMyColor('${c}')"></button>`}).join('')}</div></div>`:''}
@@ -4549,7 +4681,7 @@ function aceitaEntrada(d){
 function marcaPedido(d,o){if(!NET)return;(NET.marcaPedido||NET.setMe)(ROOM,d,o).catch(()=>{})}
 function recusaEntrada(d){if(!amHost()||!NET)return;marcaPedido(d,{quer:0,rec:Date.now()});if(LOBBY[d])LOBBY[d].quer=0;render()}
 function entradaHtml(){
-  if(!online()||!G.players)return '';
+  if(!online()||!G.players||TV)return '';
   let h='';
   if(amHost())pedidosEntrada().forEach(d=>{h+=`<div class="dzbox enbox"><div class="dztit">✋ <b>${esc(nomeLobby(d))}</b> quer entrar na partida</div><div class="row votos"><button class="ok" onclick="aceitaEntrada('${d}')">✔ Aceitar</button><button class="bad" onclick="recusaEntrada('${d}')">✘ Recusar</button></div></div>`});
   if(myIdx()<0&&emPartida()){
