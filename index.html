@@ -1294,6 +1294,30 @@ span.eqpill{cursor:default}
 .eqresp b{color:#fff}
 .eqmemb{font-size:12.5px;color:var(--suave);margin-top:2px;line-height:1.35}
 .eqmemb .vez{color:#fff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+/* Sobrevivência relâmpago: sem tabuleiro, uma coluna só */
+body.sobrev .wrap{grid-template-columns:minmax(0,1fr);max-width:860px}
+body.sobrev .wrap>.ringwrap{display:none}
+.svbadges{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+#panel .svopts button{display:flex!important;flex-direction:column;align-items:flex-start!important;justify-content:center!important;gap:6px;white-space:normal!important;text-align:left;height:auto}
+#panel .svopts button.apaga{opacity:.55}
+.svquem{display:flex;flex-wrap:wrap;gap:4px}
+.svquem i{font-style:normal;font:600 12.5px 'Fredoka',sans-serif;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--c) 30%,rgba(0,0,0,.35));border:1px solid var(--c);color:#fff}
+.svmsg{text-align:center;line-height:1.5}
+.svok{color:#55e08a}.sverr{color:#ff8a8a}
+.svvidas{display:inline-flex;gap:3px;flex:none}
+.svvidas svg{width:18px;height:18px;fill:none;stroke:rgba(255,243,222,.35);stroke-width:2}
+.svvidas svg.on{fill:#ff4d6d;stroke:#ff4d6d}
+.svpl{align-items:center}
+.svpl .nm{flex:1;min-width:0}
+.svpl.fora{opacity:.5}
+.svst{flex:none;font:600 12.5px 'Fredoka',sans-serif;color:var(--suave);margin-right:6px}
+.svst.ok{color:#55e08a}.svst.err{color:#ff8a8a}
+.svfim{display:flex;flex-direction:column;gap:6px;margin:14px 0}
+.svfimpl{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:14px;background:rgba(255,243,222,.05)}
+.svfimpl.ouro{background:color-mix(in srgb,var(--amarelo) 14%,transparent);box-shadow:inset 0 0 0 2px var(--amarelo)}
+.svfimpl b{flex:1;min-width:0}
+.svlugar{font-family:'Lilita One',sans-serif;color:var(--amarelo);min-width:30px}
+.svfimpl .pawn{width:26px;height:26px;border-radius:50%;flex:none}
 </style>
 </head>
 <body>
@@ -1317,6 +1341,7 @@ span.eqpill{cursor:default}
         <li>Na última casa, os outros votam no tema. Acertou a pergunta final, venceu.</li>
         <li><b>Modos:</b> 🎲 Tradicional; ⭐ Bônus (difícil +1 casa, impossível +2); 🔥 Arriscado (na difícil e na impossível dá para apostar o dobro; se errar, volta o valor da ficha e joga o tema da casa nova).</li>
         <li><b>Em equipes:</b> de 2 a 4 times. Cada time anda junto no tabuleiro, com as mesmas fichas, e os membros respondem um de cada vez. Na votação da resposta e do tema final, só os outros times votam.</li>
+        <li><b>Sobrevivência relâmpago</b> (só online): todo mundo responde a mesma pergunta de múltipla escolha em 15 segundos. Errou ou não respondeu, perde uma vida; cada um tem 3. As perguntas vão ficando mais difíceis, e quem sobrar por último ganha. Se todo mundo que sobrou errar junto, ninguém sai naquela rodada.</li>
         <li><b>Ajudas</b>, uma vez por partida: ⏭ Pular troca a pergunta e 💡 Dica mostra a primeira letra (ou tira uma alternativa errada).</li>
       </ul>
       <h4 class="regsub">Online</h4>
@@ -1778,7 +1803,7 @@ function renderHist(){
   el.scrollTop=rolagem;
 }
 
-let G={phase:'setup',equipes:false,nEq:2,times:{},timesL:[],count:4,fichas:5,names:['Jogador 1','Jogador 2','Jogador 3','Jogador 4','Jogador 5','Jogador 6','Jogador 7','Jogador 8','Jogador 9','Jogador 10'],colors:[...PCOLORS],selThemes:[...ORDER],size:'normal',level:'misto',seen:[],modo:'bonus',publica:false};
+let G={phase:'setup',sv:false,so:null,equipes:false,nEq:2,times:{},timesL:[],count:4,fichas:5,names:['Jogador 1','Jogador 2','Jogador 3','Jogador 4','Jogador 5','Jogador 6','Jogador 7','Jogador 8','Jogador 9','Jogador 10'],colors:[...PCOLORS],selThemes:[...ORDER],size:'normal',level:'misto',seen:[],modo:'bonus',publica:false};
 
 function spStyle(s){
   if(s.type!=='normal')return '';
@@ -1886,19 +1911,21 @@ function renderScores(){
   const el=document.getElementById('scores');
   if(!G.players){el.style.display='none';return}
   el.style.display='';
+  if(svOn()){if(G.phase==='svfim'){el.style.display='none';return}el.innerHTML=svPlacarHtml();return}
   const ed=!!G.editPl;
   el.innerHTML=`<div class="row" style="align-items:center;justify-content:space-between"><h2 style="margin:0">${emEquipes()?'Times':'Jogadores'} <span class="muted">· rodada ${G.round}</span></h2>${editBtn(ed)}</div>${ed?'<p class="muted" style="margin:6px 0 0">Arraste pelo ⠿ para mudar a ordem e toque na bolinha para trocar a cor. A vez continua com quem está jogando.</p>':''}<div class="players" style="margin-top:8px">`+G.players.map((p,k)=>`
     <div class="pl${k===G.cur?' cur':''}" data-idx="${k}">${ed?`<span class="grip" role="button" tabindex="0" title="${gripTit()}" aria-label="Mudar a ordem (setas para cima e para baixo)" onpointerdown="dragRow(event,'game')" onkeydown="gripTecla(event,'game')">⠿</span><button class="swatch${G.pickColor===k?' on':''}" style="background:${p.color}" title="Trocar a cor" onclick="G.pickColor=G.pickColor===${k}?null:${k};renderScores()"></button>`:bolinha(online()?fotoDe(p.dev):null,p.color,'pawn','div')}
     <div class="nm">${esc(p.name)}${online()?tituloChip(TITULOS[p.dev]):''}${expulsarBtn(p)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div>${Array.isArray(p.membros)?`<div class="eqmemb">${p.membros.map((m,j)=>`<span class="${j===(p.vez||0)%p.membros.length?'vez':''}">${esc(m.name)}${online()&&m.dev===MYDEV?' (você)':''}</span>`).join(' · ')}</div>`:''}</div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE||!!ENTRANDO);document.body.classList.toggle('salaespera',MODE==='online'&&!ENTRANDO&&G.phase==='setup');document.body.classList.toggle('prep',!!MODE&&!ENTRANDO&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(online()&&G.phase==='theme'&&G.vt)setTimeout(vtConfere,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
+function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE||!!ENTRANDO);document.body.classList.toggle('salaespera',MODE==='online'&&!ENTRANDO&&G.phase==='setup');document.body.classList.toggle('sobrev',svOn()&&!ENTRANDO);document.body.classList.toggle('prep',!!MODE&&!ENTRANDO&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();svRelogio();setTimeout(svConta,0);chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(online()&&G.phase==='theme'&&G.vt)setTimeout(vtConfere,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
 
 function renderPanel(){
   const el=document.getElementById('panel');
   if(ENTRANDO){el.innerHTML=entrandoHtml();return}
   if(!MODE){el.innerHTML=homeHtml();return}
   if(MODE==='online'&&G.phase==='setup'){el.innerHTML=lobbyHtml();return}
+  if(svOn()){el.innerHTML=svHtml();return}
   if(G.phase==='setup'){
     const total=Q?G.selThemes.reduce((s,k)=>s+QNj(k,G.selThemes),0):0;
     let h=`<div class="prepgrid"><div class="pcol"><div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px"><h2 style="margin:0">Novo jogo</h2><button class="small" onclick="goHome()">${ICON_CASA}Início</button></div><div class="setup-row"><label style="flex:none">Jogadores:</label><select aria-label="Número de jogadores" onchange="G.count=+this.value;G.pickColor=null;render()">${[2,3,4,5,6,7,8,9,10].map(n=>`<option ${n===G.count?'selected':''}>${n}</option>`).join('')}</select></div>`;
@@ -2387,7 +2414,7 @@ function setupColor(i,c){const j=G.colors.indexOf(c);if(j>=0&&j!==i)G.colors[j]=
 function moveGame(k,d){const j=k+d;if(j<0||j>=G.players.length)return;snapshot('Mudar a ordem');[G.players[k],G.players[j]]=[G.players[j],G.players[k]];if(G.cur===k)G.cur=j;else if(G.cur===j)G.cur=k;if(G.pickColor===k)G.pickColor=j;else if(G.pickColor===j)G.pickColor=k;render()}
 function gameColor(k,c){snapshot('Trocar a cor');const o=G.players.find((x,i)=>i!==k&&x.color===c);if(o)o.color=G.players[k].color;G.players[k].color=c;G.pickColor=null;render()}
 function rematch(){UNDO=[];G.seen=[];G.jogo=Math.random().toString(36).slice(2,10);G.ult=null;G.players.forEach(p=>{p.pos=0;p.used=[];p.forced=null;p.aj={pular:0,dica:0};p.estrelas=0;if(Array.isArray(p.membros))p.vez=0});G.cur=0;G.round=1;startTurn()}
-function newGame(){UNDO=[];G.seen=[];stopTimer();window.__c=0;G.players=null;G.board=null;G.themes=null;G.previewBoard=null;G.phase='setup';render()}
+function newGame(){UNDO=[];G.seen=[];stopTimer();window.__c=0;G.so=null;G.players=null;G.board=null;G.themes=null;G.previewBoard=null;G.phase='setup';render()}
 
 // ---------- modos de jogo ----------
 const MODOS={
@@ -2412,7 +2439,7 @@ function niveisHtml(contar){
 let AV_ABERTO=false; // fica fora do G: é só desta tela, não vai para a sala
 function resumoNiveis(){const s=niveisSel();if(s.length===4)return 'todas as dificuldades';const n=s.map(l=>LEVELS[l].toLowerCase());return n.length===1?'só '+n[0]:n.slice(0,-1).join(', ')+' e '+n[n.length-1]}
 function resumoTemas(){const a=G.selThemes||[],todos=temasEscolha();if(a.length===todos.length&&todos.every(k=>a.includes(k)))return 'todos os temas';if(a.length===CLASSIC.length&&CLASSIC.every(k=>a.includes(k)))return '6 temas clássicos';return a.length+(a.length===1?' tema':' temas')}
-function resumoPartida(sala){return [sala?(G.publica?'🌍 aberta a todos':'🔒 só com código'):'',resumoTemas(),(SIZES[G.size]||SIZES.normal).n+' casas',NF()+' fichas',resumoNiveis()].filter(Boolean).join(' · ')}
+function resumoPartida(sala){return [sala?(G.publica?'🌍 aberta a todos':'🔒 só com código'):'',resumoTemas(),...(sala&&G.sv?[]:[(SIZES[G.size]||SIZES.normal).n+' casas',NF()+' fichas',resumoNiveis()])].filter(Boolean).join(' · ')}
 function temasHtml(soma){
   const lista=temasEscolha();
   return `<h3 class="avtit">Temas da partida <span class="muted">(${G.selThemes.length} de ${lista.length})</span></h3><div class="tsel">${lista.map(k=>{const on=G.selThemes.includes(k);return `<button class="tchip${on?' on':''}" style="--c:${T[k].c}" onclick="toggleTheme('${k}')" title="${esc(T[k].n+': '+T[k].d+(chipInfo(k,G.selThemes,soma)?' ('+chipInfo(k,G.selThemes,soma)+')':''))}"><span class="tdot"></span><span class="tnome">${ic(k)} ${T[k].n}</span><small>${chipConta(k,G.selThemes,soma)}</small></button>`}).join('')}</div>
@@ -2658,6 +2685,174 @@ function membroVez(p){return p&&Array.isArray(p.membros)&&p.membros.length?p.mem
 function respDe(p){const m=membroVez(p);return m?m.dev||null:(p&&p.dev)||null} // quem responde pela peça
 function pecaDe(d){return G.players?G.players.findIndex(p=>devsDe(p).includes(d)):-1}
 function myIdx(){return pecaDe(MYDEV)}
+// ----- Sobrevivência relâmpago (só online): o servidor conduz a partida (api/salas.js, ação "sv"); aqui o aparelho
+// mostra a rodada, manda a alternativa escolhida e pede para avançar quando o tempo acaba. A certa só chega quando a rodada fecha.
+var SV_FASES=['svq','svr','svfim'];
+var SV_DESC='Todo mundo responde a mesma pergunta em 15 segundos. Errou ou não respondeu, perde uma vida (cada um tem 3). As perguntas vão ficando mais difíceis, e quem sobrar por último ganha.';
+function svFase(){return SV_FASES.includes(G.phase)}
+function svOn(){return online()&&svFase()&&!!G.so&&Array.isArray(G.players)}
+function svEu(){return (G.players||[]).find(p=>p.dev===MYDEV)||null}
+function svLimpa(so){ // o que chega da sala passa por aqui (qualquer um com o código consegue escrever lá)
+  if(!so||typeof so!=='object')return null;
+  const o={n:sInt(so.n,1,999,1),nv:sInt(so.nv,1,4,1),t:sTema(so.t),qid:sId(so.qid),q:semPalavrao(sStr(so.q,500)),o:Array.isArray(so.o)?so.o.slice(0,4).map(x=>sStr(x,200)):[],
+    ate:Number.isFinite(+so.ate)?+so.ate:0,prox:Number.isFinite(+so.prox)?+so.prox:0,c:so.c==null?null:sInt(so.c,0,3,null),esc:null,fim:null,
+    el:Array.isArray(so.el)?so.el.slice(0,12).map(g=>Array.isArray(g)?g.map(sId).filter(Boolean).slice(0,10):[]):[]};
+  if(so.esc&&typeof so.esc==='object'){o.esc={};Object.keys(so.esc).slice(0,12).forEach(d=>{if(sId(d))o.esc[d]=sInt(so.esc[d],-1,3,-1)})}
+  if(Array.isArray(so.fim))o.fim=so.fim.map(sId).filter(Boolean).slice(0,10);
+  return o.qid&&o.o.length===4?o:null;
+}
+var SV_MEU={},SV_ENV=false,SV_COMECANDO=false,SV_TICK=null,SV_ULT=null,SV_PEDIU='',SV_PEDIU_T=0,SV_FXK='';
+function svAplica(d){if(d&&typeof d.v==='number')applyRemote(Object.assign({},d,{por:d.por&&d.por!==MYDEV?d.por:'srv'}))}
+async function svChama(op,extra){
+  try{
+    const r=await servidorSala('sv',Object.assign({sala:ROOM,op},extra||{}));
+    if(r&&r.estado&&typeof r.estado.v==='number'){
+      if(r.estado.v>RV&&r.estado.g&&NET&&NET.espelha)NET.espelha('salas/'+ROOM+'/estado',{v:r.estado.v,g:r.estado.g,por:'srv',ts:Date.now()}); // simulador local: repassa às outras abas
+      svAplica(r.estado);
+    }
+    return r;
+  }catch(e){if(e.estado)svAplica(e.estado);throw e}
+}
+async function svComeca(){ // quem criou a sala: começa (ou joga de novo) com quem está conectado
+  if(!amHost()||SV_COMECANDO)return;
+  SV_COMECANDO=true;render();
+  try{
+    await esperaPush(); // os temas escolhidos precisam estar no servidor antes
+    try{await svChama('comeca')}catch(e){if(e.status!==409||!/mexeu/.test(e.message))throw e;await new Promise(r=>setTimeout(r,500));await esperaPush();await svChama('comeca')}
+  }catch(e){toast('⚠️ '+e.message)}
+  finally{SV_COMECANDO=false;render()}
+}
+async function svResponde(k){
+  const so=G.so,eu=svEu();
+  if(!svOn()||G.phase!=='svq'||!eu||!(eu.vidas>0)||SV_MEU[so.qid]!==undefined||SV_ENV)return;
+  SV_MEU[so.qid]=k;SV_ENV=true;SFX.tap&&SFX.tap();vib(20);forcePanel();render();
+  try{
+    const r=await svChama('responde',{qid:so.qid,o:k});
+    if(r&&Number.isInteger(r.o))SV_MEU[so.qid]=r.o;
+    if(r&&r.marca){VOTES[MYDEV+'_s']=r.marca;if(NET&&NET.espelhaVoto)NET.espelhaVoto(ROOM,MYDEV+'_s',r.marca)}
+  }catch(e){
+    if(G.phase==='svq'&&G.so&&G.so.qid===so.qid){delete SV_MEU[so.qid];toast('⚠️ Resposta não enviada: '+e.message)}
+  }finally{SV_ENV=false;forcePanel();render()}
+}
+function svRespondeu(d){const v=VOTES[d+'_s'];return !!(v&&G.so&&v.k==='s:'+G.so.qid)}
+function svVivosOn(){return (G.players||[]).filter(p=>p.vidas>0&&LOBBY[p.dev]&&LOBBY[p.dev].on!==false)}
+// relógio da rodada e pedido para avançar: quem criou a sala pede na hora; os outros um pouco depois, se ninguém pediu (quem criou pode ter caído)
+function svRelogio(){
+  if(!svOn()){if(SV_TICK){clearInterval(SV_TICK);SV_TICK=null}SV_ULT=null;return}
+  if(!SV_TICK)SV_TICK=setInterval(svPasso,250);
+  svPasso();
+}
+function svPasso(){
+  if(!svOn()){clearInterval(SV_TICK);SV_TICK=null;return}
+  const so=G.so,t=agora(),eu=svEu();
+  if(G.phase==='svq'){
+    const r=Math.max(0,Math.ceil((so.ate-t)/1000)),el=document.getElementById('svseg'),bar=document.getElementById('svbarra');
+    if(el){el.textContent=r;el.className='timer'+(r===0?' done':r<=5?' low':'')}
+    if(bar){bar.style.width=Math.max(0,Math.min(100,(so.ate-t)/150))+'%';bar.className=r<=5?'low':r<=10?'meio':''}
+    if(r!==SV_ULT){if(SV_ULT!==null&&r>0&&r<=5&&eu&&eu.vidas>0&&SV_MEU[so.qid]===undefined)SFX.hurry();SV_ULT=r}
+  }else if(G.phase==='svr'){const el=document.getElementById('svprox');if(el)el.textContent=Math.max(0,Math.ceil((so.prox-t)/1000))}
+  let quando=null;
+  if(G.phase==='svq'){const vo=svVivosOn();quando=vo.length&&vo.every(p=>svRespondeu(p.dev))?t:so.ate+1600}
+  else if(G.phase==='svr')quando=so.prox+150;
+  if(quando===null||t<quando+(amHost()?0:2500+parseInt(MYDEV.slice(-3),36)%1500))return;
+  const k=G.phase+'|'+so.qid+'|'+RV;
+  if(SV_PEDIU===k&&t-SV_PEDIU_T<3000)return;
+  SV_PEDIU=k;SV_PEDIU_T=t;
+  svChama('avanca').catch(e=>{if(Date.now()-AVISO_ERRO>8000&&e.status!==409){AVISO_ERRO=Date.now();toast('Sem conexão com a sala: '+e.message)}});
+}
+var SV_CORACAO='<path d="M12 20.5s-7.6-4.6-9.8-9.2C.6 7.9 2.6 4 6.3 4c2.2 0 3.7 1.3 4.6 2.7L12 8.3l1.1-1.6C14 5.3 15.5 4 17.7 4c3.7 0 5.7 3.9 4.1 7.3-2.2 4.6-9.8 9.2-9.8 9.2z"/>';
+function svVidas(p){return `<span class="svvidas" title="${p.vidas} ${p.vidas===1?'vida':'vidas'}" aria-label="${p.vidas} ${p.vidas===1?'vida':'vidas'}">${[0,1,2].map(i=>`<svg viewBox="0 0 24 24" class="${i<p.vidas?'on':''}" aria-hidden="true">${SV_CORACAO}</svg>`).join('')}</span>`}
+function svNome(d){const p=(G.players||[]).find(x=>x.dev===d);return p?p.name:'Alguém'}
+function svQuem(k){ // quem escolheu cada alternativa (aparece quando a rodada fecha)
+  const l=(G.players||[]).filter(p=>G.so.esc&&G.so.esc[p.dev]===k);
+  return l.length?`<span class="svquem">${l.map(p=>`<i style="--c:${p.color}">${esc(p.name)}</i>`).join('')}</span>`:'';
+}
+function svMsg(){
+  const so=G.so,eu=svEu();
+  if(G.phase==='svq'){
+    const vo=(G.players||[]).filter(p=>p.vidas>0),feitas=vo.filter(p=>svRespondeu(p.dev)).length,cont=`${feitas} de ${vo.length} já ${feitas===1?'respondeu':'responderam'}`;
+    if(!eu)return `Você está assistindo. ${cont}.`;
+    if(!(eu.vidas>0))return `Você saiu do jogo, mas dá para continuar assistindo. ${cont}.`;
+    if(SV_MEU[so.qid]===undefined)return 'Escolha uma alternativa antes de o tempo acabar.';
+    return `Resposta enviada. ${cont}.`;
+  }
+  const part=so.esc||{},caiu=(G.players||[]).filter(p=>p.dev in part&&p.vidas===0).map(p=>p.name),ninguem=!Object.values(part).some(o=>o===so.c);
+  let h='';
+  if(eu&&MYDEV in part){const o=part[MYDEV];h=o===so.c?'<b class="svok">Acertou!</b>':eu.vidas===0?'<b class="sverr">Você saiu do jogo.</b>':o<0?'<b class="sverr">Não respondeu a tempo: perdeu uma vida.</b>':'<b class="sverr">Errou: perdeu uma vida.</b>'}
+  if(ninguem&&!caiu.length)h+=(h?' ':'')+'Ninguém acertou essa.';
+  if(caiu.length)h+=(h?' ':'')+(caiu.length===1?esc(caiu[0])+' saiu do jogo.':caiu.map(esc).join(', ')+' saíram do jogo.');
+  return h+`<br><span class="muted">Próxima pergunta em <b id="svprox">${Math.max(0,Math.ceil((so.prox-agora())/1000))}</b> s</span>`;
+}
+function svHtml(){
+  const so=G.so,eu=svEu(),vivo=!!eu&&eu.vidas>0,tm=T[so.t]||{n:'',c:'#555'};
+  const head=`<div class="row" style="align-items:center;justify-content:space-between"><h2 style="margin:0">Sobrevivência <span class="muted">· rodada ${so.n}</span></h2><div class="row">${headBtns()}</div></div>`;
+  if(G.phase==='svfim')return head+svFimHtml();
+  let h=head+`<div class="svbadges"><span class="badge" style="background:${tm.c}">${ic(so.t)} ${esc(tm.n)}</span> <span class="badge" style="background:${LVCOLOR[so.nv]}">${LEVELS[so.nv]}</span></div>`;
+  if(G.phase==='svq'){
+    const r=Math.max(0,Math.ceil((so.ate-agora())/1000)),pct=Math.max(0,Math.min(100,(so.ate-agora())/150));
+    h+=`<div class="timerbox tempo"><div id="svseg" class="timer${r===0?' done':r<=5?' low':''}">${r}</div><div class="tempoinfo"><span class="muted">segundos para responder</span><div class="tempobar"><i id="svbarra" class="${r<=5?'low':r<=10?'meio':''}" style="width:${pct}%"></i></div></div></div>`;
+  }
+  const meu=SV_MEU[so.qid],minha=G.phase==='svr'?(so.esc?so.esc[MYDEV]:undefined):meu;
+  h+=`<div class="qtext">${esc(so.q)}</div><div class="opts dsfopts svopts">${so.o.map((o,k)=>{
+    const cls=G.phase==='svr'?(k===so.c?'right':k===minha?'wrong':'apaga'):meu===k?'sel':'';
+    return `<button class="${cls}" ${G.phase!=='svq'||!vivo||meu!==undefined?'disabled':''} onclick="svResponde(${k})"><span>${'ABCD'[k]}) ${esc(o)}</span>${G.phase==='svr'?svQuem(k):''}</button>`}).join('')}</div>`;
+  return h+`<p class="msg svmsg">${svMsg()}</p>`;
+}
+function svColocacao(){ // vencedores, depois quem ficou até o fim (por vidas e acertos), depois quem saiu (o último a sair primeiro)
+  const so=G.so,P=G.players||[],W=so.fim||[],out=[],ja=new Set();
+  const poe=(devs,lugar)=>devs.forEach(d=>{const p=P.find(x=>x.dev===d);if(p&&!ja.has(d)){ja.add(d);out.push({p,lugar})}});
+  poe(W,1);
+  P.filter(p=>p.vidas>0&&!ja.has(p.dev)).sort((a,b)=>b.vidas-a.vidas||(b.ac||0)-(a.ac||0)).forEach(p=>poe([p.dev],out.length+1));
+  (so.el||[]).slice().reverse().forEach(g=>{const l=out.length+1;poe(g,l)});
+  P.forEach(p=>poe([p.dev],out.length+1));
+  return out;
+}
+function svFimHtml(){
+  const W=G.so.fim||[],nomes=W.map(d=>esc(svNome(d)));
+  const lista=svColocacao().map(({p,lugar})=>`<div class="svfimpl${lugar===1?' ouro':''}"><span class="svlugar">${lugar}º</span>${bolinha(fotoDe(p.dev),p.color,'pawn','span')}<b>${esc(p.name)}${p.dev===MYDEV?' <span class="you">você</span>':''}</b><span class="muted">${p.ac||0} ${(p.ac||0)===1?'acerto':'acertos'}</span></div>`).join('');
+  return `<div class="fimbox"><div class="win">${W.length===1?nomes[0]+' venceu!':W.length?'Empate: '+nomes.join(' e '):'Fim de jogo'}</div><p class="msg" style="text-align:center">${W.length===1?`Sobreviveu a ${G.so.n} ${G.so.n===1?'rodada':'rodadas'}.`:`Empate depois de ${G.so.n} rodadas.`}</p><div class="svfim">${lista}</div><div class="fimacoes">${amHost()?`<button class="primary" ${SV_COMECANDO?'disabled':''} onclick="svComeca()">${SV_COMECANDO?'Começando…':'Jogar de novo'}</button><button onclick="newGame()">Voltar para a sala</button>`:'<p class="wait" style="text-align:center">Quem criou a sala decide se vocês jogam de novo.</p>'}</div></div>`;
+}
+function svPlacarHtml(){
+  const so=G.so,P=G.players||[],vivos=P.filter(p=>p.vidas>0).length;
+  return `<h2 style="margin:0">Jogadores <span class="muted">· ${vivos} no jogo</span></h2><div class="players svplayers" style="margin-top:8px">${P.map(p=>{
+    let st='';
+    if(!(p.vidas>0))st='<span class="svst fora">saiu</span>';
+    else if(G.phase==='svq')st=svRespondeu(p.dev)?'<span class="svst ok">respondeu</span>':'<span class="svst">pensando…</span>';
+    else if(G.phase==='svr'&&so.esc&&p.dev in so.esc)st=so.esc[p.dev]===so.c?'<span class="svst ok">acertou</span>':'<span class="svst err">−1 vida</span>';
+    return `<div class="pl svpl${p.vidas>0?'':' fora'}">${bolinha(fotoDe(p.dev),p.color,'pawn','div')}<div class="nm">${esc(p.name)}${tituloChip(TITULOS[p.dev])}${plTag(p)}<div class="muted">${p.ac||0} ${(p.ac||0)===1?'acerto':'acertos'}</div></div>${st}${svVidas(p)}</div>`}).join('')}</div>`;
+}
+function svFx(){ // sons e efeitos quando a rodada muda
+  const so=G.so;if(!so)return;
+  const k=G.phase+'|'+so.qid;if(k===SV_FXK)return;
+  const antes=SV_FXK;SV_FXK=k;if(!antes)return;
+  const panel=document.getElementById('panel');
+  if(G.phase==='svq'){SFX.whoosh();const q=panel&&panel.querySelector('.qtext');if(q)q.classList.add('reveal');return}
+  const eu=svEu(),part=so.esc||{};
+  if(eu&&MYDEV in part){if(part[MYDEV]===so.c){SFX.correct();flash(true);vib([30,40,60])}else{SFX.wrong();flash(false);vib(160)}}
+  if(G.phase==='svfim'){
+    setTimeout(()=>{SFX.win();vib([60,60,60,60,200])},500);
+    const cores=['#ffd23f','#ff9f43','#ffffff','#55e08a','#3da5ff',...(so.fim||[]).map(d=>((G.players||[]).find(p=>p.dev===d)||{}).color||'#ffd23f')];
+    [500,850,1200].forEach((t,i)=>setTimeout(()=>CONF.burst(90,innerWidth*(i%2?.75:.25),innerHeight*.25,cores,1.2),t));
+  }
+}
+// pontos no ranking: cada rodada em que este aparelho jogou conta uma vez (o servidor confere o que a sala registrou); a vitória também
+var SV_CONTOU=new Set();
+function svConta(){
+  if(!svOn()||G.phase==='svq'||!G.jogo||!CONTA.user||!CONTA.perfil||!ROOM)return;
+  const so=G.so;if(!so.esc||!(MYDEV in so.esc))return;
+  if(!contaEmailOk()){contaPedeConfirmar();return}
+  const manda=(corpo,k)=>{if(SV_CONTOU.has(k))return;SV_CONTOU.add(k);
+    contaApi('POST',Object.assign({acao:'sobrevivencia',sala:ROOM,jogo:G.jogo,dev:MYDEV},corpo)).then(j=>{
+      if(!j||j.ja)return;
+      if(CONTA.resumo){CONTA.resumo.semana=j.semana;CONTA.resumo.total=j.total}
+      if(j.pts)toast(j.fim?`🏆 +${j.pts} pontos no ranking pela vitória!`:`🏆 +${j.pts} ponto${j.pts>1?'s':''} no ranking`);
+    }).catch(e=>{SV_CONTOU.delete(k);console.warn('conta:',e.message)})};
+  manda({qid:so.qid},G.jogo+'|'+so.qid);
+  if(G.phase==='svfim'&&(so.fim||[]).includes(MYDEV))setTimeout(()=>manda({fim:true},G.jogo+'|fim'),1500);
+}
+function tipoJogoHtml(){
+  return `<h2 style="margin-top:16px">Jogo</h2><div class="visib" role="group" aria-label="Jogo"><button class="${G.sv?'':'on'}" aria-pressed="${!G.sv}" onclick="G.sv=false;render()">Tabuleiro</button><button class="${G.sv?'on':''}" aria-pressed="${!!G.sv}" onclick="G.sv=true;render()">Sobrevivência relâmpago</button></div>${G.sv?`<p class="mododesc">${SV_DESC}</p>`:''}`;
+}
 function ligado(d){return !!d&&!!LOBBY[d]&&LOBBY[d].on!==false}
 // no modo equipes, quem mexe pelo time da vez é quem responde; se o aparelho dele caiu, qualquer um do time
 function souResp(){if(!online())return true;const p=G.players&&G.players[G.cur];if(!p||myIdx()!==G.cur)return false;if(!Array.isArray(p.membros))return true;const r=respDe(p);return r===MYDEV||!ligado(r)}
@@ -2947,13 +3142,13 @@ function leaveRoom(){
 const ANUNCIO={k:'',t:0,foi:false,timer:null};
 function devSala(){ // só no simulador local (?net=local), em que o servidor não enxerga a sala
   if(URLP.get('net')!=='local')return undefined;
-  return {meta:{host:HOST},g:{publica:!!G.publica,phase:G.phase,selThemes:G.selThemes,modo:G.modo,level:G.level},jog:LOBBY};
+  return {meta:{host:HOST},g:{publica:!!G.publica,phase:G.phase,selThemes:G.selThemes,modo:G.modo,level:G.level,sv:!!G.sv},jog:LOBBY};
 }
 function anuncia(){
   if(!online()||!amHost()||!ROOM)return;
   if(!G.publica&&!ANUNCIO.foi)return; // nunca esteve na lista: nada a fazer
   const on=Object.keys(LOBBY).filter(d=>LOBBY[d]&&LOBBY[d].on!==false).length;
-  const k=JSON.stringify([ROOM,!!G.publica,G.phase==='setup',on,G.modo,(G.selThemes||[]).join(),G.level,(LOBBY[MYDEV]||{}).nome,(LOBBY[MYDEV]||{}).cor]);
+  const k=JSON.stringify([ROOM,!!G.publica,G.phase==='setup',on,G.modo,!!G.sv,(G.selThemes||[]).join(),G.level,(LOBBY[MYDEV]||{}).nome,(LOBBY[MYDEV]||{}).cor]);
   if(k===ANUNCIO.k&&Date.now()-ANUNCIO.t<60000)return;
   ANUNCIO.k=k;ANUNCIO.t=Date.now();if(G.publica)ANUNCIO.foi=true;
   const sala=ROOM;clearTimeout(ANUNCIO.timer);
@@ -2979,6 +3174,7 @@ function abreSalas(){
 function fechaSalas(){SALAS_ABERTO=false;clearInterval(SALAS_TIMER);const b=document.getElementById('salasbox');if(b)b.style.display='none'}
 function infoSala(s){
   const m=MODOS[s.modo]||MODOS.classico;
+  if(s.sv)return `Sobrevivência relâmpago · ${s.classico?'6 temas clássicos':s.temas===ORDER.length?'Todos os temas':s.temas+' temas'}`;
   const temas=s.classico?'6 temas clássicos':s.temas===ORDER.length?'Todos os temas':s.temas+' temas';
   const nv=nivelNorm(s.nivel),nivel=nv==='misto'?'Todos os níveis':nv.split('').map(l=>({'1':'Fácil','2':'Médio','3':'Difícil','4':'Impossível'})[l]).join(' + ');
   return `${m.e} ${m.n} · ${temas} · ${nivel}`;
@@ -3692,7 +3888,7 @@ const TITULO=document.title;
 function abaDispensada(){try{return sessionStorage.getItem(ABA_KEY)==='1'}catch(e){return false}}
 function minhaVez(){return online()&&G.players&&myIdx()===G.cur&&['theme','question','sorteio'].includes(G.phase)&&!G.resp&&G.chosen===null&&!votandoTema()}
 function meuVoto(){const k=respKey();if(votandoTema()){const v=VOTES[MYDEV+'_t'];return myIdx()>=0&&myIdx()!==G.cur&&!(v&&v.k==='f:'+G.vt.id)}return online()&&G.phase==='question'&&k&&myIdx()!==G.cur&&myIdx()>=0&&!(VOTES[MYDEV]&&VOTES[MYDEV].k===k)}
-function emPartida(){return online()&&G.players&&G.phase!=='setup'&&G.phase!=='won'}
+function emPartida(){return online()&&G.players&&G.phase!=='setup'&&G.phase!=='won'&&G.phase!=='svfim'}
 function abaAviso(){
   const box=document.getElementById('avisoaba');if(!box)return;
   const vez=minhaVez(),voto=meuVoto();
@@ -3821,13 +4017,14 @@ pintaEfx();
 function tryAutoJoin(){if(QREADY&&NETREADY&&PENDING_ROOM){const c=PENDING_ROOM;PENDING_ROOM=null;if(NET)enterRoom(c,false);else toast('O modo online não está disponível agora.')}}
 
 // ----- sincronização da partida -----
-const SYNC_KEYS=[...SNAP_KEYS,'jogo','exTheme','vt','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica','desfazer','expulsar','equipes','nEq','times'];
+const SYNC_KEYS=[...SNAP_KEYS,'jogo','exTheme','vt','fichas','board','themes','selThemes','size','level','previewBoard','ordem','modo','publica','desfazer','expulsar','equipes','nEq','times','sv','so'];
 function syncJson(){const o={};SYNC_KEYS.forEach(k=>{if(G[k]!==undefined)o[k]=G[k]});return JSON.stringify(o)}
 let PUSHING=false,PUSH_AGAIN=false,SENT=null;
 async function netPush(){
   if(!online()||APPLYING||!NET||CREATING||RV<1)return;
   const j=syncJson();if(j===LASTSYNC)return;
   if(G.phase==='setup'&&!amHost()){LASTSYNC=j;return} // na sala de espera só quem criou a sala mexe
+  if(svFase()){LASTSYNC=j;return} // na Sobrevivência quem conduz é o servidor
   if(RECUSAS>=4){RECUSAS=0;LASTSYNC=j;return} // não fica insistindo numa jogada que o servidor já recusou
   if(PUSHING){PUSH_AGAIN=true;return}
   PUSHING=true;const base=RV,sala=ROOM;SENT={v:base+1,g:j};
@@ -3853,7 +4050,7 @@ function jogadaRecusada(e){ // o servidor não aceitou: a tela volta para o que 
 // ----- segurança: tudo que chega da sala (Firebase) é conferido antes de entrar no jogo -----
 // Qualquer pessoa com o código da sala consegue escrever nela; então nada vindo de lá é usado como HTML ou código sem passar por aqui.
 const COR_OK=/^#[0-9a-fA-F]{6}$/,ID_OK=/^[A-Za-z0-9_-]{1,60}$/;
-const FASES=['setup','theme','sorteio','question','result','won','exhausted'];
+const FASES=['setup','theme','sorteio','question','result','won','exhausted','svq','svr','svfim'];
 function sStr(x,n){return typeof x==='string'?x.replace(/[\u0000-\u001f\u007f]/g,' ').slice(0,n):(typeof x==='number'?String(x).slice(0,n):'')}
 function sInt(x,min,max,def){x=Math.round(Number(x));return Number.isFinite(x)&&x>=min&&x<=max?x:def}
 function sCor(c,def){return COR_OK.test(String(c||''))?c:def}
@@ -3885,6 +4082,7 @@ function sJogador(p,i){
     used:Array.isArray(p.used)?p.used.map(v=>sInt(v,1,9,0)).filter(Boolean).slice(0,9):[],forced:sTema(p.forced),
     aj:{pular:aj.pular?1:0,dica:aj.dica?1:0},dev:sId(p.dev)||undefined,estrelas:sInt(p.estrelas,0,999,0),
     st:p.st&&typeof p.st==='object'?{a:sInt(p.st.a,0,9999,0),e:sInt(p.st.e,0,9999,0),s:sInt(p.st.s,0,9999,0),ms:sInt(p.st.ms,0,9999,0),d:sInt(p.st.d,0,9999,0),mx:sInt(p.st.mx,0,4,0)}:undefined,
+    ...(p.vidas!=null?{vidas:sInt(p.vidas,0,3,0),ac:sInt(p.ac,0,999,0)}:{}), // Sobrevivência relâmpago
     ...(Array.isArray(p.membros)&&p.membros.length?(()=>{const membros=p.membros.slice(0,10).map((m,j)=>{m=m&&typeof m==='object'?m:{};const o={name:semPalavrao(sStr(m.name,16).trim())||'Jogador '+(j+1),color:sCor(m.color,PCOLORS[j%PCOLORS.length])};const d=sId(m.dev);if(d)o.dev=d;return o});return {membros,vez:sInt(p.vez,0,membros.length-1,0)}})():{})};
 }
 function sCasa(s){s=s&&typeof s==='object'?s:{};const type=['start','final','normal'].includes(s.type)?s.type:'normal';return type==='normal'?{type,themes:sTemas(s.themes).slice(0,2)}:{type}}
@@ -3921,6 +4119,7 @@ function limpaEstado(o){
   g.board=Array.isArray(o.board)?o.board.slice(0,80).map(sCasa):null;
   g.previewBoard=Array.isArray(o.previewBoard)?o.previewBoard.slice(0,80).map(sCasa):null;
   g.ordem=Array.isArray(o.ordem)?o.ordem.map(sId).filter(Boolean).slice(0,30):[];
+  g.sv=!!o.sv;g.so=svLimpa(o.so);
   g.equipes=!!o.equipes;g.nEq=sInt(o.nEq,2,4,2);g.times={};if(o.times&&typeof o.times==='object')Object.keys(o.times).slice(0,40).forEach(d=>{if(sId(d))g.times[d]=sInt(o.times[d],0,3,0)});
   const ex=o.expulsar;g.expulsar=ex&&typeof ex==='object'&&sId(ex.id)&&sId(ex.dev)&&sId(ex.alvo)?{id:ex.id,dev:ex.dev,alvo:ex.alvo,nome:semPalavrao(sStr(ex.nome,16)),nomeAlvo:semPalavrao(sStr(ex.nomeAlvo,16)),ate:Number(ex.ate)||0}:null;
   const vt=o.vt;g.vt=vt&&typeof vt==='object'&&sId(vt.id)&&Number.isFinite(+vt.ate)?{id:vt.id,ate:+vt.ate,sem:sTemas(vt.sem)}:null;
@@ -3950,7 +4149,8 @@ function applyRemote(d){
     marcaVistas();fixLegacy();
     render();
     LASTSYNC=syncJson();
-    if(G.players&&d.por!==MYDEV&&myIdx()===G.cur&&(!emEquipes()||respDe(G.players[G.cur])===MYDEV)&&(prevCur!==G.cur||!prevPl)&&G.phase!=='won'){try{navigator.vibrate&&navigator.vibrate(150)}catch(e){}toast(votandoTema()?'🏁 Última casa! A turma está votando no tema da sua pergunta final.':'🎲 Sua vez!')}
+    if(svFase()){}
+    else if(G.players&&d.por!==MYDEV&&myIdx()===G.cur&&(!emEquipes()||respDe(G.players[G.cur])===MYDEV)&&(prevCur!==G.cur||!prevPl)&&G.phase!=='won'){try{navigator.vibrate&&navigator.vibrate(150)}catch(e){}toast(votandoTema()?'🏁 Última casa! A turma está votando no tema da sua pergunta final.':'🎲 Sua vez!')}
     else if(prevPl&&G.players&&G.phase!=='setup'){const agoraJoga=myIdx()>=0;if(agoraJoga&&!eraJogador){toast('🎉 Você entrou na partida! Começa na casa INÍCIO.');SFX.join&&SFX.join()}else if(!agoraJoga&&eraJogador)toast('🚫 Você saiu da partida por votação. Dá para continuar assistindo.')}
   }finally{APPLYING=false}
 }
@@ -4016,12 +4216,14 @@ function lobbyHtml(){
   ${G.pickColor==='me'||(!me.cor&&(me.nome||'').trim())?`<div class="pal-wrap"><span class="muted">Escolha sua cor:</span><div class="palette">${PALETA.map(([c,n])=>{const tomada=usadas.includes(c);return `<button class="swatch${c===me.cor?' on':''}${tomada?' taken':''}" style="background:${c}" title="${n}${tomada?' (já escolhida)':''}" ${tomada?'disabled':''} onclick="setMyColor('${c}')"></button>`}).join('')}</div></div>`:''}
   ${!(me.nome||'').trim()?'<p class="note2" style="background:#3a2a12;color:#ffd79a">Digite seu nome para entrar na partida.</p>':''}
   <h2 style="margin-top:16px">Jogadores <span class="muted">(${ord.length})</span></h2><div class="plist">`;
-  const tl=G.equipes?timesLobby():{};
-  ord.forEach((d,i)=>{const l=LOBBY[d]||{};h+=`<div class="setup-row lob${l.on===false?' offline':''}${NOVOS[d]?' novo':''}" data-idx="${i}">${amHost()?`<span class="grip" role="button" tabindex="0" title="${gripTit()}" aria-label="Mudar a ordem (setas para cima e para baixo)" onpointerdown="dragRow(event,'lobby')" onkeydown="gripTecla(event,'lobby')">⠿</span>`:''}<span class="ordem">${i+1}º</span>${bolinha(fotoDe(d),l.cor||'#3a4054','swatch')}<span class="lname">${esc((l.nome||'').trim()||'(sem nome)')}${tituloChip(TITULOS[d])}${d===MYDEV?' <span class="you">você</span>':''}${d===HOST?' <span class="host">criou a sala</span>':l.pronto?' <span class="pronto">✅ pronto</span>':' <span class="espera">⏳ confirmando</span>'}${l.on===false?' <span class="off">offline</span>':''}</span>${G.equipes?pillTime(tl[d],amHost()?`trocaTime('${d}')`:''):''}${amHost()&&d!==MYDEV?`<button class="small" title="Tirar da sala" onclick="kick('${d}')">✕</button>`:''}</div>`});
-  h+='</div>'+equipesHtml(false,amHost());
+  const eqL=G.equipes&&!G.sv,tl=eqL?timesLobby():{};
+  ord.forEach((d,i)=>{const l=LOBBY[d]||{};h+=`<div class="setup-row lob${l.on===false?' offline':''}${NOVOS[d]?' novo':''}" data-idx="${i}">${amHost()?`<span class="grip" role="button" tabindex="0" title="${gripTit()}" aria-label="Mudar a ordem (setas para cima e para baixo)" onpointerdown="dragRow(event,'lobby')" onkeydown="gripTecla(event,'lobby')">⠿</span>`:''}<span class="ordem">${i+1}º</span>${bolinha(fotoDe(d),l.cor||'#3a4054','swatch')}<span class="lname">${esc((l.nome||'').trim()||'(sem nome)')}${tituloChip(TITULOS[d])}${d===MYDEV?' <span class="you">você</span>':''}${d===HOST?' <span class="host">criou a sala</span>':l.pronto?' <span class="pronto">✅ pronto</span>':' <span class="espera">⏳ confirmando</span>'}${l.on===false?' <span class="off">offline</span>':''}</span>${eqL?pillTime(tl[d],amHost()?`trocaTime('${d}')`:''):''}${amHost()&&d!==MYDEV?`<button class="small" title="Tirar da sala" onclick="kick('${d}')">✕</button>`:''}</div>`});
+  h+='</div>'+(G.sv?'':equipesHtml(false,amHost()));
   if(amHost()){
     const semNome=ord.some(d=>!(LOBBY[d].nome||'').trim());
-    h+=`${ord.length>1&&!G.equipes?'<p class="muted" style="margin:-2px 0 4px">Quem está em 1º começa.</p>':''}</div><div class="pcol">${modosHtml(true)}${natalEscolhaHtml()}${avancadoHtml(`
+    h+=`${ord.length>1&&!G.equipes&&!G.sv?'<p class="muted" style="margin:-2px 0 4px">Quem está em 1º começa.</p>':''}</div><div class="pcol">${tipoJogoHtml()}${G.sv?'':modosHtml(true)}${natalEscolhaHtml()}${G.sv?avancadoHtml(`
+    <h3 class="avtit" style="margin-top:0">Quem pode entrar</h3><div class="visib"><button class="${G.publica?'':'on'}" onclick="G.publica=false;render()">🔒 Só com código</button><button class="${G.publica?'on':''}" onclick="G.publica=true;render()">🌍 Aberta a todos</button></div><p class="muted">${G.publica?'A sala aparece em <b>Salas</b> para qualquer pessoa entrar enquanto vocês esperam. Quando a partida começa, ela sai da lista.':'Só entra quem tiver o link ou o código.'}</p>
+    ${temasHtml(false)}`,true):avancadoHtml(`
     <h3 class="avtit" style="margin-top:0">Quem pode entrar</h3><div class="visib"><button class="${G.publica?'':'on'}" onclick="G.publica=false;render()">🔒 Só com código</button><button class="${G.publica?'on':''}" onclick="G.publica=true;render()">🌍 Aberta a todos</button></div><p class="muted">${G.publica?'A sala aparece em <b>Salas</b> para qualquer pessoa entrar enquanto vocês esperam. Quando a partida começa, ela sai da lista.':'Só entra quem tiver o link ou o código.'}</p>
     <h3 class="avtit">Partida</h3>
     <div class="row" style="margin:0 0 10px"><button class="small" onclick="shuffleLobby()">🔀 Sortear a ordem</button><span class="muted" style="align-self:center">${ordemToque()?'ou toque no ⠿ de um e depois no lugar dele':'ou arraste pelo ⠿ na lista'}</span></div>
@@ -4030,10 +4232,11 @@ function lobbyHtml(){
     ${niveisHtml(false)}${temasHtml(false)}`,true)}
     </div></div><div class="prepfoot">${G.selThemes.length<3?POUCOS_TEMAS:''}${semNome?'<p class="muted">Quem ficar sem nome entra como "Jogador" com o número da vez.</p>':''}
     ${ord.length>=2&&faltaPronto().length?`<p class="muted">⏳ Esperando confirmar: <b>${faltaPronto().map(d=>esc(nomeLobby(d))).join(', ')}</b></p>`:''}
-    <button class="primary" ${Q&&G.selThemes.length>=3&&ord.length>=2&&ord.length<=MAXJ&&!faltaPronto().length&&(!G.equipes||timesProntos())?'':'disabled'} onclick="lobbyStart()">Começar</button>${ord.length<2?'<p class="muted">Precisa de pelo menos 2 jogadores na sala.</p>':ord.length>MAXJ?`<p class="muted">No máximo ${MAXJ} jogadores.</p>`:''}</div>`;
+    <button class="primary" ${Q&&G.selThemes.length>=3&&ord.length>=2&&ord.length<=MAXJ&&!faltaPronto().length&&(!G.equipes||G.sv||timesProntos())&&!SV_COMECANDO?'':'disabled'} onclick="lobbyStart()">${SV_COMECANDO?'Começando…':'Começar'}</button>${ord.length<2?'<p class="muted">Precisa de pelo menos 2 jogadores na sala.</p>':ord.length>MAXJ?`<p class="muted">No máximo ${MAXJ} jogadores.</p>`:''}</div>`;
   }else{
     const hn=HOST&&LOBBY[HOST]&&(LOBBY[HOST].nome||'').trim()?esc(LOBBY[HOST].nome):'quem criou a sala';
-    h+=`<p class="muted" style="margin-top:12px">Modo: <b>${MODOS[modo()].e} ${MODOS[modo()].n}</b> — ${MODOS[modo()].d}<br>Temas: ${(G.selThemes||[]).map(k=>`<b style="color:${T[k].c}">${T[k].n}</b>`).join(', ')} · ${SIZES[G.size]?SIZES[G.size].l:''} · ${NF()} fichas · ${resumoNiveis()}</p>${me.pronto?`<button class="pronto on" onclick="marcaPronto(false)">✅ Você está pronto! <small>toque para desfazer</small></button><p class="wait">⏳ Aguardando ${hn} começar a partida…</p>`:`<button class="pronto" onclick="marcaPronto(true)">✋ Estou pronto!</button><p class="muted" style="text-align:center">A partida só começa quando todo mundo confirmar.</p>`}`;
+    const temasTxt=(G.selThemes||[]).map(k=>`<b style="color:${T[k].c}">${T[k].n}</b>`).join(', ');
+    h+=`<p class="muted" style="margin-top:12px">${G.sv?`Jogo: <b>Sobrevivência relâmpago</b> — ${SV_DESC}<br>Temas: ${temasTxt}`:`Modo: <b>${MODOS[modo()].e} ${MODOS[modo()].n}</b> — ${MODOS[modo()].d}<br>Temas: ${temasTxt} · ${SIZES[G.size]?SIZES[G.size].l:''} · ${NF()} fichas · ${resumoNiveis()}`}</p>${me.pronto?`<button class="pronto on" onclick="marcaPronto(false)">✅ Você está pronto! <small>toque para desfazer</small></button><p class="wait">⏳ Aguardando ${hn} começar a partida…</p>`:`<button class="pronto" onclick="marcaPronto(true)">✋ Estou pronto!</button><p class="muted" style="text-align:center">A partida só começa quando todo mundo confirmar.</p>`}`;
   }
   return h;
 }
@@ -4064,8 +4267,9 @@ function lobbyStart(){
   const fp=faltaPronto();if(fp.length){toast('⏳ Falta confirmar: '+fp.map(nomeLobby).join(', '));return}
   const n=lobbyOrder().length;
   if(n<2){toast('Precisa de pelo menos 2 jogadores');return}
-  if(G.equipes&&!timesProntos()){toast('Precisa de pelo menos 2 times com gente');return}
   if(n>MAXJ){toast('No máximo '+MAXJ+' jogadores');return}
+  if(G.sv){G.ordem=lobbyOrder();svComeca();return}
+  if(G.equipes&&!timesProntos()){toast('Precisa de pelo menos 2 times com gente');return}
   G.ordem=lobbyOrder();startGame();
 }
 
@@ -4249,7 +4453,7 @@ function querEntrar(){
   NET.setMe(ROOM,MYDEV,{quer:Date.now(),rec:0,nome:myName(),cor:myColor()}).then(()=>{toast('✋ Pedido enviado. Agora é só esperar quem criou a sala aceitar.');render()}).catch(()=>toast('Sem conexão: tente de novo.'));
 }
 function desistirEntrar(){if(NET&&ROOM)NET.setMe(ROOM,MYDEV,{quer:0}).catch(()=>{});if(LOBBY[MYDEV])LOBBY[MYDEV].quer=0;render()}
-function pedidosEntrada(){if(!emPartida())return [];const no=new Set(G.players.flatMap(devsDe));return Object.entries(LOBBY).filter(([d,l])=>!no.has(d)&&l.quer&&l.on!==false).map(([d])=>d)}
+function pedidosEntrada(){if(!emPartida()||svFase())return [];const no=new Set(G.players.flatMap(devsDe));return Object.entries(LOBBY).filter(([d,l])=>!no.has(d)&&l.quer&&l.on!==false).map(([d])=>d)}
 function aceitaEntrada(d){
   if(!amHost()||!emPartida())return;const l=LOBBY[d];if(!l||pecaDe(d)>=0)return;
   if(aparelhosJogo().length>=MAXJ){toast('A partida já está com '+MAXJ+' jogadores.');return}
@@ -4816,6 +5020,7 @@ function fx(){
   if(nova)pinAnim(panel);
   if(s.mode!==a.mode){falaPara();return}
   if(!G.players||s.phase==='setup')return;
+  if(svFase()){svFx();return}
   const p=G.players[G.cur];
   if(a.phase==='setup'){largada();return}
   if(s.cur!==a.cur&&s.phase!=='won'){turnPop();if(online()&&myIdx()===G.cur){SFX.myturn();vib(150)}else SFX.turn()}

@@ -4,6 +4,7 @@
 //   POST {acao:'perfil', nome, cor}      → muda nome e cor (no ranking também)
 //   POST {acao:'resposta', sala, jogo, dev, tk, ok, fim, modo, nj} → registra uma resposta de partida online
 //   POST {acao:'vitoria', sala, jogo, dev, tk, modo, nj} → modo equipes: a vitória do time para quem não respondeu a final
+//   POST {acao:'sobrevivencia', sala, jogo, dev, qid | fim:true} → uma rodada (ou a vitória) da Sobrevivência relâmpago
 //   POST {acao:'apagar'}                 → apaga os dados da conta guardados no banco
 //   GET  ?acao=desafio / POST {acao:'desafio', dia, resp, fim, hist} → desafio do dia guardado na conta
 //   GET  ?acao=painel                    → (só o dono) bugs, perguntas reportadas e perguntas com mais 👎
@@ -198,6 +199,47 @@ async function vitoriaTime(u, body) {
   return { pts, fim: true, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n, nivel: c.nivel })) };
 }
 
+// Sobrevivência relâmpago: cada rodada conta como uma resposta (acertou ou não, no nível da pergunta) e quem vence leva a vitória.
+// Vale só o que o servidor da sala registrou ao fechar a rodada (srv/svreg/<sala>/<qid>) e no fim (srv/svfim/<sala>/<jogo>);
+// cada aparelho conta uma vez por pergunta (srv/regs/<sala>/<qid>/<aparelho>).
+async function sobrevivencia(u, body) {
+  if (!emailOk(u)) throw falha(403, 'Confirme seu e-mail para suas partidas contarem no ranking.');
+  const id = s => String(s || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  const sala = String(body.sala || '').toUpperCase(), jogo = id(body.jogo).slice(0, 24), dev = id(body.dev), fim = body.fim === true;
+  const qid = fim ? 'fim_' + jogo : String(body.qid || '');
+  if (!/^[A-Z0-9]{4,6}$/.test(sala) || !jogo || !dev || !/^[a-z0-9_]{1,40}$/.test(qid)) throw falha(400, 'Rodada inválida.');
+  const base = 'usuarios/' + u.uid, regC = 'srv/regs/' + sala + '/' + qid + '/' + dev, chave = sala + '_' + jogo;
+  const [dono, reg, st, conq, part0, perfil, rr] = await Promise.all([
+    ler('srv/contas/' + sala + '/' + dev), lerEtag(regC), ler(base + '/stats'), ler(base + '/conquistas'), ler(base + '/partidas/' + chave), ler(base + '/perfil'),
+    ler(fim ? 'srv/svfim/' + sala + '/' + jogo : 'srv/svreg/' + sala + '/' + qid)
+  ]);
+  if (dono !== u.uid) throw falha(403, 'Essa rodada é de outro jogador.');
+  if (reg.v) return { ja: true };
+  if (!perfil) throw falha(404, 'Conta não encontrada. Entre de novo.');
+  if (!rr || typeof rr !== 'object' || (!fim && rr.jogo !== jogo) || !(+rr.w > Date.now() - 6 * 3600e3)) throw falha(400, 'Essa rodada não foi registrada pela sala.');
+  if ((+rr.nj || 0) < 2) throw falha(400, 'Só contam salas com 2 jogadores ou mais.');
+  const venceu = fim && Array.isArray(rr.v) && rr.v.includes(dev);
+  if (fim && !venceu) throw falha(400, 'Essa vitória não confere com a sala.');
+  if (!fim && !(rr.r && (rr.r[dev] === 0 || rr.r[dev] === 1))) throw falha(400, 'Você não estava nessa rodada.');
+  const s = ST.normaliza(st), agora = Date.now();
+  if (!fim && s.dia.id === ST.periodo().dia && s.dia.n >= LIMITE_DIA) throw falha(429, 'Limite de respostas de hoje.');
+  let part = part0 && typeof part0 === 'object' ? part0 : null;
+  if (!part) { ST.novaPartida(s, agora); part = { sala, inicio: new Date(agora).toISOString(), a: 0, e: 0, p: 0, venceu: false, modo: 'sobrevivencia', nj: Math.max(2, Math.min(10, +rr.nj || 2)) } }
+  let pts, ok = null;
+  if (fim) { pts = ST.vitoria(s, agora); part.venceu = true }
+  else {
+    ok = rr.r[dev] === 1;
+    const nivel = Math.min(4, Math.max(1, +rr.nv || 2));
+    pts = ST.aplica(s, { ok, nivel, tema: temaOk(rr.t) ? rr.t : 'V', fim: false, agora });
+    if (ok) part.a++; else part.e++;
+  }
+  part.p += pts; part.fim = new Date(agora).toISOString();
+  const ganhou = ST.novas(s, conq || {});
+  if (!(await gravaSe(regC, { u: u.uid, w: agora }, reg.etag))) return { ja: true };
+  await gravaVarios(mapaPontos(u, s, part, chave, perfil, ganhou, agora));
+  return { pts, ok, fim, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n, nivel: c.nivel })) };
+}
+
 // histórico de perguntas da conta (vale em qualquer aparelho): por tema, ids separados por espaço
 const ID_Q = /^[a-z0-9]{1,16}$/, MAX_T = 6000;
 async function usadas(u, body, get) {
@@ -331,6 +373,7 @@ module.exports = async (req, res) => {
     else if (!get && acao === 'foto') r = await mudaFoto(u, body);
     else if (!get && acao === 'resposta') r = await resposta(u, body);
     else if (!get && acao === 'vitoria') r = await vitoriaTime(u, body);
+    else if (!get && acao === 'sobrevivencia') r = await sobrevivencia(u, body);
     else if (acao === 'usadas') r = await usadas(u, body, get);
     else if (acao === 'desafio') r = await desafio(u, body, get);
     else if (!get && acao === 'apagar') { await apagar(u); r = { ok: true } }

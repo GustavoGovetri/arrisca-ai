@@ -337,4 +337,14 @@ function monta(B, fx, dia, temas) {
   return { dia, n, itens };
 }
 
-module.exports = { monta, erradas, pool, molde, diaN, NIVEIS, siglaErradas, siglaDe };
+// as 4 alternativas de uma pergunta que serve (a certa primeiro), para a Sobrevivência relâmpago; null se não serve
+function opcoes(B, fx, t, i) {
+  const q = B.temas[t].items[i];
+  if (t === 'V') return Array.isArray(q[1]) && q[1].length === 4 ? { certa: q[1][q[2]], ops: q[1].slice() } : null;
+  const e = erradas(B, fx, t, i);
+  if (!e) return null;
+  const certa = principal(fx.resposta(t, q));
+  return { certa, ops: [certa, ...e] };
+}
+
+module.exports = { monta, erradas, pool, opcoes, molde, diaN, NIVEIS, siglaErradas, siglaDe };

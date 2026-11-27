@@ -8,6 +8,7 @@ const TEMAS = ['M', 'H', 'AL', 'MU', 'CS', 'S', 'CT', 'TI', 'ES', 'GG', 'V', 'N'
 const TAMANHOS = { curto: 30, normal: 40, longo: 50 };
 const MODOS = ['classico', 'bonus', 'arriscado'];
 const MAXJ = 10;
+const SV_FASES = ['svq', 'svr', 'svfim']; // Sobrevivência relâmpago (api/_sobrev.js)
 
 const nao = motivo => ({ ok: false, motivo });
 const sim = extra => Object.assign({ ok: true }, extra || {});
@@ -379,6 +380,9 @@ async function confere(c) {
   const prev = c.prev || {}, g = c.next;
   if (!g || typeof g !== 'object' || Array.isArray(g)) return nao('Estado inválido');
   const ehHost = !!c.dev && c.dev === c.host;
+  // Sobrevivência relâmpago: quem conduz é o servidor (ação "sv" em api/salas.js); por jogada, só dá para voltar à sala de espera
+  if (SV_FASES.includes(g.phase)) return nao('Na Sobrevivência quem conduz a partida é o servidor');
+  if (SV_FASES.includes(prev.phase) && g.phase !== 'setup') return nao('Na Sobrevivência quem conduz a partida é o servidor');
   const P = pls(prev), Q = pls(g);
   // sala de espera (e "Mudar jogadores"): só quem criou a sala mexe
   if (g.phase === 'setup' || !Q) {

@@ -12,7 +12,7 @@ const ST = require('./_store');
 const juiz = require('./_juiz');
 const STATS = require('./_stats');
 const { freia } = require('./_limite');
-const FREIO = { criar: 40, entrar: 200, jogada: 3000, votar: 1000, palpite: 1000, titulo: 200, lista: 400, anunciar: 400 };
+const FREIO = { criar: 40, entrar: 200, jogada: 3000, votar: 1000, palpite: 1000, titulo: 200, lista: 400, anunciar: 400, sv: 4000 };
 
 const MAX = 10;              // jogadores por partida
 const VIVA = 3 * 60 * 1000;  // sem notícia do dono por 3 minutos, a sala sai da lista
@@ -40,6 +40,7 @@ function resumo(meta, g, jog) {
     temas: temas.length,
     classico: temas.length === CLASSICO.length && CLASSICO.every(t => temas.includes(t)),
     nivel: String(g.level || 'misto').slice(0, 6),
+    sv: !!g.sv, // Sobrevivência relâmpago
     ts: Date.now()
   };
 }
@@ -56,6 +57,7 @@ async function leSala(code) {
 //   POST entrar  {sala, dev, chave}           registra o aparelho na sala (a chave fica guardada só como hash)
 //   POST jogada  {sala, dev, chave, base, g}  confere a jogada com o juiz e grava a versão base+1
 //   POST votar   {sala, dev, chave, id, voto} voto na resposta (id = dev) ou no desfazer (id = dev_u)
+//   POST sv      {sala, dev, chave, op, ...}   Sobrevivência relâmpago (mais abaixo)
 // O aparelho prova quem é com uma chave aleatória que só ele tem. Ninguém grava "meta", "estado" ou "votos" direto.
 const ID = /^[A-Za-z0-9_-]{1,60}$/;
 // tamanho máximo do estado da sala: uma partida longa fica em ~20 KB; a sala de espera, em ~2 KB
@@ -247,7 +249,93 @@ async function votar(body) {
   return { ok: true, voto: v };
 }
 
+// ---------------------------------------------------------------- Sobrevivência relâmpago (quem conduz é o servidor)
+//   POST sv {sala, dev, chave, op:'comeca'}        quem criou a sala começa (ou joga de novo) com quem está conectado
+//   POST sv {sala, dev, chave, op:'responde', qid, o} a alternativa escolhida (a primeira é a que vale)
+//   POST sv {sala, dev, chave, op:'avanca'}         fecha a rodada (tempo esgotado ou todo mundo respondeu) ou sorteia a próxima
+// A certa fica em srv/sv/<sala>/<qid> e as respostas em srv/svresp/<sala>/<qid>/<aparelho> até a rodada fechar.
+// Em salas/<sala>/votos/<aparelho>_s fica só que o aparelho já respondeu (sem dizer o quê).
+const SV = require('./_sobrev');
+let SV_SORTEIA = null;
+function svSorteia(temas, nv, evitar) { if (!SV_SORTEIA) SV_SORTEIA = require('./perguntas.js')._svSorteia; return SV_SORTEIA(temas, nv, evitar) }
+function svTemas(g) { const t = (Array.isArray(g.selThemes) ? g.selThemes : []).filter(x => TEMAS_VOTO.includes(x)); return t.length ? t : TEMAS_VOTO.filter(x => x !== 'N') }
+async function svGrava(code, atual, est, next, antes, depois) { // nova versão do estado, só se ninguém mexeu no meio
+  if (antes) await ST.gravaVarios(antes); // a certa da pergunta nova é guardada antes de a pergunta aparecer
+  const agora = Date.now(), v = atual.v + 1, gs = JSON.stringify(next);
+  if (gs.length > MAX_G) throw erro(500, 'Estado grande demais');
+  if (!(await ST.gravaSe('salas/' + code + '/estado', { v, g: gs, por: 'srv', ts: agora }, est.etag))) return { ja: true };
+  if (depois) await ST.gravaVarios(depois);
+  return { v, g: gs };
+}
+async function svAvanca(code, atual, est, g, lobby) {
+  const agora = Date.now(), on = d => !!lobby[d] && lobby[d].on !== false;
+  if (g.phase === 'svq' && g.so) {
+    const resp = (await ST.ler('srv/svresp/' + code + '/' + g.so.qid)) || {};
+    if (!SV.podeFechar(g, resp, on, agora)) return { cedo: true };
+    const seg = await ST.ler('srv/sv/' + code + '/' + g.so.qid);
+    if (!seg || !Number.isInteger(seg.c)) throw erro(500, 'Rodada sem a resposta guardada');
+    const r = SV.fecha(g, resp, seg.c, agora), nj = g.players.length;
+    const depois = { ['srv/svreg/' + code + '/' + g.so.qid]: { jogo: g.jogo, t: seg.t, nv: seg.nv, r: r.reg, nj, w: agora } };
+    if (r.fim) depois['srv/svfim/' + code + '/' + g.jogo] = { v: r.fim, nj, w: agora };
+    return svGrava(code, atual, est, r.g, null, depois);
+  }
+  if (g.phase === 'svr' && g.so) {
+    if (agora < (+g.so.prox || 0)) return { cedo: true };
+    const n = (+g.so.n || 1) + 1, x = await svSorteia(svTemas(g), SV.nivelDa(n), (g.seen || []).map(s => s && s[1]));
+    if (!x) throw erro(503, 'Não consegui sortear a próxima pergunta. Tente de novo.');
+    return svGrava(code, atual, est, SV.rodada(g, x, agora, n), { ['srv/sv/' + code + '/' + x.qid]: { c: x.c, t: x.t, nv: x.nv, jogo: g.jogo } }, null);
+  }
+  return { nada: true };
+}
+async function sobrev(body) {
+  const code = codigo(body.sala), q = quem(body), op = String(body.op || '');
+  const [meta, est, guardada, jog] = await Promise.all([
+    ST.ler('salas/' + code + '/meta'), ST.lerEtag('salas/' + code + '/estado'), ST.ler('srv/chaves/' + code + '/' + q.dev),
+    DEV ? Promise.resolve(body.lobby && typeof body.lobby === 'object' ? body.lobby : {}) : ST.ler('salas/' + code + '/jogadores')
+  ]);
+  if (!meta) throw erro(404, 'Sala não encontrada');
+  await confereChave(code, q, guardada);
+  const atual = est.v, g = estadoG(atual), lobby = jog || {};
+  if (!atual || !g) throw erro(409, 'Sala sem estado');
+  if (op === 'comeca') {
+    if (q.dev !== meta.host) throw erro(403, 'Só quem criou a sala começa a partida');
+    if (g.phase !== 'setup' && g.phase !== 'svfim') throw erro(409, 'A partida já começou');
+    const P = SV.jogadores(lobby, g.ordem, semPalavrao);
+    if (P.length < 2) throw erro(400, 'Precisa de pelo menos 2 jogadores conectados');
+    if (P.length > MAX) throw erro(400, 'No máximo ' + MAX + ' jogadores');
+    const x = await svSorteia(svTemas(g), 1, []);
+    if (!x) throw erro(503, 'Não consegui sortear uma pergunta. Tente de novo.');
+    const jogo = crypto.randomBytes(6).toString('hex');
+    const base = Object.assign({}, g, { sv: true, jogo, players: P, cur: 0, round: 1, seen: [], so: null, board: null, themes: null, equipes: false, times: {},
+      theme: null, qt: null, q: null, qid: null, tk: null, qd: null, token: null, resp: null, chosen: null, ult: null, vt: null, desfazer: null, expulsar: null, tEnd: null });
+    const r = await svGrava(code, atual, est, SV.rodada(base, x, Date.now(), 1), { ['srv/sv/' + code + '/' + x.qid]: { c: x.c, t: x.t, nv: x.nv, jogo } }, null);
+    if (!r.v) throw erro(409, 'Alguém mexeu na sala ao mesmo tempo. Tente de novo.');
+    return { estado: r };
+  }
+  if (op === 'responde') {
+    const qid = String(body.qid || ''), o = Number(body.o), agora = Date.now();
+    const motivo = SV.respostaOk(g, q.dev, qid, o, agora);
+    if (motivo) throw erro(409, motivo, { estado: { v: atual.v, g: atual.g, por: atual.por || null, ts: atual.ts || 0 } });
+    const cam = 'srv/svresp/' + code + '/' + qid + '/' + q.dev, ja = await ST.lerEtag(cam);
+    if (ja.v) return { ok: true, o: ja.v.o, ja: true }; // a primeira resposta é a que vale
+    if (!(await ST.gravaSe(cam, { o, ts: agora }, ja.etag))) { const v2 = await ST.ler(cam); return { ok: true, o: v2 ? v2.o : o, ja: true } }
+    const marca = { k: 's:' + qid, ts: agora };
+    await ST.grava('PUT', 'salas/' + code + '/votos/' + q.dev + '_s', marca);
+    // foi a última resposta que faltava: a rodada fecha agora (se duas chegarem juntas, o próximo "avanca" fecha)
+    const r = await svAvanca(code, atual, est, g, lobby).catch(() => null);
+    return Object.assign({ ok: true, o, marca }, r && r.v ? { estado: r } : {});
+  }
+  if (op === 'avanca') {
+    if (!(g.players || []).some(p => p && p.dev === q.dev) && q.dev !== meta.host && !lobby[q.dev]) throw erro(403, 'Só quem está na sala');
+    const r = await svAvanca(code, atual, est, g, lobby);
+    if (r.v) return { estado: r };
+    return Object.assign({}, r, { estado: { v: atual.v, g: atual.g, por: atual.por || null, ts: atual.ts || 0 } });
+  }
+  throw erro(400, 'Ação inválida');
+}
+
 async function handle(acao, body) {
+  if (acao === 'sv') return sobrev(body);
   if (acao === 'criar') return criar(body);
   if (acao === 'entrar') return entrar(body);
   if (acao === 'jogada') return jogada(body);
@@ -259,7 +347,7 @@ async function handle(acao, body) {
     const agora = Date.now(), out = [], velhas = [];
     for (const [code, s] of Object.entries(todas)) {
       if (!s || !CODIGO.test(code) || agora - (s.ts || 0) > VIVA) { velhas.push(code); continue }
-      out.push({ sala: code, dono: s.dono, cor: s.cor, n: s.n, max: s.max || MAX, modo: s.modo, temas: s.temas, classico: !!s.classico, nivel: s.nivel });
+      out.push({ sala: code, dono: s.dono, cor: s.cor, n: s.n, max: s.max || MAX, modo: s.modo, temas: s.temas, classico: !!s.classico, nivel: s.nivel, sv: !!s.sv });
     }
     if (velhas.length) { // limpa as que ninguém atualizou
       if (DEV) velhas.forEach(c => delete MEM[c]);

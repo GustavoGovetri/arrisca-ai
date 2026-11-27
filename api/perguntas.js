@@ -339,6 +339,29 @@ module.exports._pergTk = async tk => {
   return { qid: x.i, t: x.t, m: x.m, s: x.s || null, e: +x.e || 0, nivel: Math.min(4, Math.max(1, +qDiff(x.t, q) || 2)),
     q: textoQ(q[0]), a: resposta(x.t, q), opts: x.t === 'V' ? q[1].slice() : null, mapa: formaDe(q) ? B.mapa[formaDe(q)] || null : null };
 };
+// Sobrevivência relâmpago: uma pergunta de múltipla escolha do nível pedido (ou do mais perto), de um dos temas,
+// sem repetir as da partida nem as do Desafio de hoje e de ontem (que têm a certa liberada). A certa (c) nunca vai para o aparelho:
+// quem chama guarda em srv/ e só mostra quando a rodada fecha.
+module.exports._svSorteia = async (temas, nv, evitar) => {
+  const B = await banco(), ev = new Set((evitar || []).map(String));
+  try { for (const d of [require('./_stats').periodo().dia, require('./_stats').periodo(Date.now() - 864e5).dia]) (await desafioDoDia(B, d)).itens.forEach(x => ev.add(x.id)) } catch (e) {}
+  const lista = [...new Set(temas || [])].filter(t => B.temas[t] && B.temas[t].items.length);
+  for (const alt of [nv, nv - 1, nv + 1, nv - 2, nv + 2, nv - 3, nv + 3]) {
+    if (alt < 1 || alt > 4) continue;
+    const cands = lista.map(t => [t, DSF.pool(B, FX, t, alt).filter(i => !ev.has(B.temas[t].ids[i]))]).filter(x => x[1].length);
+    for (let tent = 0; tent < 6 && cands.length; tent++) {
+      // o tema pesa pela raiz de quantas perguntas ele tem nesse nível (os pequenos também aparecem)
+      const w = cands.map(x => Math.sqrt(x[1].length)), tot = w.reduce((a, b) => a + b, 0);
+      let r = rnd(1e9) / 1e9 * tot, k = 0;
+      while (k < cands.length - 1 && r >= w[k]) { r -= w[k]; k++ }
+      const [t, l] = cands[k], i = l[rnd(l.length)], o = DSF.opcoes(B, FX, t, i);
+      if (!o) { l.splice(l.indexOf(i), 1); if (!l.length) cands.splice(k, 1); continue }
+      const q = B.temas[t].items[i], ops = shuffle(o.ops.slice());
+      return { qid: B.temas[t].ids[i], t, q: textoQ(q[0]), o: ops, c: ops.indexOf(o.certa), nv: Math.min(4, Math.max(1, +qDiff(t, q) || 2)) };
+    }
+  }
+  return null;
+};
 // para o painel do dono: texto, resposta e nível de uma pergunta pelo tema e id
 module.exports._pergId = async (t, id) => {
   const B = await banco(), T = B.temas[t];
