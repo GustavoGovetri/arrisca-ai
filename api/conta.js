@@ -3,6 +3,7 @@
 //   GET  ?acao=eu                        → perfil, estatísticas, conquistas e histórico
 //   POST {acao:'perfil', nome, cor}      → muda nome e cor (no ranking também)
 //   POST {acao:'resposta', sala, jogo, dev, tk, ok, fim, modo, nj} → registra uma resposta de partida online
+//   POST {acao:'vitoria', sala, jogo, dev, tk, modo, nj} → modo equipes: a vitória do time para quem não respondeu a final
 //   POST {acao:'apagar'}                 → apaga os dados da conta guardados no banco
 //   GET  ?acao=desafio / POST {acao:'desafio', dia, resp, fim, hist} → desafio do dia guardado na conta
 //   GET  ?acao=painel                    → (só o dono) bugs, perguntas reportadas e perguntas com mais 👎
@@ -145,10 +146,16 @@ async function resposta(u, body) {
   const pts = ST.aplica(s, { ok, nivel, tema: info.t, fim, agora });
   if (ok) part.a++; else part.e++;
   part.p += pts; part.fim = quando; if (fim) part.venceu = true;
-  const tem = conq || {}, ganhou = ST.novas(s, tem);
-  const per = ST.periodo(agora), nome = perfil.nome || 'Jogador', cor = perfil.cor || null, t = perfil.titulo ? ST.titulo(perfil.titulo, s, u.uid) : null;
+  const ganhou = ST.novas(s, conq || {});
   // marca a pergunta como contada só se ninguém marcou no meio (duas chamadas ao mesmo tempo não contam duas vezes)
   if (!(await gravaSe(regC, { u: u.uid, ok, n: nivel, w: agora }, reg.etag))) return { ja: true };
+  await gravaVarios(mapaPontos(u, s, part, chave, perfil, ganhou, agora));
+  return { pts, nivel, fim, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n, nivel: c.nivel })) };
+}
+// estatísticas, partida, ranking da semana e do mês e conquistas novas, gravados juntos
+function mapaPontos(u, s, part, chave, perfil, ganhou, agora) {
+  const base = 'usuarios/' + u.uid, quando = new Date(agora).toISOString();
+  const per = ST.periodo(agora), t = perfil.titulo ? ST.titulo(perfil.titulo, s, u.uid) : null;
   const mapa = {
     [base + '/stats']: s,
     [base + '/partidas/' + chave]: part
@@ -156,8 +163,39 @@ async function resposta(u, body) {
   if (s.sem.p > 0) { mapa['ranking/semana/' + per.semana + '/' + u.uid] = linhaRanking(s.sem.p, perfil, t); mapa[base + '/rk/semana_' + per.semana] = true }
   if (s.mes.p > 0) { mapa['ranking/mes/' + per.mes + '/' + u.uid] = linhaRanking(s.mes.p, perfil, t); mapa[base + '/rk/mes_' + per.mes] = true }
   ganhou.forEach(c => { mapa[base + '/conquistas/' + c.id] = quando });
-  await gravaVarios(mapa);
-  return { pts, nivel, fim, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n, nivel: c.nivel })) };
+  return mapa;
+}
+
+// modo equipes: quem não respondeu a pergunta final também leva a vitória do time (+10 e a vitória na conta).
+// Vale só se o juiz da sala registrou o aparelho no time que venceu (srv/resp/…/eq).
+async function vitoriaTime(u, body) {
+  if (!emailOk(u)) throw falha(403, 'Confirme seu e-mail para suas partidas contarem no ranking.');
+  const info = await require('./perguntas.js')._infoTk(body.tk);
+  if (!info || info.m !== 'o' || !info.s) throw falha(400, 'Só partidas online contam.');
+  if (info.e < Date.now() - 6 * 3600e3) throw falha(400, 'Essa pergunta já é antiga.');
+  const sala = info.s;
+  if (body.sala && body.sala !== sala) throw falha(400, 'A pergunta é de outra sala.');
+  const jogo = String(body.jogo || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 24) || 'x';
+  const dev = String(body.dev || '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 40);
+  if (!dev) throw falha(400, 'Aparelho inválido.');
+  const base = 'usuarios/' + u.uid, regV = 'srv/regv/' + sala + '/' + info.qid + '/' + dev, chave = sala + '_' + jogo;
+  const [dono, reg, st, conq, part0, perfil, rr] = await Promise.all([
+    ler('srv/contas/' + sala + '/' + dev), lerEtag(regV), ler(base + '/stats'), ler(base + '/conquistas'), ler(base + '/partidas/' + chave), ler(base + '/perfil'),
+    ler('srv/resp/' + sala + '/' + info.qid)
+  ]);
+  if (dono !== u.uid) throw falha(403, 'Essa vitória é de outro jogador.');
+  if (reg.v) return { ja: true };
+  if (!perfil) throw falha(404, 'Conta não encontrada. Entre de novo.');
+  if (!rr || !rr.ok || !rr.fim || !Array.isArray(rr.eq) || !rr.eq.includes(dev) || (rr.jogo || 'x') !== jogo) throw falha(400, 'Essa vitória não confere com a sala.');
+  const s = ST.normaliza(st), agora = Date.now();
+  let part = part0 && typeof part0 === 'object' ? part0 : null;
+  if (!part) { ST.novaPartida(s, agora); part = { sala, inicio: new Date(agora).toISOString(), a: 0, e: 0, p: 0, venceu: false, modo: txt(body.modo, 12), nj: Math.max(2, Math.min(10, +body.nj || 2)) } }
+  const pts = ST.vitoria(s, agora);
+  part.p += pts; part.fim = new Date(agora).toISOString(); part.venceu = true;
+  const ganhou = ST.novas(s, conq || {});
+  if (!(await gravaSe(regV, { u: u.uid, w: agora }, reg.etag))) return { ja: true };
+  await gravaVarios(mapaPontos(u, s, part, chave, perfil, ganhou, agora));
+  return { pts, fim: true, total: s.p, semana: s.sem.p, novas: ganhou.map(c => ({ id: c.id, e: c.e, n: c.n, nivel: c.nivel })) };
 }
 
 // histórico de perguntas da conta (vale em qualquer aparelho): por tema, ids separados por espaço
@@ -292,6 +330,7 @@ module.exports = async (req, res) => {
     else if (!get && acao === 'perfil') r = await mudaPerfil(u, body);
     else if (!get && acao === 'foto') r = await mudaFoto(u, body);
     else if (!get && acao === 'resposta') r = await resposta(u, body);
+    else if (!get && acao === 'vitoria') r = await vitoriaTime(u, body);
     else if (acao === 'usadas') r = await usadas(u, body, get);
     else if (acao === 'desafio') r = await desafio(u, body, get);
     else if (!get && acao === 'apagar') { await apagar(u); r = { ok: true } }

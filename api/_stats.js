@@ -103,6 +103,16 @@ function aplica(s, { ok, nivel, tema, fim, agora = Date.now() }) {
   return pts;
 }
 
+// modo equipes: a vitória do time para quem não respondeu a pergunta final (não conta como resposta)
+function vitoria(s, agora = Date.now()) {
+  const per = periodo(agora);
+  if (s.sem.id !== per.semana) s.sem = { id: per.semana, p: 0 };
+  if (s.mes.id !== per.mes) s.mes = { id: per.mes, p: 0 };
+  s.v++;
+  s.p += VITORIA; s.sem.p += VITORIA; s.mes.p += VITORIA;
+  return VITORIA;
+}
+
 // título escolhido (id da conquista) → texto e nível atuais; null se ainda não liberou
 const TITULO_DONO = { id: 'dono', x: '👑 Dono do Jogo', n: 7 }; // só a conta do dono (conferida pelo uid)
 function titulo(id, s, uid) {
@@ -115,4 +125,4 @@ function titulo(id, s, uid) {
   return nivel ? { id: c.id, x: c.e + ' ' + c.ti, n: nivel } : null;
 }
 
-module.exports = { PONTOS, VITORIA, TEMAS, CONQ, NIVEIS_CONQ, EVENTOS, periodo, normaliza, conquistasLista, eventosLista, novas, novaPartida, aplica, soma, titulo };
+module.exports = { PONTOS, VITORIA, TEMAS, CONQ, NIVEIS_CONQ, EVENTOS, periodo, normaliza, conquistasLista, eventosLista, novas, novaPartida, aplica, vitoria, soma, titulo };

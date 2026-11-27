@@ -165,7 +165,7 @@ async function jogada(body) {
   const nh = (h.length ? h : [{ v: base, c: prevN }]).concat([{ v, c: juiz.nucleo(next) }]).slice(-25);
   const mapa = { ['srv/hist/' + code]: nh };
   // quem criou a sala foi tirado da partida: o comando da sala passa para o primeiro da roda
-  if (r.expulso && r.expulso === meta.host && Array.isArray(next.players) && next.players[0]) mapa['salas/' + code + '/meta/host'] = next.players[0].dev;
+  if (r.expulso && (r.saiu || [r.expulso]).includes(meta.host) && Array.isArray(next.players) && next.players[0]) mapa['salas/' + code + '/meta/host'] = juiz.devsDe(next.players[0])[0] || next.players[0].dev;
   if (r.resp) mapa['srv/resp/' + code + '/' + r.resp.qid] = Object.assign({}, r.resp, { jogo: next.jogo || null, w: agora });
   // a jogada que mostra a resposta (respondeu, escolheu, "não sei", tempo esgotado) já leva a resposta oficial:
   // quem jogou recebe aqui e os outros pela sala, sem precisar pedir de novo
@@ -189,7 +189,7 @@ async function jogada(body) {
 // Fica em srv/ (fechado) enquanto quem está na vez responde: ninguém, nem quem está na vez, vê antes da hora.
 function palpitesAbertos(pp, g, oficial) {
   if (!pp || typeof pp !== 'object') return null;
-  const devs = new Set((g.players || []).map(x => x && x.dev));
+  const devs = new Set((g.players || []).flatMap(x => juiz.devsDe(x))); // no modo equipes, os membros dos times
   const ops = g.q && Array.isArray(g.q[1]) ? g.q[1] : null, out = {};
   for (const [d, v] of Object.entries(pp)) {
     if (!ID.test(d) || !devs.has(d) || !v || typeof v !== 'object') continue;
@@ -207,9 +207,9 @@ async function palpite(body) {
   await confereChave(code, q, guardada);
   const g = estadoG(est);
   if (!g || g.phase !== 'question' || g.qid !== qid || liberou(g)) throw erro(409, 'Essa pergunta já foi respondida');
-  const eu = (g.players || []).findIndex(x => x && x.dev === q.dev);
+  const eu = juiz.pecaDe((g.players || []).filter(Boolean), q.dev);
   if (eu < 0) throw erro(403, 'Só quem está na partida palpita');
-  if (eu === g.cur) throw erro(403, 'Quem está na vez responde, não palpita');
+  if (eu === +g.cur) throw erro(403, 'Quem está na vez responde, não palpita');
   let v;
   if (body.o !== undefined) {
     const o = Number(body.o), n = g.q && Array.isArray(g.q[1]) ? g.q[1].length : 0;
@@ -238,7 +238,7 @@ async function votar(body) {
   const aberta = id === q.dev ? (g.resp && g.resp.k) : id.endsWith('_u') ? (g.desfazer && 'u:' + g.desfazer.id)
     : id.endsWith('_x') ? (g.expulsar && 'x:' + g.expulsar.id) : (g.vt && 'f:' + g.vt.id);
   if (!aberta || voto.k !== aberta) throw erro(409, 'Essa votação já fechou');
-  if (!(g.players || []).some(p => p && p.dev === q.dev)) throw erro(403, 'Só quem está na partida vota');
+  if (juiz.pecaDe((g.players || []).filter(Boolean), q.dev) < 0) throw erro(403, 'Só quem está na partida vota');
   const tema = id.endsWith('_t') ? String(voto.t || '') : null; // voto no tema da pergunta final
   if (tema !== null && !TEMAS_VOTO.includes(tema)) throw erro(400, 'Voto inválido');
   const v = { k: voto.k, v: !!voto.v, ts: Date.now() };
