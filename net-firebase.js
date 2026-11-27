@@ -42,7 +42,6 @@ if(cfg&&cfg.databaseURL&&!sim){
       agora(){return Date.now()+OFF},
       estado(){return {uso:USO,ligado:LIGADO,conectado:REAL}}, // para conferir se está ocupando vaga no banco
       async exists(code){return op(async()=>(await d.get(R('salas/'+code+'/meta'))).exists())},
-      async create(code,meta){return op(()=>d.set(R('salas/'+code+'/meta'),meta))},
       watch(code,h){
         liga();let solto=false;
         const u=[d.onValue(R('salas/'+code+'/meta'),s=>h.onMeta(s.val())),
@@ -65,11 +64,6 @@ if(cfg&&cfg.databaseURL&&!sim){
       // histórico de perguntas de cada aparelho na sala: quem sorteia evita o que qualquer um ali já viu
       async setUsadas(code,dev,obj){return op(async()=>{await ANON;await d.set(R('salas/'+code+'/usadas/'+dev),comId(obj))})},
       async getUsadas(code){return op(async()=>(await d.get(R('salas/'+code+'/usadas'))).val()||{})},
-      async tx(code,base,val){return op(async()=>{
-        const res=await d.runTransaction(R('salas/'+code+'/estado'),cur=>{const v=(cur&&cur.v)||0;if(v!==base)return;return val},{applyLocally:false});
-        return res.committed;
-      })},
-      async vote(code,dev,obj){return op(()=>d.set(R('salas/'+code+'/votos/'+dev),obj))},
       async chat(code,msg){return op(async()=>{await ANON;await d.push(R('salas/'+code+'/chat'),comId(Object.assign({},msg,{ts:d.serverTimestamp()})))})}, // hora do servidor: a ordem não depende do relógio de cada aparelho
       async report(r){return op(async()=>{await ANON;await d.push(R('reportes'),comId(r))})},
       onConnected(cb){AVISA.push(cb);cb(REAL||!USO)}

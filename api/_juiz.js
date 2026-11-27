@@ -52,6 +52,8 @@ function igualOficial(txt, a) {
   return ops.includes(t);
 }
 
+// uma votação nova precisa de chave nova: se já existe voto guardado com essa chave, os votos antigos aprovariam outra coisa
+const chaveUsada = (votos, k) => Object.values(votos || {}).some(v => v && v.k === k);
 // votação da resposta digitada, contada pelo servidor (mesma regra do jogo)
 function decisaoVoto(g, votos, lobby) {
   const k = g.resp && g.resp.k;
@@ -175,6 +177,7 @@ async function progresso(c, base, g, quem) {
   if (!igual(base.vt || null, g.vt || null)) {
     const v = g.vt, semAntes = base.vt && Array.isArray(base.vt.sem) ? base.vt.sem : [];
     if (!v) return nao('A votação do tema não pode sumir');
+    if (v.id && chaveUsada(c.votos, 'f:' + v.id)) return nao('Votação do tema repetida');
     if (!votoFinal || g.phase !== 'theme' || !vtValido(v, c.agora) || (base.vt && v.id === base.vt.id)) return nao('Votação do tema inválida');
     if (base.phase === 'exhausted') { if (!igual(v.sem, semAntes.concat([base.exTheme]))) return nao('Votação do tema inválida') }
     else if (v.sem.length || !(quem.inicioVez || (base.phase === 'theme' && !base.vt))) return nao('A votação do tema não pode mudar');
@@ -231,7 +234,7 @@ async function progresso(c, base, g, quem) {
   if (base.phase !== 'question') return nao('Pergunta sem sorteio');
   for (const k of ['tk', 'qd', 'q', 'theme', 'qt']) if (!igual(base[k], g[k])) return nao('A pergunta não pode mudar');
   const mud = k => !igual(base[k], g[k]);
-  if ((mud('token') || mud('dobro') || mud('resp') || mud('chosen') || mud('hint') || deuDica) && !podeCur) return nao('Só quem está na vez responde');
+  if ((mud('token') || mud('dobro') || mud('resp') || mud('chosen') || mud('hint') || mud('tEnd') || deuDica) && !podeCur) return nao('Só quem está na vez responde');
   if (mud('token')) {
     if (num(base.token) !== null) return nao('A ficha já foi escolhida');
     if (fin) return nao('Na pergunta final não tem ficha');
@@ -243,7 +246,7 @@ async function progresso(c, base, g, quem) {
     if (mud('dobro') && (base.resp || (base.chosen !== null && base.chosen !== undefined))) return nao('Dobro depois de responder');
   }
   if (mud('hint')) { if (base.hint || !deuDica) return nao('Dica inválida') } else if (deuDica) return nao('Dica inválida');
-  if (mud('resp')) { if (base.resp || !g.resp || typeof g.resp.t !== 'string' || !g.resp.k) return nao('Resposta inválida'); if (base.theme === 'V') return nao('Resposta inválida') }
+  if (mud('resp')) { if (base.resp || !g.resp || typeof g.resp.t !== 'string' || !g.resp.k || chaveUsada(c.votos, g.resp.k)) return nao('Resposta inválida'); if (base.theme === 'V') return nao('Resposta inválida') }
   if (mud('chosen')) {
     if (base.chosen !== null && base.chosen !== undefined) return nao('A alternativa já foi escolhida');
     const i = num(g.chosen);
@@ -256,7 +259,7 @@ function fichaValida(base, g) {
   const P = pls(base), p = P[+base.cur || 0], t = num(g.token);
   return Number.isInteger(t) && t >= 1 && t <= nf(base) && !usadas(p).includes(t) && (+p.pos || 0) !== final(base);
 }
-function tempoOk(c, g) { return g.tEnd === null || g.tEnd === undefined || (Number.isFinite(+g.tEnd) && +g.tEnd <= c.agora + 40000) }
+function tempoOk(c, g) { return g.tEnd === null || g.tEnd === undefined || (Number.isFinite(+g.tEnd) && +g.tEnd >= c.agora + 15000 && +g.tEnd <= c.agora + 40000) }
 
 // fechar a pergunta: acertou ou errou, e o que isso faz com o jogador da vez
 function depois(base, ok, nivel) {
@@ -357,6 +360,7 @@ async function confere(c) {
     if (!ehHost) return nao('Só quem criou a sala começa a partida');
     if (!jogadoresNovos(Q) || +g.cur !== 0 || +g.round !== 1) return nao('A partida precisa começar do zero');
     if (!g.jogo) return nao('Partida sem identificação');
+    if (g.expulsar || g.desfazer) return nao('Partida nova não começa com pedido aberto');
     if (revanche) {
       if (!igual(P.map(identidade), Q.map(identidade))) return nao('Na revanche os jogadores são os mesmos');
       const f = fixosIguais(prev, g); if (f) return nao('Na revanche o jogo é o mesmo (' + f + ')');
@@ -460,7 +464,7 @@ async function andamento(c, prev, g, quem) {
     if (ex && prev.expulsar) return nao('Já tem um pedido aberto');
     if (ex) {
       if (ex.dev !== c.dev || idx < 0) return nao('Pedido para tirar jogador inválido');
-      if (typeof ex.id !== 'string' || !/^[A-Za-z0-9_-]{4,30}$/.test(ex.id) || !Number.isFinite(+ex.ate) || +ex.ate > ag + DUR_EXPULSAR + 10000) return nao('Pedido para tirar jogador inválido');
+      if (typeof ex.id !== 'string' || !/^[A-Za-z0-9_-]{4,30}$/.test(ex.id) || chaveUsada(c.votos, 'x:' + ex.id) || !Number.isFinite(+ex.ate) || +ex.ate > ag + DUR_EXPULSAR + 10000) return nao('Pedido para tirar jogador inválido');
       if (ex.alvo === c.dev || !P.some(p => p.dev === ex.alvo)) return nao('Esse jogador não está na partida');
       if (P.length < 3) return nao('Com 2 jogadores não dá para tirar ninguém');
       if (prev.phase === 'won') return nao('A partida já acabou');
@@ -472,7 +476,7 @@ async function andamento(c, prev, g, quem) {
   }
   // pedir ou cancelar o desfazer
   if (!igual(prev.desfazer, g.desfazer)) {
-    if (g.desfazer && !(g.desfazer.dev === c.dev && idx >= 0 && !prev.desfazer)) return nao('Pedido de desfazer inválido');
+    if (g.desfazer && !(g.desfazer.dev === c.dev && idx >= 0 && !prev.desfazer && typeof g.desfazer.id === 'string' && /^[A-Za-z0-9_-]{4,30}$/.test(g.desfazer.id) && !chaveUsada(c.votos, 'u:' + g.desfazer.id))) return nao('Pedido de desfazer inválido');
     if (!g.desfazer && !(prev.desfazer && (prev.desfazer.dev === c.dev || ehHost))) return nao('Só quem pediu cancela o desfazer');
   }
 

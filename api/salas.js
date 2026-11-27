@@ -58,13 +58,19 @@ async function leSala(code) {
 //   POST votar   {sala, dev, chave, id, voto} voto na resposta (id = dev) ou no desfazer (id = dev_u)
 // O aparelho prova quem é com uma chave aleatória que só ele tem. Ninguém grava "meta", "estado" ou "votos" direto.
 const ID = /^[A-Za-z0-9_-]{1,60}$/;
+// tamanho máximo do estado da sala: uma partida longa fica em ~20 KB; a sala de espera, em ~2 KB
+const MAX_G = 120000, MAX_G_ESPERA = 20000;
 const hash = s => crypto.createHash('sha256').update(String(s)).digest('hex');
 const erro = (status, msg, extra) => Object.assign(new Error(msg), { status }, extra || {});
 function codigo(x) { const c = String(x || '').toUpperCase(); if (!CODIGO.test(c)) throw erro(400, 'Sala inválida'); return c }
 function quem(body) {
   const dev = String(body.dev || ''), chave = String(body.chave || '');
   if (!ID.test(dev) || chave.length < 20 || chave.length > 100) throw erro(400, 'Aparelho inválido');
-  return { dev, h: hash(chave) };
+  const h = hash(chave);
+  // id novo ("k" + começo do hash da chave): só quem tem a chave usa esse id, ninguém consegue tomar o lugar de outro aparelho.
+  // Ids antigos continuam valendo do jeito de antes (a primeira chave que aparece na sala fica guardada).
+  if (/^k[0-9a-f]{16}$/.test(dev) && dev !== 'k' + h.slice(0, 16)) throw erro(400, 'Aparelho inválido');
+  return { dev, h };
 }
 async function confereChave(code, q, guardada) {
   if (guardada == null) { await ST.grava('PUT', 'srv/chaves/' + code + '/' + q.dev, q.h); return }
@@ -74,7 +80,7 @@ function estadoG(e) { try { return e && e.g ? JSON.parse(e.g) : null } catch (x)
 
 async function criar(body) {
   const code = codigo(body.sala), q = quem(body);
-  const g = typeof body.g === 'string' && body.g.length < 400000 ? estadoG({ g: body.g }) : null;
+  const g = typeof body.g === 'string' && body.g.length < MAX_G_ESPERA ? estadoG({ g: body.g }) : null;
   if (!g) throw erro(400, 'Estado inválido');
   if (await ST.ler('salas/' + code + '/meta')) throw erro(409, 'Esse código já está em uso');
   const r = await juiz.confere({ prev: null, next: g, dev: q.dev, host: q.dev, lobby: {}, votos: {}, hist: [], sala: code, agora: Date.now(), perg: perg() });
@@ -121,7 +127,8 @@ let PERG = null;
 function perg() { if (!PERG) PERG = require('./perguntas.js')._pergTk; return PERG }
 async function jogada(body) {
   const code = codigo(body.sala), q = quem(body);
-  if (typeof body.g !== 'string' || body.g.length > 400000) throw erro(400, 'Estado inválido');
+  if (typeof body.g !== 'string' || body.g.length > MAX_G) throw erro(400, 'Estado inválido');
+  if (body.g.length > MAX_G_ESPERA && (estadoG({ g: body.g }) || {}).phase === 'setup') throw erro(400, 'Estado inválido');
   const base = Number(body.base);
   const [meta, est, guardada, jog, votos, hist] = await Promise.all([
     ST.ler('salas/' + code + '/meta'), ST.lerEtag('salas/' + code + '/estado'), ST.ler('srv/chaves/' + code + '/' + q.dev),
@@ -213,8 +220,15 @@ async function votar(body) {
   if (id !== q.dev && id !== q.dev + '_u' && id !== q.dev + '_x' && id !== q.dev + '_t') throw erro(403, 'Voto de outro aparelho');
   const voto = body.voto && typeof body.voto === 'object' ? body.voto : null;
   if (!voto || typeof voto.k !== 'string' || voto.k.length > 60) throw erro(400, 'Voto inválido');
-  const guardada = await ST.ler('srv/chaves/' + code + '/' + q.dev);
+  const [guardada, est] = await Promise.all([ST.ler('srv/chaves/' + code + '/' + q.dev), ST.ler('salas/' + code + '/estado')]);
+  if (!est) throw erro(404, 'Sala não encontrada');
   await confereChave(code, q, guardada);
+  // o voto só vale para a votação que está aberta agora (votos antigos não podem aprovar outra coisa)
+  const g = estadoG(est) || {};
+  const aberta = id === q.dev ? (g.resp && g.resp.k) : id.endsWith('_u') ? (g.desfazer && 'u:' + g.desfazer.id)
+    : id.endsWith('_x') ? (g.expulsar && 'x:' + g.expulsar.id) : (g.vt && 'f:' + g.vt.id);
+  if (!aberta || voto.k !== aberta) throw erro(409, 'Essa votação já fechou');
+  if (!(g.players || []).some(p => p && p.dev === q.dev)) throw erro(403, 'Só quem está na partida vota');
   const tema = id.endsWith('_t') ? String(voto.t || '') : null; // voto no tema da pergunta final
   if (tema !== null && !TEMAS_VOTO.includes(tema)) throw erro(400, 'Voto inválido');
   const v = { k: voto.k, v: !!voto.v, ts: Date.now() };

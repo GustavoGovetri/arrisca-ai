@@ -9,7 +9,7 @@
 //   POST {acao:'resolver', lista, id, resolvido} → (só o dono) marca um aviso como resolvido
 const { quemE, ehAdmin } = require('./_auth');
 const { limpa: semPalavrao, tem: temPalavrao } = require('./_palavrao');
-const { DEV, ler, grava, gravaVarios } = require('./_store');
+const { DEV, ler, grava, gravaVarios, lerEtag, gravaSe } = require('./_store');
 const ST = require('./_stats');
 const { freia } = require('./_limite');
 const temaOk = t => typeof t === 'string' && (Object.prototype.hasOwnProperty.call(ST.TEMAS, t) || t === 'N'); // N: Natal
@@ -117,12 +117,12 @@ async function resposta(u, body) {
   const base = 'usuarios/' + u.uid, regC = 'srv/reg/' + sala + '/' + info.qid, chave = sala + '_' + jogo;
   const [dono, reg, st, conq, part0, perfil, estado, jogadores, rr] = await Promise.all([
     ler('srv/contas/' + sala + '/' + dev),
-    ler(regC), ler(base + '/stats'), ler(base + '/conquistas'), ler(base + '/partidas/' + chave), ler(base + '/perfil'),
+    lerEtag(regC), ler(base + '/stats'), ler(base + '/conquistas'), ler(base + '/partidas/' + chave), ler(base + '/perfil'),
     DEV ? null : ler('salas/' + sala + '/estado'), DEV ? null : ler('salas/' + sala + '/jogadores'), ler('srv/resp/' + sala + '/' + info.qid)
   ]);
   // a resposta tem que ser do aparelho em que esta conta está (gravado pelo servidor quando ela entrou na sala)
   if (dono !== u.uid) throw falha(403, 'Essa resposta é de outro jogador.');
-  if (reg) return { ja: true };
+  if (reg.v) return { ja: true };
   if (!perfil) throw falha(404, 'Conta não encontrada. Entre de novo.');
   let fim = !!body.fim && ok;
   // o que vale é o que o juiz da sala aceitou (gravado pelo servidor quando a pergunta foi fechada)
@@ -147,8 +147,9 @@ async function resposta(u, body) {
   part.p += pts; part.fim = quando; if (fim) part.venceu = true;
   const tem = conq || {}, ganhou = ST.novas(s, tem);
   const per = ST.periodo(agora), nome = perfil.nome || 'Jogador', cor = perfil.cor || null, t = perfil.titulo ? ST.titulo(perfil.titulo, s, u.uid) : null;
+  // marca a pergunta como contada só se ninguém marcou no meio (duas chamadas ao mesmo tempo não contam duas vezes)
+  if (!(await gravaSe(regC, { u: u.uid, ok, n: nivel, w: agora }, reg.etag))) return { ja: true };
   const mapa = {
-    [regC]: { u: u.uid, ok, n: nivel, w: agora },
     [base + '/stats']: s,
     [base + '/partidas/' + chave]: part
   };

@@ -25,7 +25,7 @@ const destino = (t, b) => (ROTA[t] && ROTA[t][b]) || ROTA_PADRAO[t];
 const TEMA_N = { M: 'Mundo', H: 'História', AL: 'Artes e Literatura', MU: 'Música', CS: 'Cinema e Séries', S: 'Sociedade', CT: 'Ciência', TI: 'Tecnologia e Internet', ES: 'Esporte', GG: 'Games e Geek', V: 'Variedades', N: 'Natal' };
 
 const { cred, dbGet } = require('./_fb');
-const { freia } = require('./_limite');
+const { freia, ip } = require('./_limite');
 // quantos pedidos cada endereço pode fazer a cada 10 minutos (folgado para uma família na mesma rede)
 const FREIO = { sortear: 300, resposta: 300, dica: 80, forma: 300, meta: 200, aquece: 200, nota: 120, desafio: 100, desafioResp: 200 };
 const ST = require('./_store');
@@ -123,7 +123,7 @@ function leaks(B, t, i, vistas) {
 }
 const rnd = n => crypto.randomInt(n);
 function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]] } return a }
-function sortear(B, t, nivel, usadas, vistas, junta) {
+function sortear(B, t, nivel, usadas, vistas, junta, minimo) {
   // cada pergunta possível é [tema de origem, índice]; na partida clássica entram também as dos outros temas
   const used = new Set(usadas), byLv = { 1: [], 2: [], 3: [], 4: [] };
   const refs = B.temas[t].items.map((_, i) => [t, i]);
@@ -149,6 +149,12 @@ function sortear(B, t, nivel, usadas, vistas, junta) {
     [1, 2, 3, 4].filter(l => !order.includes(l)).sort((x, y) => dist(x) - dist(y)).forEach(l => order.push(l));
   }
   else { const w = +lv; order = [w, w + 1, w - 1, w + 2, w - 2, w + 3, w - 3].filter(l => l >= 1 && l <= 4) }
+  // sala online: a lista de "já usadas" vem do aparelho; se ela deixar poucas perguntas de sobra, ela é ignorada,
+  // para ninguém conseguir escolher a pergunta que vai cair (excluindo todas as outras)
+  if (minimo && escolhidos.reduce((x, l) => x + byLv[l].length, 0) < minimo) {
+    for (const l of [1, 2, 3, 4]) byLv[l] = [];
+    for (const r of refs) { const [s, i] = r; byLv[qDiff(s, B.temas[s].items[i])].push(r) }
+  }
   order = order.filter(l => byLv[l].length);
   if (!order.length) { // acabou o tema: diz quais perguntas usadas são deste baralho (para liberar só elas)
     const ids = {};
@@ -235,7 +241,7 @@ function mascara(a) {
 }
 
 // ---------------------------------------------------------------- rotas
-async function handle(acao, body) {
+async function handle(acao, body, rede) {
   const B = await banco();
   if (acao === 'aquece') return { ok: true, v: B.v }; // só carrega o banco na memória
   if (acao === 'meta') {
@@ -253,14 +259,14 @@ async function handle(acao, body) {
     return { c: x.c };
   }
   const t = body.t;
-  if (!B.temas[t]) throw Object.assign(new Error('Tema inválido'), { status: 400 });
+  if (!Object.prototype.hasOwnProperty.call(B.temas, t)) throw Object.assign(new Error('Tema inválido'), { status: 400 });
   if (acao === 'sortear') {
     const usadas = Array.isArray(body.usadas) ? body.usadas.slice(0, 30000).map(String) : [];
     const vistas = Array.isArray(body.vistas) ? body.vistas.slice(-200).filter(x => Array.isArray(x) && x.length === 2).map(x => [String(x[0]), String(x[1])]) : [];
-    const r = sortear(B, t, body.nivel, usadas, vistas, !!body.junta && CLASSICO.includes(t));
+    const sala = body.sala && /^[A-Z0-9]{4,6}$/.test(body.sala) ? body.sala : null;
+    const r = sortear(B, t, body.nivel, usadas, vistas, !!body.junta && CLASSICO.includes(t), sala ? 40 : 0);
     if (r.esgotado) return r;
     const s = r.s, q = B.temas[s].items[r.i], id = B.temas[s].ids[r.i];
-    const sala = body.sala && /^[A-Z0-9]{4,6}$/.test(body.sala) ? body.sala : null;
     const out = { id, t: s, q: textoQ(q[0]), b: bucketOf(s, q), d: qDiff(s, q), lvNote: r.lvNote, tk: assina({ i: id, t: s, m: sala ? 'o' : 'l', s: sala, e: Date.now() + 864e5 }) };
     if (s === 'V') out.opts = shuffle(q[1].slice());
     return out;
@@ -275,10 +281,10 @@ async function handle(acao, body) {
     const f = formaDe(q);
     return f ? { a: resposta(t, q), m: B.mapa[f] || null } : { a: resposta(t, q) };
   }
-  if (acao === 'nota') { // uma nota por aparelho e por pergunta sorteada; tocar de novo troca ou tira
+  if (acao === 'nota') { // uma nota por rede (endereço) e por pergunta; tocar de novo troca ou tira
+    // antes a chave usava o id do aparelho, que quem chama escolhe: dava para votar quantas vezes quisesse
     const v = body.v === 1 ? 1 : body.v === -1 ? -1 : null;
-    const dev = typeof body.dev === 'string' && /^[A-Za-z0-9_-]{4,40}$/.test(body.dev) ? body.dev : '';
-    const h = b64u(crypto.createHmac('sha256', chaveTk()).update('nota|' + body.tk + '|' + dev).digest()).slice(0, 16);
+    const h = b64u(crypto.createHmac('sha256', chaveTk()).update('nota|' + t + '|' + tk.i + '|' + String(rede || 'x')).digest()).slice(0, 16);
     await ST.grava('PUT', 'notas/' + t + '/' + tk.i + '/' + h, v);
     return { ok: true };
   }
@@ -302,7 +308,7 @@ module.exports = async (req, res) => {
     let body = req.body || {};
     if (typeof body === 'string') { try { body = JSON.parse(body) } catch (e) { body = {} } }
     freia(req, 'p-' + (FREIO[acao] ? acao : 'outra'), FREIO[acao] || 60, 600e3);
-    const out = await handle(acao, body);
+    const out = await handle(acao, body, ip(req));
     res.setHeader('Cache-Control', acao === 'meta' ? 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400' : 'no-store');
     res.status(200).json(out);
   } catch (e) {
