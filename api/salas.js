@@ -78,6 +78,12 @@ async function confereChave(code, q, guardada) {
 }
 function estadoG(e) { try { return e && e.g ? JSON.parse(e.g) : null } catch (x) { return null } }
 
+// identidade anônima do Firebase deste aparelho (a do app da sala): o servidor guarda em srv/donos, e as regras do banco
+// só deixam criar a entrada do aparelho na lista de jogadores para essa identidade. Assim ninguém "guarda o lugar" de outro.
+async function donoAnon(body) {
+  if (!body.anon) return null;
+  try { return (await require('./_auth').verifica(String(body.anon).slice(0, 4000))).uid } catch (e) { return null }
+}
 async function criar(body) {
   const code = codigo(body.sala), q = quem(body);
   const g = typeof body.g === 'string' && body.g.length < MAX_G_ESPERA ? estadoG({ g: body.g }) : null;
@@ -91,6 +97,8 @@ async function criar(body) {
     ['salas/' + code + '/estado']: { v: 1, g: body.g, por: q.dev, ts: agora },
     ['srv/chaves/' + code + '/' + q.dev]: q.h
   });
+  const uid = await donoAnon(body);
+  if (uid) await ST.grava('PUT', 'srv/donos/' + code + '/' + q.dev, uid);
   return { v: 1 };
 }
 async function entrar(body) {
@@ -98,6 +106,8 @@ async function entrar(body) {
   const [meta, guardada] = await Promise.all([ST.ler('salas/' + code + '/meta'), ST.ler('srv/chaves/' + code + '/' + q.dev)]);
   if (!meta) throw erro(404, 'Sala não encontrada');
   await confereChave(code, q, guardada);
+  const uid = await donoAnon(body);
+  if (uid) await ST.grava('PUT', 'srv/donos/' + code + '/' + q.dev, uid);
   return { host: meta.host || null };
 }
 // título da conta ao lado do nome na sala: o servidor confere a conta (token do login) e grava; ninguém grava "titulos" direto

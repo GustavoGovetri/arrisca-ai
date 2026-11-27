@@ -2392,6 +2392,7 @@ const MYDEV=(()=>{const novo='k'+sha256hex(MYKEY).slice(0,16);try{let d=localSto
 const LOCALSIM=URLP.get('net')==='local';
 async function servidorSala(acao,body){ // criar, entrar, jogada e votar: quem grava na sala é o servidor, depois de conferir
   const corpo=Object.assign({dev:MYDEV,chave:MYKEY},body,LOCALSIM?{lobby:LOBBY}:{});
+  if((acao==='criar'||acao==='entrar')&&NET&&NET.anonToken){try{const t=await NET.anonToken();if(t)corpo.anon=t}catch(e){}}
   const r=await fetch('/api/salas?acao='+acao,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(corpo)});
   let j=null;try{j=await r.json()}catch(e){}
   if(!r.ok){const e=new Error((j&&j.erro)||('Erro '+r.status));e.status=r.status;e.estado=j&&j.estado;throw e}

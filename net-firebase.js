@@ -24,11 +24,11 @@ if(cfg&&cfg.databaseURL&&!sim){
     const solta=()=>{USO=Math.max(0,USO-1);if(USO)return;clearTimeout(DESLIGA);
       DESLIGA=setTimeout(()=>{if(!USO&&LIGADO){LIGADO=false;d.goOffline(db);conta()}},15000)}; // espera um pouco: dá tempo de gravar a saída e evita liga-desliga
     const op=async f=>{liga();try{return await f()}finally{solta()}};
-    let UID=null;
+    let UID=null,AU=null;
     const ANON=(async()=>{
       try{
         const a=await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
-        const au=a.getAuth(salaApp);
+        const au=a.getAuth(salaApp);AU=au;
         if(typeof au.authStateReady==='function')await au.authStateReady();
         if(!au.currentUser)await a.signInAnonymously(au);
         UID=au.currentUser?au.currentUser.uid:null;
@@ -66,7 +66,9 @@ if(cfg&&cfg.databaseURL&&!sim){
       async getUsadas(code){return op(async()=>(await d.get(R('salas/'+code+'/usadas'))).val()||{})},
       async chat(code,msg){return op(async()=>{await ANON;await d.push(R('salas/'+code+'/chat'),comId(Object.assign({},msg,{ts:d.serverTimestamp()})))})}, // hora do servidor: a ordem não depende do relógio de cada aparelho
       async report(r){return op(async()=>{await ANON;await d.push(R('reportes'),comId(r))})},
-      onConnected(cb){AVISA.push(cb);cb(REAL||!USO)}
+      onConnected(cb){AVISA.push(cb);cb(REAL||!USO)},
+      // token da identidade anônima: o servidor guarda de quem é este aparelho na sala (as regras conferem)
+      async anonToken(){await ANON;try{return AU&&AU.currentUser?await AU.currentUser.getIdToken():null}catch(e){return null}}
     };
   }catch(e){console.warn('Modo online indisponível:',e)}
 }

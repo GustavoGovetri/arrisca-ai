@@ -17,7 +17,7 @@ async function limpaSalas(agora = Date.now()) {
   }
   if (velhas.length) {
     const mapa = {};
-    for (const c of velhas) for (const p of ['salas/', 'publicas/', 'srv/chaves/', 'srv/hist/', 'srv/resp/', 'srv/palp/', 'srv/reg/', 'srv/contas/']) mapa[p + c] = null;
+    for (const c of velhas) for (const p of ['salas/', 'publicas/', 'srv/chaves/', 'srv/hist/', 'srv/resp/', 'srv/palp/', 'srv/reg/', 'srv/contas/', 'srv/donos/']) mapa[p + c] = null;
     await ST.gravaVarios(mapa);
   }
   return { salas: todas.length, olhadas: olhar.length, apagadas: velhas.length };
