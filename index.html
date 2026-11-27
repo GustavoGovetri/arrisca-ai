@@ -1203,6 +1203,35 @@ body.inicio #view-jogo>.card:not(#panel){background:rgba(0,0,0,.22)!important;bo
 .opts.optsgrade button .tic{flex:none}
 /* 3, 2, 1, Valendo!: a tela escurece por baixo para o aviso não brigar com a lista */
 .largada{background:radial-gradient(circle,rgba(20,2,8,.82),rgba(20,2,8,.55) 70%)!important}
+
+/* ----- Palco refinado, 2ª etapa: cartões, sala de espera e partida ----- */
+/* cartões: sem a moldura dourada dupla; painel escuro com borda fina */
+.card{background:color-mix(in srgb,var(--k) 74%,transparent)!important;border:1px solid color-mix(in srgb,var(--amarelo) 22%,transparent)!important;box-shadow:0 18px 40px rgba(0,0,0,.32)!important;border-radius:24px!important}
+.card h2{font-size:22px}
+/* botões leves (Início, Novo jogo, Sair, e os pequenos do painel) */
+#panel .hb,#panel button.small:not(.primary):not(.on):not(.confirma),#scores button.small:not(.primary){background:rgba(255,243,222,.07)!important;border:2px solid rgba(255,243,222,.16)!important;box-shadow:none!important;color:#fff3de!important;text-shadow:none!important}
+#panel .hb:hover,#panel button.small:not(.primary):hover{background:rgba(255,243,222,.14)!important}
+#panel .hb{font:600 15px 'Fredoka',sans-serif!important;min-height:40px;padding:0 14px!important;border-radius:12px!important;letter-spacing:0!important;text-transform:none!important}
+/* a pergunta num cartão claro, fácil de ler */
+#panel .qtext{background:#fff3de;color:#2a0510;text-shadow:none!important;padding:18px 20px;border-radius:20px;box-shadow:0 12px 30px rgba(0,0,0,.3);font-size:22px;font-weight:600;line-height:1.32;margin:12px 0 14px}
+#panel .qtext .falabtn{background:#2a0510!important;color:#fff3de!important;border:0!important;box-shadow:none!important}
+/* jogadores: linhas lisas; a vez em destaque dourado fino */
+.pl{background:rgba(255,243,222,.05)!important;border-radius:14px!important;box-shadow:none!important}
+.pl.cur{background:color-mix(in srgb,var(--amarelo) 13%,transparent)!important;box-shadow:inset 0 0 0 2px var(--amarelo)!important}
+/* sala de espera */
+.lobtopo{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.lobcod{display:flex;flex-direction:column}
+.lobcod small{font-size:13px;font-weight:600;color:var(--suave,#f2b8c2)}
+.lobcod b{font-family:'Lilita One',sans-serif;font-weight:400;font-size:clamp(40px,11vw,54px);line-height:1.05;letter-spacing:5px;color:var(--amarelo);text-shadow:0 3px 0 var(--k)}
+.lobacoes{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));grid-auto-flow:column;gap:8px;margin:12px 0 4px}
+.lobac{display:flex!important;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:66px;border-radius:16px!important;border:2px solid rgba(255,243,222,.16)!important;background:rgba(255,243,222,.05)!important;box-shadow:none!important;color:#fff3de!important;font:600 14px 'Fredoka',sans-serif!important;text-transform:none!important;letter-spacing:0!important;padding:6px!important}
+.lobac.prim{background:#fff3de!important;color:#4a0817!important;border-color:#fff3de!important;font-weight:700!important}
+.lobac:hover{filter:brightness(1.1)}
+.setup-row.lob{background:rgba(255,243,222,.05);border-radius:14px;padding:6px 10px}
+
+/* celular, sala de espera: a sala vem primeiro e o tabuleiro de prévia vai para baixo */
+@media(max-width:980px){body.salaespera .wrap>.ringwrap{order:3}}
+@media(max-width:980px){.toolbar{padding-left:50px}}
 </style>
 </head>
 <body>
@@ -1328,7 +1357,10 @@ const ICO={
   mais:TRACO('<path d="M12 5v14M5 12h14"/>','  stroke-width="2.6"'),
   celular:TRACO('<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>'),
   desafio:TRACO('<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/>'),
-  seta:TRACO('<path d="M9 6l6 6-6 6"/>','  stroke-width="2.6"')
+  seta:TRACO('<path d="M9 6l6 6-6 6"/>','  stroke-width="2.6"'),
+  compartilhar:TRACO('<path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>'),
+  link:TRACO('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
+  chamar:TRACO('<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/>')
 };
 function icoBarra(){
   const p=[['efxbtn','visual'],['rankbtn','ranking'],['contabtn','conta'],['amigosbtn','amigos'],['histbtn','hist'],['chatbtn','chat']];
@@ -1786,7 +1818,7 @@ function renderScores(){
     <div class="nm">${esc(p.name)}${online()?tituloChip(TITULOS[p.dev]):''}${expulsarBtn(p)}${p.estrelas?` <span class="estrelas" title="Impossíveis acertadas">⭐${p.estrelas>1?p.estrelas:''}</span>`:''}${plTag(p)}<div class="muted">${p.pos===0?'Início':p.pos===FINAL?'Última casa':'Casa '+p.pos}${p.forced?' · repete '+T[p.forced].n:''}</div></div>
     ${ed?'':`<div class="chips">${fichasArr().map(v=>`<div class="chip${p.used.includes(v)?' used':''}" style="background:${p.color}">${v}</div>`).join('')}</div>`}</div>`).join('')+'</div>'+(ed&&G.pickColor!=null&&G.players[G.pickColor]?`<div class="pal-wrap"><span class="muted">Cor de <b>${esc(G.players[G.pickColor].name)}</b>:</span>${paletaHtml(G.players[G.pickColor].color,`gameColor(${G.pickColor},'#C')`,G.players.map(x=>x.color))}</div>`:'');
 }
-function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE||!!ENTRANDO);document.body.classList.toggle('prep',!!MODE&&!ENTRANDO&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(online()&&G.phase==='theme'&&G.vt)setTimeout(vtConfere,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
+function render(){setTimeout(contaRegistra,0);document.body.classList.toggle('inicio',!MODE||!!ENTRANDO);document.body.classList.toggle('salaespera',MODE==='online'&&!ENTRANDO&&G.phase==='setup');document.body.classList.toggle('prep',!!MODE&&!ENTRANDO&&G.phase==='setup'&&(MODE!=='online'||amHost()));if(G.desfazer)setTimeout(confereDesfazer,0);if(MODE)comoPara();else comoAnda();syncBoard();renderBoard();renderScores();renderPanel();renderTabCount();if(TAB==='hist')renderHist();fx();onlineTimer();chatVis();garanteResposta();if(online()&&G.resp&&G.phase==='question')setTimeout(julgar,0);if(online()&&G.phase==='theme'&&G.vt)setTimeout(vtConfere,0);if(MODE==='online'){netPush();anuncia();if(document.hidden)abaTitulo()}else saveGame();if(G.phase==='theme')setTimeout(preSorteia,0);else if(G.phase==='result')setTimeout(preProximo,300)}
 
 function renderPanel(){
   const el=document.getElementById('panel');
@@ -2620,12 +2652,12 @@ async function tituloSala(){ // mostra (ou tira) o título da conta para quem es
 }
 function plTag(p){if(!online())return '';let s='';if(p.dev===MYDEV)s+=' <span class="you">você</span>';const l=LOBBY[p.dev];if(!l||l.on===false)s+=' <span class="off" title="Sem conexão">offline</span>';else if(l.fora)s+=' <span class="fora" title="Está em outra aba">👀 fora da aba</span>';return s}
 function editBtn(ed){return can('host')?`<button class="small" onclick="G.editPl=!G.editPl;G.pickColor=null;renderScores()">${ed?'✓ Pronto':'✎ Ordem e cores'}</button>`:''}
-const NOVO_BTN=`<button onclick="if(window.__c){newGame()}else{window.__c=1;this.textContent='Confirmar?';const b=this;setTimeout(()=>{window.__c=0;b.textContent='Novo jogo'},2500)}">Novo jogo</button>`;
+const NOVO_BTN=`<button class="hb" onclick="if(window.__c){newGame()}else{window.__c=1;this.textContent='Confirmar?';const b=this;setTimeout(()=>{window.__c=0;b.textContent='Novo jogo'},2500)}">Novo jogo</button>`;
 function headBtns(){
-  if(!online())return `<button title="Voltar para a tela inicial (a partida fica salva)" onclick="goHome()">${ICON_CASA}Início</button>`+NOVO_BTN;
+  if(!online())return `<button class="hb" title="Voltar para a tela inicial (a partida fica salva)" onclick="goHome()">${ICON_CASA}Início</button>`+NOVO_BTN;
   let h='';
   if(amHost())h+=NOVO_BTN;
-  return h+`<button class="small${Date.now()-SAIR_T<3000?' confirma':''}" onclick="sairConfirma(this)">${Date.now()-SAIR_T<3000?(G.phase&&G.phase!=='setup'?'Sair da partida?':'Sair da sala?'):'Sair'}</button>`;
+  return h+`<button class="small hb${Date.now()-SAIR_T<3000?' confirma':''}" onclick="sairConfirma(this)">${Date.now()-SAIR_T<3000?(G.phase&&G.phase!=='setup'?'Sair da partida?':'Sair da sala?'):'Sair'}</button>`;
 }
 function wonBtns(){
   if(can('host'))return `<button class="primary" onclick="rematch()">Jogar de novo (mesmos jogadores)</button><button onclick="newGame()">Mudar jogadores</button>`;
@@ -3838,10 +3870,10 @@ function lobbyHtml(){
   const ord=lobbyOrder();
   const me=LOBBY[MYDEV]||{};
   const usadas=ord.filter(d=>d!==MYDEV).map(d=>LOBBY[d].cor).filter(Boolean);
-  let h=`${amHost()?'<div class="prepgrid"><div class="pcol">':''}<div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Sala <span class="code">${ROOM}</span></h2><button class="small${Date.now()-SAIR_T<3000?' confirma':''}" onclick="sairConfirma(this)">${Date.now()-SAIR_T<3000?(G.phase&&G.phase!=='setup'?'Sair da partida?':'Sair da sala?'):'Sair'}</button></div>
+  let h=`${amHost()?'<div class="prepgrid"><div class="pcol">':''}<div class="lobtopo"><div class="lobcod"><small>Código da sala</small><b>${ROOM}</b></div><button class="small hb${Date.now()-SAIR_T<3000?' confirma':''}" onclick="sairConfirma(this)">${Date.now()-SAIR_T<3000?(G.phase&&G.phase!=='setup'?'Sair da partida?':'Sair da sala?'):'Sair'}</button></div>
   ${amHost()?'':(G.publica?'<p class="muted">🌍 Sala aberta a todos.</p>':'')}
   <p class="muted">Mande o link ou o código para quem vai jogar. Cada um entra pelo próprio celular.${amHost()&&G.publica?' <b>🌍 A sala também aparece em Salas para qualquer pessoa entrar.</b>':''}</p>
-  <div class="row"><button class="small primary" onclick="shareRoom()">📤 Compartilhar</button><button class="small" onclick="copyText(linkSala(),'📋 Link copiado')">📋 Copiar link</button>${CONTA.user?'<button class="small" onclick="amigosAbre()">👥 Chamar amigos</button>':''}</div>
+  <div class="lobacoes"><button class="lobac prim" onclick="shareRoom()">${ICO.compartilhar}Compartilhar</button><button class="lobac" onclick="copyText(linkSala(),'📋 Link copiado')">${ICO.link}Copiar link</button>${CONTA.user?`<button class="lobac" onclick="amigosAbre()">${ICO.chamar}Chamar amigo</button>`:''}</div>
   <h2 style="margin-top:16px">Você</h2>
   <div class="setup-row"><button class="swatch${me.cor?'':' vazio'}" style="background:${me.cor||'#3a4054'}" title="Escolher a cor" onclick="G.pickColor=G.pickColor==='me'?null:'me';render()"></button><input id="meunome" aria-label="Seu nome" autocomplete="nickname" value="${esc(me.nome||'')}" maxlength="16" placeholder="Seu nome" onchange="setMyName(this.value)" onkeydown="if(event.key==='Enter')this.blur()"></div>
   ${G.pickColor==='me'||(!me.cor&&(me.nome||'').trim())?`<div class="pal-wrap"><span class="muted">Escolha sua cor:</span><div class="palette">${PALETA.map(([c,n])=>{const tomada=usadas.includes(c);return `<button class="swatch${c===me.cor?' on':''}${tomada?' taken':''}" style="background:${c}" title="${n}${tomada?' (já escolhida)':''}" ${tomada?'disabled':''} onclick="setMyColor('${c}')"></button>`}).join('')}</div></div>`:''}
