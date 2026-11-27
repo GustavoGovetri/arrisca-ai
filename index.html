@@ -11,6 +11,21 @@
 <title>Arrisca Aí – jogo de perguntas</title>
 <meta name="description" content="Jogo de perguntas para jogar em família: num aparelho só ou online, cada um no seu celular.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Arrisca Aí">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:title" content="Arrisca Aí – bora jogar?">
+<meta property="og:description" content="Jogo de perguntas com a turma: cada um joga no seu celular. Toque para entrar.">
+<meta property="og:image" content="https://arrisca-ai.vercel.app/icones/prevista.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Arrisca Aí, jogo de perguntas">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icones/apple-180.png">
+<meta name="apple-mobile-web-app-title" content="Arrisca Aí">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:radial-gradient(circle at 30% 0%,#1f2433,#111318 60%);color:#ececf1;min-height:100vh}
@@ -785,6 +800,10 @@ html.parado .silhmapa i{animation:none}
 .meuid>b{display:block;font-family:'Lilita One',sans-serif;font-weight:400;font-size:34px;letter-spacing:3px;color:var(--amarelo);text-shadow:var(--txt-contorno);margin:2px 0 8px;font-variant-numeric:tabular-nums}
 .meuid .row{justify-content:center}
 .meuid p{margin:8px 0 0;font-size:13px;opacity:.85;line-height:1.35}
+.notifrow{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:14px;border:3px solid var(--k);background:var(--ladrilho)}
+.notifrow>span{flex:1;font-size:14px;line-height:1.3}.notifrow small{display:block;opacity:.8;font-size:12px}
+.appbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:10px}
+.appios{margin-top:10px;padding:10px 12px;border-radius:14px;border:3px solid var(--k);background:var(--ladrilho);font-size:14px;line-height:1.4;text-align:center}
 .amg{display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.22);border-radius:14px;padding:8px 10px;margin-bottom:6px}
 .amg.clica{cursor:pointer}.amg.clica:hover{background:rgba(255,255,255,.07)}
 .amg.achado{border:2px dashed rgba(255,255,255,.35);margin-top:8px}
@@ -2571,6 +2590,7 @@ function homeHtml(){
       </div>
       <div class="joinrow"><input id="joincode" aria-label="Código da sala" maxlength="6" placeholder="Código da sala" autocapitalize="characters" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')joinFromInput()"><button ${ok?'':'disabled'} onclick="joinFromInput()">Entrar</button></div>
       ${ok?'':`<p class="muted">${NETREADY?'O modo online não está disponível agora.':'Conectando o modo online…'}</p>`}
+      ${appHtml()}
     </section>
     <section class="hbox">
       <h3>Como jogar</h3>
@@ -2798,7 +2818,7 @@ function contaInicia(){
     if(u){
       try{const j=await contaApi('POST',{acao:'entrar',nome:myName(),cor:myColor()});contaAplica(j.perfil);CONTA.admin=!!j.admin}
       catch(e){console.warn(e);CONTA_UI.erro='Você entrou, mas não consegui carregar o perfil agora: '+e.message}
-      contaResumo();contaHistInicia();if(ROOM)tituloSala();amigosCarrega(true).then(amigoLinkAbre);dsfConta().catch(e=>console.warn(e));
+      contaResumo();contaHistInicia();if(ROOM)tituloSala();amigosCarrega(true).then(amigoLinkAbre).then(notifLinkAbre);dsfConta().catch(e=>console.warn(e));
       CONTA_UI.aba='entrar'; // quando sair, a janela volta na aba Entrar
       if(CONTA_UI.esperando){CONTA_UI.esperando=false;toast('✔ Você entrou'+(CONTA.perfil?' como '+CONTA.perfil.nome:'')+'!')}
     }
@@ -3052,6 +3072,7 @@ function amigosHtml(){
   if(AMIGOS.ver)return amigoPerfilHtml();
   const d=AMIGOS.dados,dis=AMIGOS.ocupado?'disabled':'',id=meuIdAmigo();
   let h=`<div class="meuid"><small>Seu ID</small><b>${id?fmtId(id):'· · · ·'}</b>${id?`<div class="row"><button class="small primary" onclick="copia('${idAm(id)}','📋 ID copiado')">📋 Copiar ID</button><button class="small" onclick="copia(textoAmigo(),'🔗 Convite copiado com o link. É só colar na conversa!')">🔗 Copiar link</button>${navigator.share?'<button class="small" onclick="mandaAmigo()">📤 Compartilhar</button>':''}</div>`:''}<p>Mande esse número (ou o link) para quem você quer adicionar. Seu e-mail nunca aparece para ninguém.</p></div>`+amigosMsgs();
+  h+=notifHtml();
   if(!d)return h+(AMIGOS.erro?'':`<p class="pvazio">Carregando…</p>`);
   if(d.convites.length)h+=`<h4 class="ctsub">🎮 Te chamaram para jogar</h4>`+d.convites.map(c=>`<div class="amg">${bolinha(c.f,c.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(c.nome)}</b><small>Sala ${esc(sSala(c.sala))}</small></div><div class="amgbts"><button class="small primary" onclick="conviteEntra('${idAm(c.id)}','${sSala(c.sala)}')">Entrar</button><button class="small" title="Dispensar" onclick="conviteFecha('${idAm(c.id)}')">✕</button></div></div>`).join('');
   if(d.pedidos.length)h+=`<h4 class="ctsub">📨 Pedidos de amizade</h4>`+d.pedidos.map(p=>`<div class="amg">${bolinha(p.f,p.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(p.nome)}${tituloChip(p.t)}</b><small>ID ${fmtId(p.id)} quer ser seu amigo</small></div><div class="amgbts"><button class="small primary" ${dis} onclick="amigoFaz('aceitar','${idAm(p.id)}')">Aceitar</button><button class="small" ${dis} onclick="amigoFaz('recusar','${idAm(p.id)}')">Recusar</button></div></div>`).join('');
@@ -3108,6 +3129,78 @@ function amigoLinkAbre(){
   try{const u=new URL(location.href);u.searchParams.delete('amigo');history.replaceState(null,'',u.pathname+u.search)}catch(e){}
   AMIGOS.busca=AMIGO_LINK;amigosAbre();amigoProcura();
 }
+// ----- app instalável e notificações (convite para sala e pedido de amizade) -----
+var APP={prompt:null,ios:/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),
+  instalado:()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true,iosAjuda:false};
+if('serviceWorker' in navigator)addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(e=>console.warn('sw',e))});
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();APP.prompt=e;if(MODE==null)render()});
+addEventListener('appinstalled',()=>{APP.prompt=null;toast('📲 Pronto! O Arrisca Aí está na sua tela inicial.');if(MODE==null)render()});
+function appHtml(){
+  if(!APP||APP.instalado())return '';
+  if(APP.prompt)return `<button class="small appbtn" onclick="appInstala()">📲 Instalar o app no aparelho</button>`;
+  if(APP.ios&&/Safari/.test(navigator.userAgent)&&!/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent))return APP.iosAjuda
+    ?`<div class="appios">No Safari, toque em <b>Compartilhar</b> <span aria-hidden="true">⬆️</span> e depois em <b>Adicionar à Tela de Início</b>. Assim o jogo abre como app e pode avisar quando te chamarem.</div>`
+    :`<button class="small appbtn" onclick="APP.iosAjuda=true;render()">📲 Instalar o app no iPhone</button>`;
+  return '';
+}
+async function appInstala(){const p=APP.prompt;if(!p)return;APP.prompt=null;try{await p.prompt();await p.userChoice}catch(e){}render()}
+// notificações: cada aparelho liga as suas (fica na conta, só o servidor vê)
+var NOTIF={ok:'serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window,ligado:false,ocupado:false,chave:undefined};
+async function notifEstado(){
+  if(!NOTIF.ok)return;
+  try{const r=await navigator.serviceWorker.ready,s=await r.pushManager.getSubscription();NOTIF.ligado=!!s&&Notification.permission==='granted'}catch(e){NOTIF.ligado=false}
+}
+function notifHtml(){
+  if(!NOTIF)return '';
+  if(!NOTIF.ok){
+    if(APP.ios&&!APP.instalado())return `<div class="notifrow"><span>🔔 <b>Avisos de convite</b><small>No iPhone, instale o app (Compartilhar → Adicionar à Tela de Início) para receber avisos quando te chamarem.</small></span></div>`;
+    return '';
+  }
+  if(NOTIF.chave===null)return '';
+  const neg=Notification.permission==='denied';
+  return `<div class="notifrow"><span>🔔 <b>Avisos neste aparelho</b><small>${neg?'As notificações estão bloqueadas nas configurações do navegador para este site.':'Convite para sala e pedido de amizade, mesmo com o jogo fechado.'}</small></span>${neg?'':`<button class="small${NOTIF.ligado?'':' primary'}" ${NOTIF.ocupado?'disabled':''} onclick="notifTroca()">${NOTIF.ligado?'Desligar':'Ligar'}</button>`}</div>`;
+}
+async function notifChave(){if(NOTIF.chave===undefined){try{NOTIF.chave=(await amigosApi('GET',{acao:'push'})).chave||null}catch(e){return null}}return NOTIF.chave}
+const b64uBytes=s=>{s=s.replace(/-/g,'+').replace(/_/g,'/');s+='='.repeat((4-s.length%4)%4);return Uint8Array.from(atob(s),c=>c.charCodeAt(0))};
+async function notifTroca(){
+  if(NOTIF.ocupado)return;NOTIF.ocupado=true;amigosRender();
+  try{
+    const r=await navigator.serviceWorker.ready;let s=await r.pushManager.getSubscription();
+    if(NOTIF.ligado){
+      if(s){await amigosApi('POST',{acao:'push-desliga',endpoint:s.endpoint}).catch(()=>{});await s.unsubscribe().catch(()=>{})}
+      NOTIF.ligado=false;toast('🔕 Avisos desligados neste aparelho.');
+    }else{
+      const chave=await notifChave();if(!chave)throw new Error('Os avisos ainda não estão disponíveis.');
+      if(await Notification.requestPermission()!=='granted')throw new Error('Sem permissão, o aparelho não mostra os avisos.');
+      if(!s)s=await r.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uBytes(chave)});
+      await amigosApi('POST',{acao:'push-liga',inscricao:s.toJSON()});
+      NOTIF.ligado=true;toast('🔔 Pronto! Quando um amigo te chamar, este aparelho avisa.');
+    }
+  }catch(e){toast(e.message||'Não deu para mudar os avisos agora.')}
+  NOTIF.ocupado=false;amigosRender();
+}
+// ao sair da conta, este aparelho para de receber os avisos dela
+async function notifSaiDaConta(){
+  if(!NOTIF||!NOTIF.ok)return;
+  try{const r=await navigator.serviceWorker.ready,s=await r.pushManager.getSubscription();if(!s)return;
+    await amigosApi('POST',{acao:'push-desliga',endpoint:s.endpoint}).catch(()=>{});await s.unsubscribe()}catch(e){}
+  NOTIF.ligado=false;
+}
+function notifLinkAbre(){
+  notifEstado().then(()=>{if(amigosAberto())amigosRender()});
+  if(URLP.get('amigos')===null||notifLinkAbre.feito)return;notifLinkAbre.feito=true;
+  try{const u=new URL(location.href);u.searchParams.delete('amigos');history.replaceState(null,'',u.pathname+u.search)}catch(e){}
+  if(CONTA.user&&!ROOM)amigosAbre();
+}
+// tocou na notificação com o jogo já aberto
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{
+  const d=e.data||{};if(d.tipo!=='abrir'||typeof d.url!=='string')return;
+  let u;try{u=new URL(d.url,location.origin)}catch(x){return}if(u.origin!==location.origin)return;
+  const sala=sSala(u.searchParams.get('sala')||'');
+  if(sala&&sala===ROOM)return;
+  if(!ROOM&&MODE==null){if(sala)enterRoom(sala,false);else if(CONTA.user)amigosAbre();return}
+  if(CONTA.user)amigosAbre(); // no meio de outra partida: mostra o convite em vez de tirar a pessoa do jogo
+});
 // ----- histórico de perguntas na conta: o mesmo em qualquer aparelho em que a pessoa entrar -----
 var CONTA_HIST={ok:false,conhecidas:{},t:null}; // var: o persist() pode rodar antes desta linha
 async function contaHistInicia(){ // ao entrar: junta o histórico da conta com o deste aparelho (nunca apaga nada)
@@ -3226,7 +3319,7 @@ function contaSalva(){
     const h=document.getElementById('homeconta');if(h)h.innerHTML=contaLinhaHtml();
   });
 }
-function contaSair(){return contaFaz(async()=>{await AUTH.sair();painelFecha();toast('Você saiu da conta.')})}
+function contaSair(){return contaFaz(async()=>{await notifSaiDaConta();await AUTH.sair();painelFecha();toast('Você saiu da conta.')})}
 function contaApaga(){
   if(!CONTA_UI.apagar){CONTA_UI.apagar=1;contaRender();setTimeout(()=>{if(CONTA_UI.apagar===1){CONTA_UI.apagar=0;contaRender()}},5000);return}
   return contaFaz(async()=>{

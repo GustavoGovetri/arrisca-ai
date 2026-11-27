@@ -8,6 +8,8 @@
 //   POST {acao:'dispensar', id}     tira o aviso de convite
 //   GET  ?acao=perfil&id=           perfil de um amigo (estatísticas e conquistas)
 //   GET  ?acao=ranking&periodo=semana|mes   ranking só com você e seus amigos
+//   GET  ?acao=push                 chave pública das notificações (null se não estiver configurada)
+//   POST {acao:'push-liga', inscricao} / {acao:'push-desliga', endpoint}   notificações neste aparelho
 // Tudo fica em /usuarios e /ids, que só o servidor lê e grava.
 const crypto = require('crypto');
 const { limpa: semPalavrao } = require('./_palavrao');
@@ -15,6 +17,7 @@ const { quemE } = require('./_auth');
 const { ler, gravaVarios } = require('./_store');
 const ST = require('./_stats');
 const { freia } = require('./_limite');
+const PUSH = require('./_push');
 
 const MAX_AMIGOS = 200, MAX_ENVIADOS = 30, MAX_PEDIDOS = 100;
 const ONLINE = 90 * 1000, CONVITE = 15 * 60 * 1000;
@@ -117,6 +120,7 @@ async function pedir(u, body) {
   if (chaves(pedidosDele).length >= MAX_PEDIDOS) throw falha(400, 'Essa pessoa tem pedidos demais esperando. Tente mais tarde.');
   const quando = new Date().toISOString();
   await gravaVarios({ [ele + '/pedidos/' + u.uid]: { quando }, [eu + '/enviados/' + alvo]: { quando } });
+  await notifica(u.uid, alvo, 'p', nome => ({ titulo: '📨 Pedido de amizade', corpo: nome + ' quer ser seu amigo no Arrisca Aí.', url: '/?amigos=1', tag: 'pedido-' + u.uid }), 7 * 86400);
   return { estado: 'enviado' };
 }
 async function aceitar(u, body) {
@@ -141,7 +145,19 @@ async function convidar(u, body) {
   if (!amigo) throw falha(403, 'Só dá para chamar quem é seu amigo.');
   if (!meta && !process.env.ARRISCA_DEV_SALAS) throw falha(404, 'Essa sala não existe mais.');
   await gravaVarios({ ['usuarios/' + alvo + '/convites/' + u.uid]: { sala, quando: Date.now() } });
+  await notifica(u.uid, alvo, 'c', nome => ({ titulo: '🎮 Bora jogar?', corpo: nome + ' te chamou para a sala ' + sala + '. Toque para entrar.', url: '/?sala=' + sala, tag: 'convite-' + u.uid }), CONVITE / 1000);
   return { ok: true };
+}
+// notificação no aparelho do amigo (se ele ligou). Freio: no máximo uma a cada 2 minutos da mesma pessoa, por tipo.
+async function notifica(de, para, tipo, monta, ttl) {
+  if (!PUSH.ligado()) return;
+  try {
+    const k = 'usuarios/' + para + '/pushvez/' + de + tipo, [vez, aparelhos] = await Promise.all([ler(k), ler('usuarios/' + para + '/push')]);
+    if (!aparelhos || Date.now() - (+vez || 0) < 120e3) return;
+    await gravaVarios({ [k]: Date.now() });
+    const p = await publico(de, false);
+    await PUSH.avisa(para, monta(p ? p.nome : 'Um amigo'), Math.round(ttl));
+  } catch (e) { }
 }
 async function dispensar(u, body) {
   const alvo = await uidDoId(body.id);
@@ -212,6 +228,9 @@ module.exports = async (req, res) => {
     else if (!get && ['recusar', 'cancelar', 'remover'].includes(acao)) r = await desfaz(u, body, acao);
     else if (!get && acao === 'convidar') r = await convidar(u, body);
     else if (!get && acao === 'dispensar') r = await dispensar(u, body);
+    else if (get && acao === 'push') r = { chave: PUSH.chavePublica() };
+    else if (!get && acao === 'push-liga') r = { ok: true, id: await PUSH.guarda(u.uid, body.inscricao) };
+    else if (!get && acao === 'push-desliga') { await PUSH.tira(u.uid, body.endpoint); r = { ok: true }; }
     else throw falha(400, 'Ação desconhecida.');
     res.status(200).json(r);
   } catch (e) {

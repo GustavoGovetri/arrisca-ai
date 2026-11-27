@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs><radialGradient id="g" cx="50%" cy="0%" r="110%"><stop offset="0" stop-color="#e3274f"/><stop offset=".35" stop-color="#a10d33"/><stop offset=".75" stop-color="#5c0519"/><stop offset="1" stop-color="#2a020b"/></radialGradient>
+<linearGradient id="d" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#ffe7b3"/></linearGradient>
+<radialGradient id="l" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#fffbe0"/><stop offset=".5" stop-color="#ffd54a"/><stop offset="1" stop-color="#e09b00"/></radialGradient>
+<radialGradient id="h" cx="50%" cy="20%" r="60%"><stop offset="0" stop-color="#fff6c8" stop-opacity=".55"/><stop offset="1" stop-color="#fff6c8" stop-opacity="0"/></radialGradient></defs>
+<rect width="512" height="512" fill="url(#g)" rx="112"/>
+<rect x="0" y="0" width="22" height="512" fill="#000" opacity=".13"/>
+<rect x="64" y="0" width="22" height="512" fill="#000" opacity=".13"/>
+<rect x="128" y="0" width="22" height="512" fill="#000" opacity=".13"/>
+<rect x="192" y="0" width="22" height="512" fill="#000" opacity=".13"/>
+<rect x="256" y="0" width="22" height="512" fill="#000" opacity=".13"/>
+<rect x="320" y="0" width="22" height="512" fill="#000" opacity=".13"/>
+<rect x="384" y="0" width="22" height="512" fill="#000" opacity=".13"/>
+<rect x="448" y="0" width="22" height="512" fill="#000" opacity=".13"/>
+<rect x="512" y="0" width="22" height="512" fill="#000" opacity=".13"/>
+<ellipse cx="256" cy="150" rx="230" ry="190" fill="url(#h)"/>
+<g transform="translate(256 256) scale(1.0) translate(-256 -256)">
+<circle cx="256.0" cy="60.0" r="13" fill="url(#l)"/>
+<circle cx="316.6" cy="69.6" r="13" fill="url(#l)"/>
+<circle cx="371.2" cy="97.4" r="13" fill="url(#l)"/>
+<circle cx="414.6" cy="140.8" r="13" fill="url(#l)"/>
+<circle cx="442.4" cy="195.4" r="13" fill="url(#l)"/>
+<circle cx="452.0" cy="256.0" r="13" fill="url(#l)"/>
+<circle cx="442.4" cy="316.6" r="13" fill="url(#l)"/>
+<circle cx="414.6" cy="371.2" r="13" fill="url(#l)"/>
+<circle cx="371.2" cy="414.6" r="13" fill="url(#l)"/>
+<circle cx="316.6" cy="442.4" r="13" fill="url(#l)"/>
+<circle cx="256.0" cy="452.0" r="13" fill="url(#l)"/>
+<circle cx="195.4" cy="442.4" r="13" fill="url(#l)"/>
+<circle cx="140.8" cy="414.6" r="13" fill="url(#l)"/>
+<circle cx="97.4" cy="371.2" r="13" fill="url(#l)"/>
+<circle cx="69.6" cy="316.6" r="13" fill="url(#l)"/>
+<circle cx="60.0" cy="256.0" r="13" fill="url(#l)"/>
+<circle cx="69.6" cy="195.4" r="13" fill="url(#l)"/>
+<circle cx="97.4" cy="140.8" r="13" fill="url(#l)"/>
+<circle cx="140.8" cy="97.4" r="13" fill="url(#l)"/>
+<circle cx="195.4" cy="69.6" r="13" fill="url(#l)"/>
+<g transform="rotate(-12 256 262)">
+<rect x="150" y="160" width="212" height="212" rx="46" fill="#3a0410" opacity=".45" transform="translate(8 12)"/>
+<rect x="150" y="156" width="212" height="212" rx="46" fill="url(#d)" stroke="#ffd54a" stroke-width="8"/>
+<circle cx="204" cy="210" r="21" fill="#a10d33"/>
+<circle cx="308" cy="210" r="21" fill="#a10d33"/>
+<circle cx="256" cy="262" r="21" fill="#a10d33"/>
+<circle cx="204" cy="314" r="21" fill="#a10d33"/>
+<circle cx="308" cy="314" r="21" fill="#a10d33"/>
+</g></g></svg>

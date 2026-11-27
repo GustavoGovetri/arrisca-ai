@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Chaves das notificações – Arrisca Aí</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#2a020b;color:#fff;max-width:640px;margin:0 auto;padding:24px;line-height:1.5}
+h1{font-size:22px}code,textarea{font-family:ui-monospace,monospace}
+textarea{width:100%;height:56px;background:#140106;color:#ffd54a;border:2px solid #a10d33;border-radius:10px;padding:8px;font-size:13px}
+button{background:#ffd54a;color:#2a020b;border:0;border-radius:10px;padding:10px 16px;font-weight:700;font-size:15px;cursor:pointer}
+.aviso{background:#5c0519;border-radius:10px;padding:10px 12px}
+</style>
+</head>
+<body>
+<h1>🔔 Chaves das notificações</h1>
+<p class="aviso">As chaves são criadas aqui, no seu navegador. Nada é enviado para lugar nenhum. Feche a página depois de copiar.</p>
+<p><button id="gera">Gerar chaves</button></p>
+<div id="saida" hidden>
+  <p>Na Vercel: <b>Settings → Environment Variables</b>, crie as duas abaixo (Production) e depois faça <b>Redeploy</b>.</p>
+  <p><code>VAPID_PUBLIC_KEY</code></p><textarea id="pub" readonly></textarea>
+  <p><code>VAPID_PRIVATE_KEY</code> (secreta: não mande para ninguém)</p><textarea id="pri" readonly></textarea>
+  <p>Se um dia trocar as chaves, quem já tinha ligado os avisos precisa ligar de novo.</p>
+</div>
+<script>
+const b64u = b => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+document.getElementById('gera').onclick = async () => {
+  const k = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign']);
+  const pub = await crypto.subtle.exportKey('raw', k.publicKey);
+  const jwk = await crypto.subtle.exportKey('jwk', k.privateKey);
+  document.getElementById('pub').value = b64u(pub);
+  document.getElementById('pri').value = jwk.d;
+  document.getElementById('saida').hidden = false;
+};
+</script>
+</body>
+</html>
