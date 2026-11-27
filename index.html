@@ -7,7 +7,8 @@
 <meta name="theme-color" content="#a10d33">
 <link rel="preload" href="/fonts/fredoka.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/lilita-one.woff2" as="font" type="font/woff2" crossorigin>
-<script>try{var e=localStorage.getItem('arrisca-estilo');if(e&&/^[a-z]{3,10}$/.test(e))document.documentElement.dataset.estilo=e}catch(x){}</script>
+<script>try{var e=localStorage.getItem('arrisca-estilo');if(e&&/^[a-z]{3,10}$/.test(e))document.documentElement.dataset.estilo=e}catch(x){}
+window.ARRISCA_ERRO='';window.addEventListener('error',function(ev){if(ev&&ev.message&&!window.ARRISCA_ERRO)window.ARRISCA_ERRO=String(ev.message).slice(0,140)});</script>
 <title>Arrisca Aí – jogo de perguntas</title>
 <meta name="description" content="Jogo de perguntas para jogar em família: num aparelho só ou online, cada um no seu celular.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
@@ -1428,6 +1429,7 @@ body.sobrev .wrap>.ringwrap{display:none}
 <div id="histbox" class="chatbox histbox" style="display:none"><div class="chathead"><b>📜 Histórico</b><button class="small" aria-label="Fechar" title="Fechar" onclick="setTab('jogo')">✕</button></div><div id="hist" class="histcorpo"></div></div>
 <div id="chatbox" class="chatbox" style="display:none"><div class="chathead"><b id="chattit">💬 Chat da sala</b><div class="row"><button class="small" id="chatmudobtn" title="Silenciar alguém" onclick="chatMudosTroca()">🔇</button><button class="small" aria-label="Fechar" title="Fechar" onclick="chatFecha()">✕</button></div></div><div id="chatabas" class="abas chatabas" role="group" aria-label="Com quem conversar" style="display:none"></div><div id="chatlist" class="chatlist"></div><div class="chatreac" id="chatreac"></div><form class="chatform" onsubmit="chatEnvia(event)"><input id="chatin" aria-label="Mensagem para a sala" maxlength="200" placeholder="Escreva uma mensagem" autocomplete="off" enterkeyhint="send"><button class="primary">Enviar</button></form></div>
 <script>
+window.ARRISCA_JS=1; // o jogo começou a rodar (o aviso de navegador antigo, logo depois deste bloco, confere isto)
 // ----- filtro de palavrão (o mesmo do servidor, em api/_palavrao.js) -----
 // Confere palavra por palavra, sem acento, com números no lugar de letras (p0rr4) e letras repetidas (porraaa).
 const PAL_EXATO=new Set('cu cus cuzinho cuzao cuzona cuzoes fdp vsf vtnc tnc tmnc pqp pnc crl cct prr poha pora poras porinha krl kct karai karaio puta putas puto putos putinha putinho putao viado viados viadinho viadao bicha bichas boiola baitola traveco sapatao corno cornos cornao vadia vadias otario otaria otarios otarias babaca babacas retardado retardada retardados mongoloide bosta bostas merda merdas cacete cacetes carai caraio xota xotas xereca shit shits shity cunt cunts dick dicks pusy ashole whore whores slut sluts fag fags fagot niga nigas'.split(' '));
@@ -5348,6 +5350,24 @@ render();
 api('meta').then(d=>{Q=d;restoreLocalGame();if(G.players&&G.phase!=='setup'&&!PENDING_ROOM)MODE='local';render();loadResolvidos();QREADY=true;tryAutoJoin()}).catch(()=>{
   document.getElementById('panel').innerHTML='<h2>Ops</h2><p class="msg">Não consegui falar com o servidor de perguntas. Verifique a internet e recarregue a página.</p>';
 });
+</script>
+<script>
+// Navegador antigo demais (ex.: o de algumas TVs): o jogo não chegou a rodar. Em vez da página vazia, um aviso.
+// Escrito do jeito antigo de propósito (var, function, sem crase), para rodar em qualquer navegador.
+(function(){
+  if(window.ARRISCA_JS)return;
+  var esc=function(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var w=document.createElement('div');
+  w.id='navvelho';w.setAttribute('role','alert');
+  w.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;display:-webkit-box;display:flex;-webkit-box-align:center;align-items:center;-webkit-box-pack:center;justify-content:center;padding:24px;background:#22040c;color:#fff3de;font-family:Fredoka,Arial,sans-serif;text-align:center;overflow:auto';
+  w.innerHTML='<div style="max-width:720px">'+
+    '<div style="width:64px;height:64px;line-height:64px;margin:0 auto 18px;border-radius:50%;background:#ffc93c;color:#22040c;font-size:40px;font-weight:bold">!</div>'+
+    '<h1 style="margin:0 0 14px;font-size:30px;line-height:1.25;color:#ffc93c">Este navegador é antigo demais para o Arrisca Aí</h1>'+
+    '<p style="margin:0 0 12px;font-size:20px;line-height:1.5">Abra <b>'+esc(location.host||'arrisca-ai.vercel.app')+'</b> num celular, num computador ou num aparelho Android ligado na TV, com o navegador atualizado.</p>'+
+    '<p style="margin:0 0 22px;font-size:18px;line-height:1.5;color:#f2b8c2">Na TV, também dá para espelhar a tela do celular ou do computador.</p>'+
+    '<p style="margin:0;font-size:12px;line-height:1.4;color:#f2b8c2;opacity:.7;word-wrap:break-word">'+esc(navigator.userAgent||'')+(window.ARRISCA_ERRO?'<br>'+esc(window.ARRISCA_ERRO):'')+'</p></div>';
+  document.body.appendChild(w);
+})();
 </script>
 <script src="config.js"></script>
 <script type="module" src="net-firebase.js"></script>
