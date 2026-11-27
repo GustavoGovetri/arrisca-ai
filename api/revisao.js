@@ -1,6 +1,6 @@
 // Copia os reportes abertos para o repositório privado de perguntas, para o Claude revisar (ver _revisao.js).
 // A Vercel chama uma vez por dia (vercel.json → crons). O dono também pode mandar na hora, pelo painel.
-// Depois da cópia, apaga as salas paradas há mais de 7 dias (_limpeza.js).
+// Depois da cópia, apaga as salas vazias paradas há mais de 12 horas e qualquer sala parada há mais de 7 dias (_limpeza.js).
 // Só aceita a chamada da própria Vercel, com o segredo CRON_SECRET (configurado na Vercel).
 const { freia } = require('./_limite');
 module.exports = async (req, res) => {
