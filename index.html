@@ -1232,6 +1232,53 @@ body.inicio #view-jogo>.card:not(#panel){background:rgba(0,0,0,.22)!important;bo
 /* celular, sala de espera: a sala vem primeiro e o tabuleiro de prévia vai para baixo */
 @media(max-width:980px){body.salaespera .wrap>.ringwrap{order:3}}
 @media(max-width:980px){.toolbar{padding-left:50px}}
+
+/* ----- Palco refinado, 3ª etapa: todas as janelas (visual, ranking, conta, amigos, sons, salas, desafio, histórico, chat, reportar) ----- */
+.chatbox{background:linear-gradient(180deg,color-mix(in srgb,var(--k) 88%,#2a0a14),color-mix(in srgb,var(--k) 96%,#000))!important;border:1px solid color-mix(in srgb,var(--amarelo) 24%,transparent)!important;box-shadow:0 24px 60px rgba(0,0,0,.55)!important;border-radius:24px!important;color:#fff3de}
+.chathead{padding:14px 16px!important;border-bottom:1px solid rgba(255,243,222,.08)!important;min-height:44px}
+.chathead b,.chathead h2{display:flex;align-items:center;gap:9px;font-family:'Fredoka',sans-serif!important;font-weight:700!important;font-size:18px!important;color:#fff3de!important;text-shadow:none!important;letter-spacing:0!important;text-transform:none!important}
+.chathead b svg.traco{color:var(--amarelo);width:20px;height:20px}
+.chathead button.small{width:40px;min-width:40px!important;height:40px!important;padding:0!important;border-radius:12px!important;background:rgba(255,243,222,.07)!important;border:0!important;box-shadow:none!important;color:#fff3de!important;font-size:16px!important;display:inline-flex;align-items:center;justify-content:center}
+.chathead button.small:hover{background:rgba(255,243,222,.15)!important}
+.chathead .row{gap:6px}
+/* abas dentro das janelas: controle segmentado */
+.chatbox .abas{display:flex;gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.3)}
+.chatbox .abas>button{flex:1;min-height:40px;border-radius:10px!important;border:0!important;background:none!important;box-shadow:none!important;color:#f7dce1!important;font:600 15px 'Fredoka',sans-serif!important;text-shadow:none!important;text-transform:none!important;letter-spacing:0!important}
+.chatbox .abas>button.on{background:var(--amarelo)!important;color:var(--k)!important;font-weight:700!important}
+/* títulos de seção: discretos, alinhados à esquerda */
+.chatbox h3,.chatbox .avtit{font-family:'Fredoka',sans-serif!important;font-weight:700!important;font-size:16px!important;color:#fff3de!important;text-shadow:none!important;text-align:left!important;letter-spacing:0!important;text-transform:none!important;margin:18px 0 8px!important}
+/* botões comuns dentro das janelas: leves; o principal continua dourado */
+.chatbox button.small:not(.on):not(.primary):not(.confirma),.chatbox .row>button:not(.primary):not(.on){background:rgba(255,243,222,.07)!important;border:2px solid rgba(255,243,222,.14)!important;box-shadow:none!important;color:#fff3de!important;text-shadow:none!important}
+.chatbox button.small.on{background:color-mix(in srgb,var(--amarelo) 18%,transparent)!important;border:2px solid var(--amarelo)!important;color:#fff3de!important;box-shadow:none!important}
+.chatbox button.primary{border-radius:16px!important}
+/* caixas de marcar com a cor do tema */
+.chatbox input[type=checkbox],.chatbox input[type=radio]{accent-color:var(--amarelo);width:20px;height:20px}
+/* campos */
+.chatbox input[type=text],.chatbox input[type=email],.chatbox input[type=password],.chatbox textarea{border-radius:14px!important}
+/* alternativas do Desafio do dia: botões grandes, escuros, e a escolhida em dourado */
+.dsfopts{display:flex!important;flex-direction:column;gap:10px}
+.dsfopts button{min-height:56px;justify-content:flex-start!important;text-align:left;padding:10px 16px!important;border-radius:16px!important;border:2px solid rgba(255,243,222,.14)!important;background:rgba(0,0,0,.28)!important;box-shadow:none!important;color:#fff3de!important;font:600 17px 'Fredoka',sans-serif!important;text-shadow:none!important;text-transform:none!important;letter-spacing:0!important}
+.dsfopts button:hover:not(:disabled){border-color:color-mix(in srgb,var(--amarelo) 60%,transparent)!important}
+.dsfopts button.sel{outline:0!important;border:3px solid var(--amarelo)!important;background:color-mix(in srgb,var(--amarelo) 14%,transparent)!important}
+.dsfopts button.right{background:#2fd07f!important;border-color:#2fd07f!important;color:#0b2a1c!important}
+.dsfopts button.wrong{background:rgba(255,107,107,.18)!important;border-color:#ff6b6b!important}
+/* no celular as janelas sobem de baixo, com cantos de cima arredondados */
+@media(max-width:600px){.chatbox.modal{border-radius:24px 24px 0 0!important}}
+
+/* ajustes da 3ª etapa */
+.chatbox .abas>button.small,.chatbox .abas>button.small:not(.on){flex:1;min-height:40px;border-radius:10px!important;border:0!important;background:none!important;box-shadow:none!important;color:#f7dce1!important;font:600 15px 'Fredoka',sans-serif!important}
+.chatbox .abas>button.small.on{background:var(--amarelo)!important;color:var(--k)!important;font-weight:700!important;border:0!important}
+.chatbox .abas+.abas{margin-top:8px}
+.chatbox h3,.chatbox .avtit{text-align:inherit!important}
+.chatbox h4.ctsub{font-family:'Fredoka',sans-serif!important;font-weight:700!important;font-size:16px!important;color:#fff3de!important;text-shadow:none!important;text-align:left!important;letter-spacing:0!important;text-transform:none!important;margin:18px 0 10px!important}
+.chathead button.small{width:auto}
+.chathead .row>button.small{padding:0 12px!important;font:600 14px 'Fredoka',sans-serif!important;white-space:nowrap}
+
+.hm .joinrow button{background:#fff3de!important;color:var(--k)!important;border:0!important;box-shadow:none!important;text-shadow:none!important;font:700 15px 'Fredoka',sans-serif!important;border-radius:14px!important;text-transform:none!important;letter-spacing:0!important}
+.hm .homecards .hcard{background:rgba(0,0,0,.28)!important;border:1px solid rgba(255,243,222,.08)!important;box-shadow:none!important;border-radius:18px!important;color:#fff3de!important;text-shadow:none!important}
+.hm .homecards .hcard:hover{background:rgba(255,243,222,.1)!important}
+.hm .homecards .hcard .hico{background:color-mix(in srgb,var(--amarelo) 16%,transparent)!important;color:var(--amarelo)!important}
+.hm .homecards .hcard .hico svg.traco{color:var(--amarelo)}
 </style>
 </head>
 <body>
@@ -1360,14 +1407,25 @@ const ICO={
   seta:TRACO('<path d="M9 6l6 6-6 6"/>','  stroke-width="2.6"'),
   compartilhar:TRACO('<path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>'),
   link:TRACO('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
-  chamar:TRACO('<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/>')
+  chamar:TRACO('<circle cx="10" cy="8" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0 1 13 0M19 8v6M16 11h6"/>'),
+  globo:TRACO('<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>'),
+  ferramenta:TRACO('<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z"/>'),
+  bug:TRACO('<rect x="7" y="8" width="10" height="12" rx="5"/><path d="M9 8a3 3 0 0 1 6 0M3 13h4M17 13h4M4 7l3 2M20 7l-3 2M4 19l3-2M20 19l-3-2M12 12v8"/>'),
+  perfil:TRACO('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>')
 };
+// títulos das janelas: ícone de traço no lugar do emoji
+const JANELA_ICO={visualbox:'visual',rankbox:'ranking',contabox:'conta',amigosbox:'amigos',desafiobox:'desafio',painelbox:'ferramenta',sombox:'som',bugbox:'bug',histbox:'hist',chatbox:'chat',salasbox:'globo'};
+const tiraEmoji=t=>String(t||'').replace(/^[\p{Extended_Pictographic}\u2600-\u27BF\uFE0F\u200D\s]+/u,'');
+function tituloSet(el,ico,txt){if(!el)return;el.innerHTML=(ICO[ico]||'')+'<span>'+esc(tiraEmoji(txt))+'</span>'}
+function janelasIco(){for(const id in JANELA_ICO){const b=document.querySelector('#'+id+' .chathead b');if(b&&!b.querySelector('svg.traco'))tituloSet(b,JANELA_ICO[id],b.textContent)}}
+
 function icoBarra(){
   const p=[['efxbtn','visual'],['rankbtn','ranking'],['contabtn','conta'],['amigosbtn','amigos'],['histbtn','hist'],['chatbtn','chat']];
   p.forEach(([id,k])=>{const b=document.getElementById(id);if(b&&!b.querySelector('svg.traco'))b.insertAdjacentHTML('afterbegin',ICO[k])});
   const sb=document.getElementById('snd');if(sb)sb.innerHTML=ICO.som; // o ícone certo (som ou mudo) é posto depois que o SFX carrega
 }
 icoBarra();
+setTimeout(janelasIco,0);
 const LOGO_HTML='<div class="letreiro"><div class="logo" aria-label="Arrisca Aí">'+[...'ARRISCA AÍ'].map((ch,i)=>ch===' '?'<span class="lt esp"></span>':`<span class="lt" style="--i:${i}">${ch}</span>`).join('')+'</div></div>';
 setTimeout(()=>{fetch('/api/perguntas?acao=aquece',{cache:'no-store'}).catch(()=>{})},1200);
 (function montaFundo(){ // palco: cortinas, bambinela, holofotes passando e brilhos
@@ -3068,7 +3126,7 @@ function contaHtml(){
   const cor=CONTA_UI.pcor||p.cor||myColor()||'#ffd000';
   const google=u.provedor==='google.com';
   const topo=`<div class="ctbanner" style="--c:${p.cor||cor}"><span class="avatar ctav${fotoUrl(p.foto)?' temfoto':''}" style="--c:${p.cor||cor}${fotoUrl(p.foto)?`;background:${p.cor||cor} url(${p.foto}) center/cover`:''}"></span><div class="ctquem"><b>${esc(p.nome||u.nome||'Jogador')}</b><small>${esc(u.email)} · ${google?'Google':'e-mail e senha'}</small>${p.id?`<small class="ctid">ID ${fmtId(p.id)} <button type="button" class="linkbtn" onclick="copia('${idAm(p.id)}','📋 ID copiado')">copiar</button> · <button type="button" class="linkbtn" onclick="amigosAbre()">👥 amigos</button></small>`:''}</div></div>
-    <div class="abas ctabas">${[['perfil','📊 Perfil'],['conq','🏅 Conquistas'],['hist','🕘 Histórico']].map(([k,l])=>`<button class="small${CONTA_UI.tab===k?' on':''}" onclick="CONTA_UI.tab='${k}';CONTA_UI.erro='';CONTA_UI.ok='';contaRender()">${l}</button>`).join('')}</div>`;
+    <div class="abas ctabas">${[['perfil','Perfil'],['conq','Conquistas'],['hist','Histórico']].map(([k,l])=>`<button class="small${CONTA_UI.tab===k?' on':''}" onclick="CONTA_UI.tab='${k}';CONTA_UI.erro='';CONTA_UI.ok='';contaRender()">${l}</button>`).join('')}</div>`;
   if(CONTA_UI.tab==='conq')return topo+conquistasHtml(d);
   if(CONTA_UI.tab==='hist')return topo+historicoHtml(d);
   const nome=CONTA_UI.pnome!=null?CONTA_UI.pnome:(p.nome||'');
@@ -3128,7 +3186,7 @@ function contaRender(){
   const s=document.getElementById('ctsenha'),sv=s?s.value:'',tipo=s?s.type:'password';
   el.innerHTML=contaHtml();
   const s2=document.getElementById('ctsenha');if(s2){if(sv)s2.value=sv;if(tipo==='text')olhoSenha()}
-  const t=document.getElementById('contatit');if(t)t.textContent=CONTA.user?'👤 Sua conta':'👤 Entrar ou criar conta';
+  const t=document.getElementById('contatit');tituloSet(t,'conta',CONTA.user?'Sua conta':'Entrar ou criar conta');
 }
 function contaAbre(tab){
   Object.assign(CONTA_UI,{erro:'',ok:'',apagar:0,pnome:null,pcor:null,ptit:null,tab:tab||'perfil'});
@@ -3157,7 +3215,7 @@ async function rankingCarrega(){
 }
 function rankingHtml(){
   const d=RANK.dados;
-  let h=`${CONTA.user?`<div class="abas"><button class="small${RANK.escopo!=='amigos'?' on':''}" onclick="RANK.escopo='todos';rankingCarrega()">🌎 Todos</button><button class="small${RANK.escopo==='amigos'?' on':''}" onclick="RANK.escopo='amigos';rankingCarrega()">👥 Amigos</button></div>`:''}<div class="abas"><button class="small${RANK.periodo==='semana'?' on':''}" onclick="RANK.periodo='semana';rankingCarrega()">🗓️ Semana</button><button class="small${RANK.periodo==='mes'?' on':''}" onclick="RANK.periodo='mes';rankingCarrega()">📅 Mês</button></div>`;
+  let h=`${CONTA.user?`<div class="abas"><button class="small${RANK.escopo!=='amigos'?' on':''}" onclick="RANK.escopo='todos';rankingCarrega()">Todos</button><button class="small${RANK.escopo==='amigos'?' on':''}" onclick="RANK.escopo='amigos';rankingCarrega()">Amigos</button></div>`:''}<div class="abas"><button class="small${RANK.periodo==='semana'?' on':''}" onclick="RANK.periodo='semana';rankingCarrega()">Semana</button><button class="small${RANK.periodo==='mes'?' on':''}" onclick="RANK.periodo='mes';rankingCarrega()">Mês</button></div>`;
   if(RANK.escopo==='amigos'&&!CONTA.user)RANK.escopo='todos';
   if(d&&d.soAmigos&&!d.amigos)return h+`<p class="pvazio">Você ainda não tem amigos para comparar pontos.</p><button class="primary" style="width:100%" onclick="rankingFecha();amigosAbre()">👥 Adicionar amigos</button>`;
   if(RANK.erro)return h+`<div class="contaerro">${esc(RANK.erro)}</div>`;
@@ -3219,7 +3277,7 @@ function conviteEntra(id,sala){
 }
 function amigosAbre(){AMIGOS.erro='';AMIGOS.ok='';AMIGOS.ver=null;AMIGOS.remover=null;amigosRender();modalAbre('amigosbox');amigosCarrega()}
 function amigosFecha(){modalFecha('amigosbox')}
-function amigosRender(){const el=document.getElementById('amigoscorpo');if(!el)return;el.innerHTML=amigosHtml();const t=document.getElementById('amigostit');if(t)t.textContent=AMIGOS.ver?'👥 Perfil do amigo':'👥 Amigos'}
+function amigosRender(){const el=document.getElementById('amigoscorpo');if(!el)return;el.innerHTML=amigosHtml();const t=document.getElementById('amigostit');tituloSet(t,'amigos',AMIGOS.ver?'Perfil do amigo':'Amigos')}
 function amigosMsgs(){return (AMIGOS.erro?`<div class="contaerro">${esc(AMIGOS.erro)}</div>`:'')+(AMIGOS.ok?`<div class="contaok">${esc(AMIGOS.ok)}</div>`:'')}
 function vistoTxt(ts){if(!ts)return 'Offline';const m=Math.round((Date.now()-ts)/60000);if(m<60)return 'Visto há '+Math.max(1,m)+' min';const h=Math.round(m/60);if(h<24)return 'Visto há '+h+' h';const d=Math.round(h/24);return 'Visto há '+d+(d===1?' dia':' dias')}
 function amigoStatus(a){
@@ -3283,7 +3341,7 @@ function amigoPerfilHtml(){
   const foto=fotoUrl(p.foto)||fotoUrl(p.f),cor=p.cor||'#b0b8c4';
   h+=`<div class="ctbanner" style="--c:${cor};margin-top:10px"><span class="avatar ctav${foto?' temfoto':''}" style="--c:${cor}${foto?`;background:${cor} url(${foto}) center/cover`:''}"></span><div class="ctquem"><b>${esc(p.nome)}</b>${p.t?`<small>${tituloChip(p.t)}</small>`:''}<small>ID ${fmtId(p.id)}${p.desde?' · amigos desde '+new Date(p.desde).toLocaleDateString('pt-BR'):''}</small><small>${amigoStatus(p)}</small></div></div>`;
   const bt=amigoBotoes(p,dis);if(bt)h+=`<div class="row" style="justify-content:center;margin-bottom:10px">${bt}</div>`;
-  h+=`<div class="abas ctabas">${[['perfil','📊 Estatísticas'],['conq','🏅 Conquistas']].map(([k,l])=>`<button class="small${AMIGOS.ptab===k?' on':''}" onclick="AMIGOS.ptab='${k}';amigosRender()">${l}</button>`).join('')}</div>`;
+  h+=`<div class="abas ctabas">${[['perfil','Estatísticas'],['conq','Conquistas']].map(([k,l])=>`<button class="small${AMIGOS.ptab===k?' on':''}" onclick="AMIGOS.ptab='${k}';amigosRender()">${l}</button>`).join('')}</div>`;
   h+=AMIGOS.ptab==='conq'?conquistasHtml(p):statsHtml(p,true);
   return h+`<div class="contapes"><button class="perigo" ${dis} onclick="amigoFaz('remover','${id}')">${AMIGOS.remover===id?'Clique de novo para desfazer a amizade':'Desfazer amizade'}</button></div>`;
 }
@@ -4330,7 +4388,7 @@ function chatBadge(){const n=CHAT.filter(m=>!CHAT_VISTAS.has(m.id)&&m.dev!==MYDE
 function chatPinta(){
   if(!CHAT_OPEN)return;const el=document.getElementById('chatlist');if(!el)return;
   const bx=document.getElementById('chatbox');if(bx)bx.classList.toggle('mudos',CHAT_MUDOS_VER);
-  const tt=document.getElementById('chattit');if(tt)tt.textContent=CHAT_MUDOS_VER?'🔇 Silenciar alguém':'💬 Chat da sala';
+  const tt=document.getElementById('chattit');tituloSet(tt,CHAT_MUDOS_VER?'mudo':'chat',CHAT_MUDOS_VER?'Silenciar alguém':'Chat da sala');
   const mb=document.getElementById('chatmudobtn');if(mb)mb.classList.toggle('on',CHAT_MUDOS_VER);
   if(CHAT_MUDOS_VER){el.innerHTML=chatMudosHtml();return}
   const vis=CHAT.filter(m=>!mudo(m.dev));
