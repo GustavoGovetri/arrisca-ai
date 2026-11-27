@@ -1107,6 +1107,102 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
   .hcard{flex-direction:column;gap:4px;padding:8px 6px;text-align:center}
   .hcard .htxt{align-items:center;max-width:100%}
 }
+
+/* ===================== Palco refinado (27/11/2026) =====================
+   Uma ação principal por tela, ícones de traço, letra normal nos botões, menos moldura dentro de moldura.
+   Usa as variáveis de cada estilo (--amarelo, --k, --painel…), então Neon, Praia etc. ganham junto. */
+svg.traco{width:21px;height:21px;display:block;flex:none}
+.toolbar{gap:6px}
+.toolbar .snd{display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3)!important;border:0!important;box-shadow:none!important;border-radius:13px;color:#fff3de;height:44px;transition:background .15s}
+.toolbar .snd:hover{background:rgba(255,255,255,.14)!important}
+.toolbar .snd.on{background:var(--amarelo)!important;color:var(--k)}
+.toolbar .snd:focus-visible{outline:3px solid var(--amarelo);outline-offset:2px}
+
+/* tela inicial: sem a moldura dourada em volta de tudo */
+body.inicio #panel{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;animation:none!important}
+body.inicio .wrap{max-width:1180px}
+.hm{display:grid;gap:18px}
+.hm-palco{display:flex;flex-direction:column;gap:12px;min-width:0}
+.hm-palco .homelogo{display:block;margin:0 0 6px}
+.hm-lema{display:none}
+.hm .perfil{margin:4px 0 0}
+.hm-nome{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.hm-nome>span{font-size:13px;font-weight:600;color:var(--suave,#f2b8c2)}
+.hm-nome input{width:100%;box-sizing:border-box}
+.hm .avatar.grande{width:64px;height:64px}
+
+.hm-jogar{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;gap:14px;width:100%;min-height:78px;margin-top:4px;border-radius:22px;border:0!important;
+  background:linear-gradient(180deg,#ffdc6b,#ffb81f)!important;color:#3a0612!important;box-shadow:0 6px 0 #b9780a,0 14px 34px rgba(255,184,31,.32)!important;font-family:'Fredoka',sans-serif;cursor:pointer;transition:transform .12s,box-shadow .12s}
+.hm-jogar svg.traco{width:30px;height:30px}
+.hm-jogar>span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.1;text-align:left}
+.hm-jogar b{font-size:25px;font-weight:700;letter-spacing:0;text-transform:none}
+.hm-jogar small{font-size:14px;font-weight:500;color:#6b2a12}
+.hm-jogar:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 0 #b9780a,0 18px 40px rgba(255,184,31,.4)!important}
+.hm-jogar:active:not(:disabled){transform:translateY(4px);box-shadow:0 2px 0 #b9780a!important}
+.hm-jogar::after{content:'';position:absolute;top:-20%;bottom:-20%;width:28%;left:0;background:linear-gradient(100deg,transparent,rgba(255,255,255,.6),transparent);transform:translateX(-160%) skewX(-20deg);will-change:transform;animation:hmBrilho 4.5s ease-in-out infinite 1.2s;pointer-events:none}
+@keyframes hmBrilho{0%,70%{transform:translateX(-160%) skewX(-20deg)}100%{transform:translateX(470%) skewX(-20deg)}}
+.hm-sec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.hm-btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;border-radius:16px!important;border:2px solid rgba(255,243,222,.2)!important;background:rgba(255,243,222,.05)!important;
+  color:#fff3de!important;box-shadow:none!important;font:600 16px 'Fredoka',sans-serif!important;text-transform:none!important;letter-spacing:0!important}
+.hm-btn.ouro{border-color:color-mix(in srgb,var(--amarelo) 60%,transparent)!important;background:color-mix(in srgb,var(--amarelo) 8%,transparent)!important}
+.hm-btn.ouro svg{color:var(--amarelo)}
+.hm-btn:hover:not(:disabled){background:rgba(255,243,222,.12)!important}
+.hm .joinrow{margin-top:0}
+
+.hm-lado{display:flex;flex-direction:column;gap:14px;min-width:0}
+.hm-desafio{display:flex;align-items:center;gap:14px;width:100%;padding:14px 16px;border-radius:20px!important;border:0!important;background:linear-gradient(135deg,#1c6e45,#124a30)!important;box-shadow:0 10px 26px rgba(0,0,0,.25)!important;color:#fff3de!important;text-align:left;cursor:pointer}
+.hm-dico{width:48px;height:48px;flex:none;border-radius:14px;background:#2fd07f;color:#0b2a1c;display:flex;align-items:center;justify-content:center}
+.hm-dico svg.traco{width:26px;height:26px}
+.hm-dtxt{flex:1;display:flex;flex-direction:column;gap:3px}
+.hm-dtxt b{font-size:17px;font-weight:700}
+.hm-dtxt small{font-size:13.5px;color:#bfeed4}
+.hm-desafio:hover{filter:brightness(1.08)}
+.hm .homecards{margin:0}
+
+.hm-salas{padding:16px;border-radius:20px;background:rgba(0,0,0,.28)}
+.hm-tit{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.hm-tit b{font-size:16px}
+.hm-link{background:none!important;border:0!important;box-shadow:none!important;color:var(--amarelo)!important;font:600 14px 'Fredoka',sans-serif!important;padding:6px 4px!important;min-height:0!important}
+.hm-aovivo{display:flex;align-items:center;gap:8px;margin:0 0 8px;font-size:13.5px;color:var(--suave,#f2b8c2)}
+.hm-aovivo i{position:relative;width:9px;height:9px;border-radius:50%;background:#2fd07f}
+.hm-aovivo i::after{content:'';position:absolute;inset:0;border-radius:50%;background:#2fd07f;animation:hmVivo 1.8s ease-out infinite}
+@keyframes hmVivo{from{transform:scale(1);opacity:.7}to{transform:scale(2.8);opacity:0}}
+.hm-vazio{margin:4px 0 2px;font-size:14px;opacity:.85}
+.hm-sala{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:6px 12px!important;margin-top:6px;border-radius:14px!important;border:0!important;background:rgba(255,243,222,.06)!important;box-shadow:none!important;color:#fff3de!important;text-align:left;font-family:'Fredoka',sans-serif!important;text-transform:none!important}
+.hm-sala:hover{background:rgba(255,243,222,.12)!important}
+.hm-stxt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2}
+.hm-stxt b{font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-stxt small{font-size:12px;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-sn{font-size:13px;opacity:.85}
+.hm-sent{font-weight:700;font-size:14px;color:var(--amarelo)}
+.hm-como{border-radius:20px;background:rgba(0,0,0,.2);padding:4px 16px}
+.hm-como>summary{cursor:pointer;padding:12px 0;font-weight:700;font-size:16px;list-style-position:inside}
+.hm-como[open]{padding-bottom:14px}
+
+@media(min-width:900px){
+  .hm{grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:44px;align-items:start;padding-top:10px}
+  .hm-lema{display:block;margin:0 0 4px;font-size:19px;line-height:1.45;opacity:.92;text-align:center}
+  .hm-palco .homelogo .letreiro .logo{font-size:clamp(52px,5.4vw,76px)!important}
+  .hm-como[open]{padding-bottom:16px}
+}
+@media(prefers-reduced-motion:reduce){.hm-jogar::after,.hm-aovivo i::after{animation:none}}
+html.leve .hm-jogar::after,html.parado .hm-jogar::after{animation:none}
+
+.hm .homesub{text-transform:none!important;letter-spacing:.2px!important;font-size:15px!important;font-weight:600;opacity:.9}
+.hm .joinrow input::placeholder{text-transform:none;letter-spacing:0}
+.hcard .hico svg.traco{width:18px;height:18px;color:#fff3de}
+body.inicio #view-jogo>.card:not(#panel){background:rgba(0,0,0,.22)!important;border:0!important;box-shadow:none!important}
+@media(max-width:899px){.hm{padding:0 4px}}
+
+/* partida: o meio da roda mostra só de quem é a vez, grande */
+.center .turn:first-child{margin-top:0;font-size:6.4cqw;line-height:1.1;color:var(--amarelo);display:flex;align-items:center;justify-content:center;gap:2cqw;flex-wrap:wrap}
+.center .turn:first-child .pawn{width:7cqw;height:7cqw}
+.center .turn:first-child+.turninfo{font-size:2.9cqw;margin-top:2cqw;line-height:1.5}
+/* temas: nome inteiro, quebrando a linha se precisar */
+.opts.optsgrade button{white-space:normal!important;text-overflow:clip!important;line-height:1.15;min-height:54px;display:flex;align-items:center;gap:8px;text-align:left;font-size:15.5px}
+.opts.optsgrade button .tic{flex:none}
+/* 3, 2, 1, Valendo!: a tela escurece por baixo para o aviso não brigar com a lista */
+.largada{background:radial-gradient(circle,rgba(20,2,8,.82),rgba(20,2,8,.55) 70%)!important}
 </style>
 </head>
 <body>
@@ -1115,7 +1211,7 @@ html[data-estilo="lousa"] .card{box-shadow:inset 0 0 0 3px #fff2a8,inset 0 0 0 6
 <div class="wrap">
   <div class="ringwrap"><div class="ring" id="ring"></div></div>
   <div>
-    <div class="toolbar"><button id="efxbtn" class="tab snd" title="Visual: estilo do site e efeitos" onclick="visualAbre()">🎨</button><button id="rankbtn" class="tab snd" title="Ranking da semana e do mês" onclick="rankingAbre()">🏆</button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" onclick="contaAbre()">👤</button><button id="amigosbtn" class="tab snd" style="position:relative" title="Amigos" onclick="amigosAbre()">👥<span id="amigosn" class="chatn"></span></button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" onclick="setTab(TAB==='hist'?'jogo':'hist')">📜</button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" onclick="chatAbre()">💬<span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Sons e avisos" onclick="somAbre()">🔊</button></div>
+    <div class="toolbar" role="toolbar" aria-label="Menu"><button id="efxbtn" class="tab snd" title="Visual: estilo do site e efeitos" aria-label="Visual do site" onclick="visualAbre()"></button><button id="rankbtn" class="tab snd" title="Ranking da semana e do mês" aria-label="Ranking" onclick="rankingAbre()"></button><button id="contabtn" class="tab snd" title="Entrar ou criar conta" aria-label="Conta" onclick="contaAbre()"></button><button id="amigosbtn" class="tab snd" style="position:relative" title="Amigos" aria-label="Amigos" onclick="amigosAbre()"><span id="amigosn" class="chatn"></span></button><button id="histbtn" class="tab snd" title="Histórico: as perguntas que já saíram" aria-label="Histórico de perguntas" onclick="setTab(TAB==='hist'?'jogo':'hist')"></button><button id="chatbtn" class="tab snd" style="display:none;position:relative" title="Chat da sala" aria-label="Chat da sala" onclick="chatAbre()"><span id="chatn" class="chatn"></span></button><button id="snd" class="tab snd" title="Sons e avisos" aria-label="Sons e avisos" onclick="somAbre()"></button></div>
     <div id="view-jogo">
     <div class="card" id="panel"></div>
     <div class="card" id="scores" style="display:none"></div>
@@ -1217,6 +1313,29 @@ function temasEscolha(){return natalAtivo()&&QN('N')>0?[...ORDER,'N']:ORDER}
 const LAMPADAS=[45.7,36.3].map(r=>`<circle class="halo" cx="50" cy="50" r="${r}"/>`).join('');
 // as lâmpadas de cada fase ficam numa camada própria e só a opacidade anima: a placa de vídeo troca as camadas sem redesenhar o tabuleiro
 const LAMPADAS_CAMADAS=[0,1,2].map(k=>`<svg class="lampadas k${k}" viewBox="0 0 100 100" aria-hidden="true">${[45.7,36.3].map(r=>`<circle class="lamp" cx="50" cy="50" r="${r}" stroke-dashoffset="${-k*2.6}"/>`).join('')}</svg>`).join('');
+// ----- ícones de traço da barra de cima (no lugar dos emojis) -----
+const TRACO=(d,extra)=>`<svg class="traco" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"${extra||''}>${d}</svg>`;
+const ICO={
+  visual:TRACO('<path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-4-4-7.2-9-7.2z"/><circle cx="7.5" cy="11" r="1.1"/><circle cx="10.5" cy="7" r="1.1"/><circle cx="15.5" cy="7.5" r="1.1"/>'),
+  ranking:TRACO('<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>'),
+  conta:TRACO('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
+  amigos:TRACO('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.5"/><path d="M17 14a5 5 0 0 1 4.5 5"/>'),
+  hist:TRACO('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/>'),
+  chat:TRACO('<path d="M4 5h16v11H9l-5 4z"/>'),
+  som:TRACO('<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>'),
+  mudo:TRACO('<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M17 9l5 5M22 9l-5 5"/>'),
+  jogar:'<svg class="traco" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+  mais:TRACO('<path d="M12 5v14M5 12h14"/>','  stroke-width="2.6"'),
+  celular:TRACO('<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>'),
+  desafio:TRACO('<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M8 3v4M16 3v4M4 10h16M9 15l2 2 4-4"/>'),
+  seta:TRACO('<path d="M9 6l6 6-6 6"/>','  stroke-width="2.6"')
+};
+function icoBarra(){
+  const p=[['efxbtn','visual'],['rankbtn','ranking'],['contabtn','conta'],['amigosbtn','amigos'],['histbtn','hist'],['chatbtn','chat']];
+  p.forEach(([id,k])=>{const b=document.getElementById(id);if(b&&!b.querySelector('svg.traco'))b.insertAdjacentHTML('afterbegin',ICO[k])});
+  const sb=document.getElementById('snd');if(sb)sb.innerHTML=ICO.som; // o ícone certo (som ou mudo) é posto depois que o SFX carrega
+}
+icoBarra();
 const LOGO_HTML='<div class="letreiro"><div class="logo" aria-label="Arrisca Aí">'+[...'ARRISCA AÍ'].map((ch,i)=>ch===' '?'<span class="lt esp"></span>':`<span class="lt" style="--i:${i}">${ch}</span>`).join('')+'</div></div>';
 setTimeout(()=>{fetch('/api/perguntas?acao=aquece',{cache:'no-store'}).catch(()=>{})},1200);
 (function montaFundo(){ // palco: cortinas, bambinela, holofotes passando e brilhos
@@ -1590,8 +1709,9 @@ function renderBoard(){
   }
   const curPos=G.players&&G.players[G.cur]?G.players[G.cur].pos:-1;
   SQ.forEach((q,i)=>{q.el.classList.toggle('target',i===tgt);q.el.classList.toggle('here',i===curPos)});
-  let c=LOGO_HTML+'<div class="sub">jogo de perguntas</div>';
-  if(G.players&&G.phase!=='setup'){
+  const jogando=!!(G.players&&G.phase!=='setup');
+  let c=jogando?'':LOGO_HTML+'<div class="sub">jogo de perguntas</div>'; // na partida, o meio da roda é de quem está na vez (o letreiro já está na tela inicial)
+  if(jogando){
     const p=G.players[G.cur];
     c+=`<div class="turn">${bolinha(online()?fotoDe(p.dev):null,p.color,'pawn')}${G.phase==='won'?'🏆 '+esc(p.name)+' venceu!':(online()&&myIdx()===G.cur?'Sua vez!':'Vez de '+esc(p.name))}</div>`;
     let info=(online()?'Sala '+ROOM+' · ':'')+`Rodada ${G.round}`+(modo()!=='classico'?` · ${MODOS[modo()].e} ${MODOS[modo()].n}`:'');
@@ -1599,7 +1719,7 @@ function renderBoard(){
     c+=`<div class="turninfo">${info}</div>`;
   }else if(!Q){c+='<div class="turninfo dots" style="margin-top:3cqw">Carregando perguntas</div>'}
   const legT=G.phase==='setup'?G.selThemes:activeThemes();
-  c+='<div class="leg">'+legT.map(k=>`<span><i style="background:${T[k].c}"></i>${ic(k)} ${T[k].n}</span>`).join('')+'</div>';
+  if(!jogando)c+='<div class="leg">'+legT.map(k=>`<span><i style="background:${T[k].c}"></i>${ic(k)} ${T[k].n}</span>`).join('')+'</div>';
   if(c!==CENTER_H){CENTER_H=c;document.getElementById('center').innerHTML=c}
   updatePawns();
 }
@@ -2568,32 +2688,50 @@ let HOME_COR=false;
 function homeCor(c){try{localStorage.setItem('arrisca-cor',c)}catch(e){}HOME_COR=false;contaSalvaDepois();render()}
 function homeHtml(){
   const ok=!!NET,cor=myColor()||'#ffd23f';
-  return `<div class="homelogo">${LOGO_HTML}<div class="homesub">jogo de perguntas</div></div>
-  <div class="homegrid">
-    <section class="hbox">
-      <h3>Jogue agora</h3>
-      <div class="perfil">
-        <button class="avatar grande${minhaFoto()?' temfoto':''}" style="--c:${cor}${minhaFoto()?`;background:${cor} url(${minhaFoto()}) center/cover`:''}" title="Trocar a cor" onclick="HOME_COR=!HOME_COR;render()"><i><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.6L15.6 5a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/></svg></i></button>
-        <input id="homenome" aria-label="Seu nome" value="${esc(myName())}" maxlength="16" placeholder="Seu nome" autocomplete="nickname" oninput="setMyName(this.value);contaSalvaDepois()" onkeydown="if(event.key==='Enter')this.blur()">
-      </div>
-      <div id="homeconta" class="homecards">${contaCartoesHtml()}</div>${natalAtivo()?`<div class="homenatal">🎄 <b>Chegou o Natal!</b> Dá para incluir o tema de Natal na hora de criar a sala.${eventoNatalAtivo()?` Jogue ${EVENTO_NATAL.alvo} partidas online com conta até 31/12 e ganhe o título exclusivo <span class="titulo tn8">${EVENTO_NATAL.e} ${EVENTO_NATAL.ti}</span>.`:''}</div>`:''}
-      ${HOME_COR?`<div class="palette homepal">${PALETA.map(([c,n])=>`<button class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="homeCor('${c}')"></button>`).join('')}</div>`:''}
-      <div class="hbtns">
-        <button class="pilula amarela" ${ok?'':'disabled'} onclick="jogarRapido()"><span class="ico">${ICONES.jogar}</span><span><b>Jogar</b><small>Entra numa sala aberta</small></span></button>
-        <button class="pilula verde" onclick="desafioAbre()"><span class="ico">${ICONES.desafio}</span><span><b>Desafio do dia</b><small id="dsfsub">${dsfResumo()}</small></span></button>
-        <button class="pilula laranja" ${ok?'':'disabled'} onclick="createRoom(false)"><span class="ico">${ICONES.criar}</span><span><b>Criar sala</b><small>Chame a turma pelo link</small></span></button>
-        <button class="pilula roxa" ${ok?'':'disabled'} onclick="abreSalas()"><span class="ico">${ICONES.salas}</span><span><b>Salas</b><small>Veja as salas abertas</small></span></button>
-        <button class="pilula" onclick="playLocal()"><span class="ico">${ICONES.local}</span><span><b>Neste aparelho</b><small>O celular passa de mão em mão</small></span></button>
-      </div>
-      <div class="joinrow"><input id="joincode" aria-label="Código da sala" maxlength="6" placeholder="Código da sala" autocapitalize="characters" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')joinFromInput()"><button ${ok?'':'disabled'} onclick="joinFromInput()">Entrar</button></div>
-      ${ok?'':`<p class="muted">${NETREADY?'O modo online não está disponível agora.':'Conectando o modo online…'}</p>`}
-    </section>
-    <section class="hbox">
-      <h3>Como jogar</h3>
-      ${comoHtml()}
-    </section>
+  setTimeout(homeSalasCarrega,0);
+  return `<div class="hm">
+  <section class="hm-palco" aria-label="Jogar">
+    <div class="homelogo">${LOGO_HTML}<div class="homesub">o jogo de perguntas da turma</div></div>
+    <p class="hm-lema">Perguntas de ${ORDER.length} temas, um tabuleiro e a turma toda. Cada um responde no próprio celular.</p>
+    <div class="perfil">
+      <button class="avatar grande${minhaFoto()?' temfoto':''}" style="--c:${cor}${minhaFoto()?`;background:${cor} url(${minhaFoto()}) center/cover`:''}" title="Trocar a cor" onclick="HOME_COR=!HOME_COR;render()"><i><svg viewBox="0 0 24 24"><path d="M4 20l1.2-4.6L15.6 5a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/></svg></i></button>
+      <label class="hm-nome"><span>Seu nome no jogo</span><input id="homenome" aria-label="Seu nome" value="${esc(myName())}" maxlength="16" placeholder="Seu nome" autocomplete="nickname" oninput="setMyName(this.value);contaSalvaDepois()" onkeydown="if(event.key==='Enter')this.blur()"></label>
+    </div>
+    ${HOME_COR?`<div class="palette homepal">${PALETA.map(([c,n])=>`<button class="swatch${c===cor?' on':''}" style="background:${c}" title="${n}" onclick="homeCor('${c}')"></button>`).join('')}</div>`:''}
+    ${natalAtivo()?`<div class="homenatal">🎄 <b>Chegou o Natal!</b> Dá para incluir o tema de Natal na hora de criar a sala.${eventoNatalAtivo()?` Jogue ${EVENTO_NATAL.alvo} partidas online com conta até 31/12 e ganhe o título exclusivo <span class="titulo tn8">${EVENTO_NATAL.e} ${EVENTO_NATAL.ti}</span>.`:''}</div>`:''}
+    <button class="hm-jogar" ${ok?'':'disabled'} onclick="jogarRapido()">${ICO.jogar}<span><b>Jogar agora</b><small>entra numa sala aberta</small></span></button>
+    <div class="hm-sec">
+      <button class="hm-btn ouro" ${ok?'':'disabled'} onclick="createRoom(false)">${ICO.mais}Criar sala</button>
+      <button class="hm-btn" onclick="playLocal()">${ICO.celular}Neste aparelho</button>
+    </div>
+    <div class="joinrow"><input id="joincode" aria-label="Código da sala" maxlength="6" placeholder="Código da sala" autocapitalize="characters" autocomplete="off" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')joinFromInput()"><button ${ok?'':'disabled'} onclick="joinFromInput()">Entrar</button></div>
+    ${ok?'':`<p class="muted">${NETREADY?'O modo online não está disponível agora.':'Conectando o modo online…'}</p>`}
+  </section>
+  <aside class="hm-lado">
+    <button class="hm-desafio" onclick="desafioAbre()"><span class="hm-dico">${ICO.desafio}</span><span class="hm-dtxt"><b>Desafio do dia</b><small id="dsfsub">${dsfResumo()}</small></span>${ICO.seta}</button>
+    <div id="homeconta" class="homecards">${contaCartoesHtml()}</div>
+    <div class="hm-salas"><div class="hm-tit"><b>Salas abertas agora</b><button class="hm-link" ${ok?'':'disabled'} onclick="abreSalas()">Ver todas</button></div><div id="homesalas">${homeSalasHtml()}</div></div>
+    <details class="hm-como"><summary>Como jogar</summary>${comoHtml()}</details>
+  </aside>
   </div>`;
 }
+// salas abertas na tela inicial: pega a lista de vez em quando, sem redesenhar a tela toda
+var HOME_SALAS={t:0,lista:null,timer:null};
+function homeSalasHtml(){
+  const l=typeof HOME_SALAS==='object'&&HOME_SALAS?HOME_SALAS.lista:null;
+  if(l===null)return '<p class="hm-vazio">Procurando salas…</p>';
+  if(!l.length)return `<p class="hm-vazio">Nenhuma sala aberta agora. Crie uma e chame a turma!</p>`;
+  const gente=l.reduce((n,x)=>n+(+x.n||0),0);
+  return `<p class="hm-aovivo"><i></i>${gente} ${gente===1?'pessoa jogando':'pessoas jogando'} agora</p>`+l.slice(0,3).map(x=>`<button class="hm-sala" onclick="entraSala('${sSala(x.sala)}')"><span class="avatar mini" style="--c:${/^#[0-9a-f]{6}$/i.test(x.cor||'')?x.cor:'#ffd23f'}"></span><span class="hm-stxt"><b>Sala de ${esc(x.dono||'alguém')}</b><small>${esc(infoSala(x))}</small></span><span class="hm-sn">${+x.n||0}/${+x.max||0}</span><span class="hm-sent">Entrar</span></button>`).join('');
+}
+async function homeSalasCarrega(forca){
+  if(MODE||ENTRANDO||document.hidden)return;
+  if(!forca&&Date.now()-HOME_SALAS.t<25000){const el=document.getElementById('homesalas');if(el)el.innerHTML=homeSalasHtml();return}
+  HOME_SALAS.t=Date.now();
+  try{const j=await apiSalas('lista');HOME_SALAS.lista=((j&&j.salas)||[]).filter(x=>x.n<x.max)}catch(e){if(HOME_SALAS.lista===null)HOME_SALAS.lista=[]}
+  const el=document.getElementById('homesalas');if(el)el.innerHTML=homeSalasHtml();
+}
+setInterval(()=>{if(!MODE&&!ENTRANDO&&!document.hidden)homeSalasCarrega(true)},30000);
 function joinFromInput(){if(!precisaNome())return;const v=((document.getElementById('joincode')||{}).value||'').trim();if(v.length<4){toast('Digite o código da sala');return}enterRoom(v,false)}
 function newCode(){const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=A[rndInt(A.length)];return s} // 6 letras e números (sem I, O, 0 e 1 para não confundir): mais de 1 bilhão de códigos; salas antigas de 4 continuam valendo
 async function createRoom(publica){
@@ -2858,8 +2996,8 @@ function contaCartoesHtml(){ // tela inicial: conta e ranking, lado a lado
   const p=CONTA.perfil,u=CONTA.user,r=CONTA.resumo;
   const conta=u
     ?`<button class="hcard" onclick="contaAbre()"><span class="hico" style="background:${p&&p.cor||myColor()||'#ffd000'}">✔</span><span class="htxt"><b>${esc(p?p.nome:'Minha conta')}</b><small>${r?r.semana+' pts na semana':'Minha conta'}</small></span></button>`
-    :`<button class="hcard chama" onclick="contaAbre()"><span class="hico">👤</span><span class="htxt"><b>Entrar</b><small>ou criar conta</small></span></button>`;
-  return conta+`<button class="hcard" onclick="rankingAbre()"><span class="hico">🏆</span><span class="htxt"><b>Ranking</b><small>semana e mês</small></span></button>`;
+    :`<button class="hcard chama" onclick="contaAbre()"><span class="hico">${ICO.conta}</span><span class="htxt"><b>Entrar</b><small>ou criar conta</small></span></button>`;
+  return conta+`<button class="hcard" onclick="rankingAbre()"><span class="hico">${ICO.ranking}</span><span class="htxt"><b>Ranking</b><small>semana e mês</small></span></button>`;
 }
 function contaLinhaHtml(){return contaCartoesHtml()}
 function contaPinta(){
@@ -3075,7 +3213,7 @@ function amigosHtml(){
   const a=AMIGOS.achado;
   h+=`<h4 class="ctsub">➕ Adicionar amigo</h4>
   <form class="amgadd" onsubmit="event.preventDefault();amigoProcura()"><input id="amgid" inputmode="numeric" autocomplete="off" maxlength="9" placeholder="0000 0000" aria-label="ID do amigo" value="${fmtId(AMIGOS.busca)}" oninput="AMIGOS.busca=this.value.replace(/\\D/g,'').slice(0,8);this.value=fmtId(AMIGOS.busca);AMIGOS.achado=null"><button class="small primary" type="submit" ${dis}>Procurar</button></form>
-  <p class="amgdica">Você precisa do <b>ID de 8 números</b> do seu amigo. Ele encontra o dele tocando em <b>👥</b> no alto da tela, em <b>Seu ID</b>, e copia com o botão <b>📋</b>. Se ele te mandar o link de amigo, é só abrir.</p>`;
+  <p class="amgdica">Você precisa do <b>ID de 8 números</b> do seu amigo. Ele encontra o dele em <b>Amigos</b>, no alto da tela, em <b>Seu ID</b>, e copia com o botão <b>📋</b>. Se ele te mandar o link de amigo, é só abrir.</p>`;
   if(a)h+=`<div class="amg achado">${bolinha(a.f,a.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(a.nome)}${tituloChip(a.t)}</b><small>ID ${fmtId(a.id)}</small></div><div class="amgbts">${a.eu?'<small>É você 🙂</small>':a.amigo?'<small>Já é seu amigo</small>':a.pedido==='enviado'?'<small>Pedido enviado</small>':a.pedido==='recebido'?`<button class="small primary" ${dis} onclick="amigoFaz('aceitar','${idAm(a.id)}')">Aceitar pedido</button>`:`<button class="small primary" ${dis} onclick="amigoFaz('pedir','${idAm(a.id)}')">Enviar pedido</button>`}</div></div>`;
   h+=`<h4 class="ctsub">👥 Seus amigos <span class="muted">(${d.amigos.length})</span></h4>`;
   h+=d.amigos.length?d.amigos.map(x=>`<div class="amg clica" role="button" tabindex="0" title="Ver o perfil" onclick="amigoVer('${idAm(x.id)}')">${bolinha(x.f,x.cor||'#b0b8c4','swatch')}<div class="amgtxt"><b>${esc(x.nome)}${tituloChip(x.t)}</b>${amigoStatus(x)}</div><div class="amgbts">${amigoBotoes(x,dis)}</div></div>`).join(''):`<p class="pvazio">Você ainda não tem amigos aqui. Adicione alguém pelo ID! 🙌</p>`;
@@ -4348,7 +4486,7 @@ const SFX=(()=>{
   return {
     get on(){return on},
     unlock(){if(on){ctx();carrega()}},
-    toggle(quieto){on=!on;try{localStorage.setItem('arrisca-som',on?'1':'0')}catch(e){}const b=document.getElementById('snd');if(b)b.textContent=on?'🔊':'🔇';if(on){ctx();carrega();som('agogo_agudo')||arp([660,990],.07,.12,{vol:.15})}if(!quieto)toast(on?'🔊 Som ligado':'🔇 Som desligado')},
+    toggle(quieto){on=!on;try{localStorage.setItem('arrisca-som',on?'1':'0')}catch(e){}const b=document.getElementById('snd');if(b)b.innerHTML=on?ICO.som:ICO.mudo;if(on){ctx();carrega();som('agogo_agudo')||arp([660,990],.07,.12,{vol:.15})}if(!quieto)toast(on?'🔊 Som ligado':'🔇 Som desligado')},
     volume(v){PREF.vol=v;if(M)M.gain.value=.55*v},
     fora(){som('pandeiro_curto',{rate:.9})||tone(260,0,.14,{vol:.28,f2:880})},
     saiu(){som('surdo',{vol:.8})?som('agogo_grave',{t:.16,rate:.85,vol:.6}):tone(440,0,.28,{vol:.15,f2:220})},
@@ -4545,7 +4683,7 @@ function largada(){ // 3, 2, 1, Valendo! quando a partida começa
 function turnPop(){anim(document.querySelector('#center .turn'),[{transform:'scale(.4)',opacity:0},{transform:'scale(1)',opacity:1}],{duration:550,easing:'cubic-bezier(.2,.9,.3,1.4)'})}
 // som de toque e liberação do áudio (o navegador só deixa tocar depois do primeiro toque)
 document.addEventListener('pointerdown',e=>{SFX.unlock();const b=e.target.closest&&e.target.closest('button');if(b&&!b.disabled)SFX.tap()},true);
-(()=>{const b=document.getElementById('snd');if(b)b.textContent=SFX.on?'🔊':'🔇'})();
+(()=>{const b=document.getElementById('snd');if(b)b.innerHTML=SFX.on?ICO.som:ICO.mudo})();
 
 loadLocal();loadReports();
 render();
