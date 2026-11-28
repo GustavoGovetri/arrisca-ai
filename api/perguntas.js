@@ -192,9 +192,10 @@ const DSF = require('./_desafio');
 const FX = { qDiff, bucketOf, resposta, textoQ, tipoDe };
 const DSF_MEM = new Map();
 async function desafioDoDia(B, pedido) {
-  const P = require('./_stats').periodo, hoje = P().dia, ontem = P(Date.now() - 864e5).dia;
+  const hoje = require('./_stats').periodo().dia;
   const dia = pedido === undefined || pedido === null || pedido === '' ? hoje : String(pedido);
-  if (dia !== hoje && dia !== ontem) throw Object.assign(new Error('Esse desafio já acabou.'), { status: 400 });
+  // os dias anteriores também valem (arquivo do desafio), desde o dia 1; o de amanhã ainda não
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || dia > hoje || !(DSF.diaN(dia) >= 1)) throw Object.assign(new Error('Esse desafio não existe.'), { status: 400 });
   const k = B.v + '|' + dia;
   if (DSF_MEM.has(k)) return DSF_MEM.get(k);
   // o desafio de cada dia fica guardado: se o banco mudar no meio do dia, as perguntas continuam as mesmas
@@ -204,9 +205,31 @@ async function desafioDoDia(B, pedido) {
     d = DSF.monta(B, FX, dia, temas);
     await ST.grava('PUT', 'desafio2/' + dia, d).catch(() => {});
   }
-  if (DSF_MEM.size > 6) DSF_MEM.clear();
+  if (DSF_MEM.size > 60) DSF_MEM.clear();
   DSF_MEM.set(k, d);
   return d;
+}
+
+// todas as perguntas que já saíram em algum Desafio do dia: com o arquivo, a certa de cada uma fica à vista de qualquer um,
+// então elas ficam fora da Sobrevivência e das salas online (que valem ranking). Uma vez por dia em cada servidor.
+const DSF_IDS = { k: '', ids: null, p: null };
+async function idsDesafios(B) {
+  const hoje = require('./_stats').periodo().dia, k = B.v + '|' + hoje;
+  if (DSF_IDS.k === k && DSF_IDS.ids) return DSF_IDS.ids;
+  if (DSF_IDS.k === k && DSF_IDS.p) return DSF_IDS.p;
+  DSF_IDS.k = k; DSF_IDS.ids = null;
+  DSF_IDS.p = (async () => {
+    const guardados = (await ST.ler('desafio2').catch(() => null)) || {}, ids = new Set();
+    for (let n = 1; ; n++) {
+      const dia = DSF.diaDe(n); if (dia > hoje) break;
+      let d = guardados[dia];
+      if (!d || !Array.isArray(d.itens) || !d.itens.length) d = await desafioDoDia(B, dia).catch(() => null);
+      ((d && d.itens) || []).forEach(x => { if (x && x.id) ids.add(String(x.id)) });
+    }
+    if (DSF_IDS.k === k) { DSF_IDS.ids = ids; DSF_IDS.p = null }
+    return ids;
+  })();
+  return DSF_IDS.p;
 }
 
 function assina(obj) { const p = b64u(JSON.stringify(obj)); return p + '.' + b64u(crypto.createHmac('sha256', chaveTk()).update(p).digest()) }
@@ -324,7 +347,9 @@ async function handle(acao, body, rede) {
     const usadas = Array.isArray(body.usadas) ? body.usadas.slice(0, 30000).map(String) : [];
     const vistas = Array.isArray(body.vistas) ? body.vistas.slice(-200).filter(x => Array.isArray(x) && x.length === 2).map(x => [String(x[0]), String(x[1])]) : [];
     const sala = body.sala && /^[A-Z0-9]{4,6}$/.test(body.sala) ? body.sala : null;
-    const r = sortear(B, t, body.nivel, usadas, vistas, !!body.junta && CLASSICO.includes(t), sala ? 40 : 0);
+    let fora = usadas; // na sala online, as perguntas que já saíram no Desafio do dia ficam de fora (a certa está no arquivo)
+    if (sala) { try { fora = usadas.concat([...(await idsDesafios(B))]) } catch (e) {} }
+    const r = sortear(B, t, body.nivel, fora, vistas, !!body.junta && CLASSICO.includes(t), sala ? 40 : 0);
     if (r.esgotado) return r;
     const s = r.s, q = B.temas[s].items[r.i], id = B.temas[s].ids[r.i];
     const out = { id, t: s, q: textoQ(q[0]), b: bucketOf(s, q), d: qDiff(s, q), lvNote: r.lvNote, tk: assina({ i: id, t: s, m: sala ? 'o' : 'l', s: sala, e: Date.now() + 864e5 }) };
@@ -405,11 +430,11 @@ module.exports._pergTk = async tk => {
     q: textoQ(q[0]), a: resposta(x.t, q), opts: x.t === 'V' ? q[1].slice() : null, mapa: formaDe(q) ? B.mapa[formaDe(q)] || null : null };
 };
 // Sobrevivência relâmpago: uma pergunta de múltipla escolha do nível pedido (ou do mais perto), de um dos temas,
-// sem repetir as da partida nem as do Desafio de hoje e de ontem (que têm a certa liberada). A certa (c) nunca vai para o aparelho:
+// sem repetir as da partida nem nenhuma que já saiu num Desafio do dia (o arquivo mostra a certa). A certa (c) nunca vai para o aparelho:
 // quem chama guarda em srv/ e só mostra quando a rodada fecha.
 module.exports._svSorteia = async (temas, nv, evitar) => {
   const B = await banco(), ev = new Set((evitar || []).map(String));
-  try { for (const d of [require('./_stats').periodo().dia, require('./_stats').periodo(Date.now() - 864e5).dia]) (await desafioDoDia(B, d)).itens.forEach(x => ev.add(x.id)) } catch (e) {}
+  try { (await idsDesafios(B)).forEach(id => ev.add(id)) } catch (e) {} // nada que já saiu num Desafio do dia (a certa está no arquivo)
   const lista = [...new Set(temas || [])].filter(t => B.temas[t] && B.temas[t].items.length);
   for (const alt of [nv, nv - 1, nv + 1, nv - 2, nv + 2, nv - 3, nv + 3]) {
     if (alt < 1 || alt > 4) continue;
@@ -440,4 +465,5 @@ module.exports._pergId = async (t, id) => {
 module.exports._desafioTeste = async (dia, temas) => { const B = await banco(); return DSF.monta(B, FX, dia, temas || ORDER.filter(t => t !== 'N')) };
 module.exports._erradasTeste = async (n) => { const B = await banco(); const out = []; for (const t of ORDER) { if (t === 'V') continue; const T = B.temas[t]; for (let i = 0; i < T.items.length && out.length < n * 12; i += 37) { const e = DSF.erradas(B, FX, t, i); if (e) out.push([t, T.items[i][0], resposta(t, T.items[i]), e]) } } return out };
 module.exports._bancoTeste = async () => ({ B: await banco(), FX });
+module.exports._idsDesafiosTeste = async () => idsDesafios(await banco());
 module.exports._poolsTeste = async () => { const B = await banco(); const o = {}; ORDER.forEach(t => { o[t] = [1, 2, 3, 4].map(nv => DSF.pool(B, FX, t, nv).length + '/' + B.temas[t].lv[nv]) }); return o };

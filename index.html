@@ -1306,6 +1306,19 @@ span.eqpill{cursor:default}
 .eqmemb{font-size:12.5px;color:var(--suave);margin-top:2px;line-height:1.35}
 .eqmemb .vez{color:#fff;font-weight:700;text-decoration:underline;text-underline-offset:3px}
 .chatabas{margin:8px 12px 0;flex:none}
+/* Desafio do dia: dias anteriores */
+.dsfarqtxt{margin:4px 0 12px;font-size:14px}
+.dsfdias{display:flex;flex-direction:column;gap:8px}
+.dsfdia{all:unset;box-sizing:border-box;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;cursor:pointer;background:rgba(255,243,222,.06);border:1px solid rgba(255,243,222,.1);color:#fff3de}
+.dsfdia:hover:not(:disabled){background:rgba(255,243,222,.12);transform:none}.dsfdia:focus-visible{outline:2px solid var(--amarelo);outline-offset:2px}
+.dsfdn{font:700 16px 'Fredoka',sans-serif;color:var(--amarelo)}.dsfdd{font-size:14px;color:var(--suave)}
+.dsfds{font-size:13.5px;text-align:right}.dsfds b{color:#55e08a}
+.dsfdia svg.traco{width:18px;height:18px;color:var(--suave)}
+.dsfarqtag{font-style:normal;font-size:12px;padding:2px 8px;border-radius:999px;background:rgba(255,243,222,.1);color:var(--suave);margin-left:4px}
+.dsfarqbtn{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;margin-top:14px;padding:12px 14px;border-radius:16px;cursor:pointer;background:rgba(255,243,222,.06);border:1px solid rgba(255,243,222,.12);color:#fff3de;text-align:left}
+.dsfarqbtn:hover:not(:disabled){background:rgba(255,243,222,.12);transform:none}.dsfarqbtn:focus-visible{outline:2px solid var(--amarelo);outline-offset:2px}
+.dsfarqbtn>svg.traco:first-child{width:24px;height:24px;color:var(--amarelo);flex:none}.dsfarqbtn>svg.traco:last-child{width:18px;height:18px;margin-left:auto;color:var(--suave)}
+.dsfarqbtn span{display:flex;flex-direction:column}.dsfarqbtn b{font:700 15px 'Fredoka',sans-serif}.dsfarqbtn small{font-size:12.5px;color:var(--suave)}
 /* modo TV: sem menu nem botões de jogar; letras maiores; QR code para entrar */
 body.tv .toolbar,body.tv #bugbtn,body.tv #chatbox,body.tv #chatbtn,body.tv #view-jogo>.card:not(#panel):not(#scores){display:none!important}
 @media(min-width:981px){ /* duas colunas e letras maiores só em tela larga; no celular fica uma coluna, como no resto do site */
@@ -1328,7 +1341,7 @@ body.tv .toolbar,body.tv #bugbtn,body.tv #chatbox,body.tv #chatbtn,body.tv #view
 .tvj small{font-size:13px;color:var(--suave)}.tvj small.ok{color:#55e08a}.tvj.off{opacity:.5}
 .tvinfo{margin-top:16px}
 .hm-tv{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:10px 12px;border-radius:14px;cursor:pointer;color:#fff3de;background:rgba(255,243,222,.05);border:1px dashed rgba(255,243,222,.22)}
-.hm-tv:hover{background:rgba(255,243,222,.1)}.hm-tv:focus-visible{outline:2px solid var(--amarelo);outline-offset:2px}
+.hm-tv:hover:not(:disabled){background:rgba(255,243,222,.1);transform:none}.hm-tv:focus-visible{outline:2px solid var(--amarelo);outline-offset:2px}
 .hm-tv[disabled]{opacity:.5;cursor:default}
 .hm-tv svg.traco{width:26px;height:26px;flex:none;color:var(--amarelo)}
 .hm-tv span{display:flex;flex-direction:column}.hm-tv b{font:700 15px 'Fredoka',sans-serif}.hm-tv small{font-size:12.5px;color:var(--suave)}
@@ -1383,6 +1396,7 @@ body.sobrev .wrap>.ringwrap{display:none}
         <li><b>Modos:</b> 🎲 Tradicional; ⭐ Bônus (difícil +1 casa, impossível +2); 🔥 Arriscado (na difícil e na impossível dá para apostar o dobro; se errar, volta o valor da ficha e joga o tema da casa nova).</li>
         <li><b>Em equipes:</b> de 2 a 4 times. Cada time anda junto no tabuleiro, com as mesmas fichas, e os membros respondem um de cada vez. Na votação da resposta e do tema final, só os outros times votam.</li>
         <li><b>👪 Turma:</b> perguntas que você mesmo escreve em Conta → Perguntas (ex.: "Em que cidade a vó nasceu?"). Quem criou a sala liga o tema e elas caem no tabuleiro como os outros. Só em sala com código, e não valem ranking.</li>
+        <li><b>Desafio do dia:</b> 10 perguntas de múltipla escolha, as mesmas para todo mundo. Em <b>Dias anteriores</b> dá para jogar os desafios que já passaram (não contam para a sequência).</li>
         <li><b>Modo TV:</b> na TV (ou num computador ligado nela), abra o site, digite o código da sala e toque em <b>Abrir como TV</b>. Ela mostra o tabuleiro, a pergunta, o tempo e o placar em tela grande, e na sala de espera um QR code para o pessoal entrar. A TV não conta como jogador.</li>
         <li><b>Sobrevivência relâmpago</b> (só online): todo mundo responde a mesma pergunta de múltipla escolha em 15 segundos. Errou ou não respondeu, perde uma vida; cada um tem 3. As perguntas vão ficando mais difíceis, e quem sobrar por último ganha. Se todo mundo que sobrou errar junto, ninguém sai naquela rodada.</li>
         <li><b>Ajudas</b>, uma vez por partida: ⏭ Pular troca a pergunta e 💡 Dica mostra a primeira letra (ou tira uma alternativa errada).</li>
@@ -2285,13 +2299,16 @@ function isReported(){return REPORTS.some(r=>r.id===G.qid&&r.t===(G.qt||G.theme)
 function nivelAtual(){const q=G.q||[];return ehMC()?q[4]:q[3]}
 function motivoMudou(){const sel=document.querySelector('input[name="motivo"]:checked');const box=document.getElementById('repnivel');if(box)box.style.display=(sel&&+sel.value===MOT_NIVEL)?'':'none'}
 // ----- Desafio do dia: 10 perguntas de múltipla escolha, as mesmas para todo mundo; o progresso fica neste aparelho -----
-const DSF_KEY='arrisca-desafio-v1',DSF_HIST='arrisca-desafio-hist';
-let DSF={st:null,ver:0,carregando:false,erro:'',esperando:false};
+const DSF_KEY='arrisca-desafio-v1',DSF_HIST='arrisca-desafio-hist',DSF_ARQ='arrisca-desafio-arquivo',DSF_INICIO='2026-11-21';
+let DSF={st:null,ver:0,carregando:false,erro:'',esperando:false,tela:null};
+// dias anteriores (arquivo): jogados depois, ficam guardados à parte e não contam para a sequência
+function dsfArq(){let a={};try{a=JSON.parse(localStorage.getItem(DSF_ARQ)||'{}')||{}}catch(e){}return a&&typeof a==='object'?a:{}}
+function dsfArqSalva(a){const k=Object.keys(a).sort();k.slice(0,Math.max(0,k.length-400)).forEach(x=>delete a[x]);try{localStorage.setItem(DSF_ARQ,JSON.stringify(a))}catch(e){}}
 function diaBrasilia(ts){return new Date((ts||Date.now())-3*3600e3).toISOString().slice(0,10)}
 function diaAntes(d){return new Date(Date.parse(d+'T12:00:00Z')-864e5).toISOString().slice(0,10)}
 function dataCurta(d){return d.slice(8,10)+'/'+d.slice(5,7)}
 function dsfLe(){try{const o=JSON.parse(localStorage.getItem(DSF_KEY)||'null');if(o&&typeof o.dia==='string'&&Array.isArray(o.itens)&&o.itens.length&&Array.isArray(o.resp))return o}catch(e){}return null}
-function dsfSalva(){try{localStorage.setItem(DSF_KEY,JSON.stringify(DSF.st))}catch(e){}}
+function dsfSalva(){const st=DSF.st;if(st&&st.arq){const a=dsfArq();a[st.dia]={resp:st.resp,fim:!!st.fim};dsfArqSalva(a);return}try{localStorage.setItem(DSF_KEY,JSON.stringify(st))}catch(e){}}
 function dsfHist(){let h={};try{h=JSON.parse(localStorage.getItem(DSF_HIST)||'{}')||{}}catch(e){}return h&&typeof h==='object'?h:{}}
 function dsfHistSalva(h){const k=Object.keys(h).sort();k.slice(0,Math.max(0,k.length-400)).forEach(x=>delete h[x]);try{localStorage.setItem(DSF_HIST,JSON.stringify(h))}catch(e){}}
 function dsfAcertos(st){return st.resp.filter(r=>r&&r.o===r.c).length}
@@ -2332,7 +2349,7 @@ async function dsfConta(){
   const e=document.getElementById('dsfsub');if(e)e.textContent=dsfResumo();
 }
 async function desafioAbre(){
-  modalAbre('desafiobox');DSF.erro='';
+  modalAbre('desafiobox');DSF.erro='';DSF.tela=null;
   if(CONTA.user){DSF.carregando=true;desafioRender();try{await dsfConta()}catch(e){console.warn(e)}DSF.carregando=false}
   const st=dsfLe();
   if(st&&st.dia===diaBrasilia()){DSF.st=st;dsfPosiciona();desafioRender()}else{DSF.st=null;dsfCarrega()}
@@ -2357,7 +2374,7 @@ async function dsfEscolhe(k){
   DSF.esperando=k;desafioRender();
   try{
     const r=await api('desafioResp',{dia:st.dia,i,o:k});
-    st.resp[i]={o:k,c:+r.c};dsfSalva();dsfEnvia();
+    st.resp[i]={o:k,c:+r.c};dsfSalva();if(!st.arq)dsfEnvia();
     if(k===+r.c){SFX.correct&&SFX.correct();vib(30)}else{SFX.wrong&&SFX.wrong();vib([60,40,60])}
   }catch(e){toast('Não consegui conferir: '+e.message)}
   DSF.esperando=false;desafioRender();
@@ -2370,7 +2387,7 @@ function dsfProxima(){
 }
 function dsfTermina(quieto){
   const st=DSF.st;st.fim=true;dsfSalva();
-  const h=dsfHist();h[st.dia]=dsfAcertos(st);dsfHistSalva(h);dsfEnvia();
+  if(!st.arq){const h=dsfHist();h[st.dia]=dsfAcertos(st);dsfHistSalva(h);dsfEnvia()}
   desafioRender();
   if(!quieto){const ac=dsfAcertos(st);if(ac>=8){SFX.win&&SFX.win();const el=document.querySelector('.dsfnota');if(el){const [x,y]=centro(el);CONF.burst(ac===10?160:90,x,y)}}}
 }
@@ -2379,16 +2396,50 @@ function faltaTxt(){const br=Date.now()-3*3600e3,ms=Math.ceil(br/864e5)*864e5-br
 setInterval(()=>{const e=document.getElementById('dsfconta');if(e)e.textContent=faltaTxt()},30000);
 function dsfTexto(){
   const st=DSF.st,ac=dsfAcertos(st),g=st.resp.map(r=>r.o===r.c?'🟩':'🟥').join(''),{seq}=dsfSeq();
+  if(st.arq)return `Desafio do dia #${st.n} do Arrisca Aí (de ${dataCurta(st.dia)}) 🎯\n${g} ${ac}/${st.itens.length}\nTenta também: ${location.origin}/?desafio`;
   return `Desafio do dia #${st.n} do Arrisca Aí 🎯\n${g} ${ac}/${st.itens.length}${seq>1?`\n🔥 ${seq} dias seguidos`:''}\nTenta também: ${location.origin}/?desafio`;
 }
 function dsfCompartilha(){const t=dsfTexto();if(navigator.share)navigator.share({text:t}).catch(()=>{});else copyText(t,'📋 Resultado copiado')}
 function desafioRender(){const el=document.getElementById('desafiocorpo');if(el)el.innerHTML=desafioHtml()}
+function dsfDias(){ // do mais recente (ontem) ao dia 1
+  const out=[];let d=diaAntes(diaBrasilia());
+  while(d>=DSF_INICIO&&out.length<400){out.push(d);d=diaAntes(d)}
+  return out;
+}
+const dsfNum=d=>Math.round((Date.parse(d+'T12:00:00Z')-Date.parse(DSF_INICIO+'T12:00:00Z'))/864e5)+1;
+function dsfListaAbre(){falaPara();DSF.tela='lista';DSF.erro='';desafioRender();const c=document.getElementById('desafiocorpo');if(c)c.scrollTop=0}
+function dsfListaHtml(){
+  const h=dsfHist(),a=dsfArq(),dias=dsfDias();
+  let t=`<div class="dsftopo"><span>Dias anteriores</span><button type="button" class="small" onclick="dsfHoje()">Voltar para hoje</button></div>
+  <p class="muted dsfarqtxt">Jogue os desafios que já passaram. Eles não contam para a sequência de dias seguidos.</p>`;
+  if(!dias.length)return t+'<p class="pvazio">Ainda não tem dias anteriores. Volte amanhã!</p>';
+  return t+`<div class="dsfdias">${dias.map(d=>{
+    const x=a[d],ac=x&&Array.isArray(x.resp)?x.resp.filter(r=>r&&r.o===r.c).length:0;
+    const st=[d in h?`No dia: <b>${h[d]}/10</b>`:'',x&&x.fim?`Depois: <b>${ac}/10</b>`:x&&x.resp&&x.resp.length?`Parou em ${x.resp.length} de 10`:''].filter(Boolean).join(' · ')||'<span class="muted">Ainda não jogou</span>';
+    return `<button type="button" class="dsfdia" onclick="dsfArquivo('${d}')"><span class="dsfdn">Dia ${dsfNum(d)}</span><span class="dsfdd">${dataCurta(d)}</span><span class="dsfds">${st}</span>${ICO.seta}</button>`}).join('')}</div>`;
+}
+async function dsfArquivo(dia){ // abre um dia antigo (continua de onde parou, se já começou)
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dia))return;
+  DSF.tela=null;DSF.carregando=true;DSF.erro='';desafioRender();
+  try{
+    const r=await api('desafio',{dia});
+    if(!r||r.dia!==dia||!Array.isArray(r.itens)||!r.itens.length)throw new Error('Não consegui abrir esse dia. Tente de novo.');
+    const x=dsfArq()[dia],resp=x&&Array.isArray(x.resp)?x.resp.filter(q=>q&&Number.isInteger(q.o)&&Number.isInteger(q.c)).slice(0,r.itens.length):[];
+    DSF.st={dia,n:r.n,itens:r.itens,resp,fim:!!(x&&x.fim)&&resp.length>=r.itens.length,arq:true};
+    dsfPosiciona();
+  }catch(e){DSF.erro=e.message;DSF.tela='lista'}
+  DSF.carregando=false;desafioRender();
+  const c=document.getElementById('desafiocorpo');if(c)c.scrollTop=0;
+  if(DSF.st&&DSF.st.arq&&!DSF.st.fim&&PREF.voz&&SFX.on)setTimeout(dsfFala,300);
+}
+function dsfHoje(){DSF.tela=null;DSF.erro='';const st=dsfLe();if(st&&st.dia===diaBrasilia()){DSF.st=st;dsfPosiciona();desafioRender()}else{DSF.st=null;dsfCarrega()}}
 function desafioHtml(){
-  if(DSF.carregando)return '<p class="pvazio">Preparando o desafio de hoje…</p>';
+  if(DSF.tela==='lista')return (DSF.erro?`<div class="contaerro">${esc(DSF.erro)}</div>`:'')+dsfListaHtml();
+  if(DSF.carregando)return '<p class="pvazio">Preparando o desafio…</p>';
   if(DSF.erro)return `<div class="contaerro">${esc(DSF.erro)}</div><div class="row" style="justify-content:center;margin-top:10px"><button class="small" onclick="dsfCarrega()">↻ Tentar de novo</button></div>`;
   const st=DSF.st;if(!st)return '';
   const quad=st.itens.map((x,j)=>{const r=st.resp[j];return `<i class="dq${r?(r.o===r.c?' ok':' err'):''}${!st.fim&&j===DSF.ver?' cur':''}"></i>`}).join('');
-  let h=`<div class="dsftopo"><span>Dia ${st.n} · ${dataCurta(st.dia)}</span><span class="dsfquad" aria-hidden="true">${quad}</span></div>`;
+  let h=`<div class="dsftopo"><span>Dia ${st.n} · ${dataCurta(st.dia)}${st.arq?' <em class="dsfarqtag">dia anterior</em>':''}</span><span class="dsfquad" aria-hidden="true">${quad}</span></div>`;
   if(st.fim)return h+dsfFimHtml();
   const x=st.itens[DSF.ver],r=st.resp[DSF.ver],tema=T[x.t]||{n:x.t,c:'#555'};
   h+=`<div class="dsfq"><div class="dsfbadges"><span class="badge" style="background:${tema.c}">${ic(x.t)} ${esc(tema.n)}</span>${LEVELS[x.nv]?` <span class="badge" style="background:${LVCOLOR[x.nv]}">${LEVELS[x.nv]}</span>`:''}<span class="muted dsfnum">${DSF.ver+1} de ${st.itens.length}</span></div>
@@ -2399,13 +2450,22 @@ function desafioHtml(){
 }
 function dsfFimHtml(){
   const st=DSF.st,ac=dsfAcertos(st),tot=st.itens.length,{seq,rec}=dsfSeq();
+  const outros=`<button type="button" class="dsfarqbtn" onclick="dsfListaAbre()">${ICO.desafio}<span><b>Dias anteriores</b><small>Jogue os desafios que já passaram</small></span>${ICO.seta}</button>`;
+  if(st.arq){ // dia antigo: sem sequência nem contagem para amanhã
+    const no=dsfHist()[st.dia];
+    const revA=st.itens.map((x,j)=>{const r=st.resp[j]||{},ok=r.o===r.c;return `<div class="dsfrv"><span class="dsfrvn ${ok?'ok':'err'}">${j+1}</span><div><div class="hq">${ic(x.t)} ${esc(x.q)}</div><div class="ha">${ok?'✔ '+esc(x.o[r.c]):'✘ Você: '+esc(x.o[r.o]??'—')+' · Certa: <b>'+esc(x.o[r.c]??'')+'</b>'}</div></div></div>`}).join('');
+    return `<div class="dsffim"><div class="dsfnota">${ac}<small>/${tot}</small></div><p class="dsffrase">Desafio de ${dataCurta(st.dia)}${no!=null?` · no dia você fez ${no}/${tot}`:''}</p>
+    <p class="muted dsfvolta">Dias anteriores não contam para a sequência.</p>
+    <div class="row" style="justify-content:center"><button class="primary" onclick="dsfListaAbre()">Outros dias</button><button onclick="dsfHoje()">Voltar para hoje</button><button onclick="dsfCompartilha()">📤 Compartilhar</button></div>
+    <details class="dsfrev"><summary>Ver as respostas</summary>${revA}</details></div>`;
+  }
   const frase=ac===tot?'Gabaritou! 🤯':ac>=8?'Mandou muito bem! 🔥':ac>=5?'Nada mal! 👏':ac>=3?'Amanhã tem mais 💪':'Dia difícil, hein? 😅';
   const rev=st.itens.map((x,j)=>{const r=st.resp[j]||{},ok=r.o===r.c;return `<div class="dsfrv"><span class="dsfrvn ${ok?'ok':'err'}">${j+1}</span><div><div class="hq">${ic(x.t)} ${esc(x.q)}</div><div class="ha">${ok?'✔ '+esc(x.o[r.c]):'✘ Você: '+esc(x.o[r.o]??'—')+' · Certa: <b>'+esc(x.o[r.c]??'')+'</b>'}</div></div></div>`}).join('');
   return `<div class="dsffim"><div class="dsfnota">${ac}<small>/${tot}</small></div><p class="dsffrase">${frase}</p>
   <p class="dsfseq">🔥 <b>${seq}</b> ${seq===1?'dia':'dias seguidos'}${rec>seq?` · recorde: ${rec}`:''}</p>
   <div class="row" style="justify-content:center"><button class="primary" onclick="dsfCompartilha()">📤 Compartilhar</button><button onclick="copyText(dsfTexto(),'📋 Resultado copiado')">📋 Copiar</button></div>
   <p class="muted dsfvolta">Amanhã tem outro. Faltam <b id="dsfconta">${faltaTxt()}</b>.</p>${CONTA.user?'':'<p class="muted dsfvolta" style="font-size:13px">Sem conta, a sequência fica só neste aparelho. <button type="button" class="small" onclick="desafioFecha();contaAbre()">Entrar</button></p>'}
-  <details class="dsfrev"><summary>Ver as respostas</summary>${rev}</details></div>`;
+  <details class="dsfrev"><summary>Ver as respostas</summary>${rev}</details>${dsfDias().length?outros:''}</div>`;
 }
 
 // ----- 👍/👎 em cada pergunta (vai para o painel do dono; uma nota por aparelho) -----

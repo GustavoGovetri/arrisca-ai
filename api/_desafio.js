@@ -347,4 +347,4 @@ function opcoes(B, fx, t, i) {
   return { certa, ops: [certa, ...e] };
 }
 
-module.exports = { monta, erradas, pool, opcoes, molde, diaN, NIVEIS, siglaErradas, siglaDe };
+module.exports = { monta, erradas, pool, opcoes, molde, diaN, diaDe, NIVEIS, siglaErradas, siglaDe };
